@@ -123,7 +123,7 @@ export const WalletLab: React.FC = () => {
                     </div>
                     <div className="text-3xl font-serif text-stone-900 mb-2">Weekly UBI</div>
                     <p className="text-sm text-stone-500 mb-6">
-                        Distributed to all verified citizens maintaining >0.85 personal integrity.
+                        Distributed to all verified citizens maintaining &gt;0.85 personal integrity.
                     </p>
                     <button className="w-full py-2 bg-stone-100 text-stone-400 text-sm font-medium rounded-lg cursor-not-allowed border border-stone-200 flex items-center justify-center">
                         <History className="w-4 h-4 mr-2" />

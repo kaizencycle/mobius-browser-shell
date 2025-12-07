@@ -1,5 +1,8 @@
 import React from 'react';
-import { MOCK_THREADS } from '../../constants';
+import { MOCK_THREADS, getLabById } from '../../constants';
+import { TabId } from '../../types';
+import { shouldUseLiveMode } from '../../config/env';
+import { LabFrame } from '../LabFrame';
 import { Map, Compass, Play, Plus, Share2, Atom, Calculator, Dna, Code, FlaskConical, Cpu, Globe, Rocket, ArrowRight } from 'lucide-react';
 
 const SUBJECTS = [
@@ -14,6 +17,20 @@ const SUBJECTS = [
 ];
 
 export const OAALab: React.FC = () => {
+  const lab = getLabById(TabId.OAA);
+  
+  // If live mode is enabled and URL exists, show iframe
+  if (lab && shouldUseLiveMode(lab.url)) {
+    return (
+      <LabFrame 
+        url={lab.url!} 
+        title={lab.name}
+        description={lab.description}
+      />
+    );
+  }
+
+  // Otherwise show demo UI
   return (
     <div className="h-full overflow-y-auto p-8 bg-stone-50">
       <div className="max-w-7xl mx-auto space-y-10">

@@ -1,4 +1,5 @@
-import { Sentinel, LearningThread, ReflectionEntry, ShieldAlert } from './types';
+import { Sentinel, LearningThread, ReflectionEntry, ShieldAlert, LabDefinition, TabId } from './types';
+import { env } from './config/env';
 
 export const SENTINELS: Sentinel[] = [
   { id: 'atlas', name: 'ATLAS', role: 'Context & Memory', status: 'active', integrity: 0.99 },
@@ -23,3 +24,53 @@ export const MOCK_ALERTS: ShieldAlert[] = [
   { id: 'a1', level: 'medium', message: 'Unusual data egress pattern detected on port 8080.', source: 'Network Monitor' },
   { id: 'a2', level: 'low', message: '3 days since last local backup verification.', source: 'Data Hygiene' },
 ];
+
+/**
+ * Lab definitions for the Mobius Browser Shell
+ * 
+ * Each lab can operate in two modes:
+ * 1. Live mode: Embeds the real deployed app via iframe
+ * 2. Demo mode: Shows the local mock UI
+ * 
+ * Set VITE_USE_LIVE_LABS=true and provide URLs to enable live mode
+ */
+export const LABS: LabDefinition[] = [
+  {
+    id: TabId.OAA,
+    name: 'OAA Learning Hub',
+    description: 'Multi-model AI tutoring across STEM subjects.',
+    url: env.OAA_URL,
+  },
+  {
+    id: TabId.REFLECTIONS,
+    name: 'Reflections',
+    description: 'AI-assisted journaling and E.O.M.M. cycles.',
+    url: env.REFLECTIONS_URL,
+  },
+  {
+    id: TabId.SHIELD,
+    name: 'Citizen Shield',
+    description: 'Digital safety & civic resilience practice.',
+    url: env.CITIZEN_SHIELD_URL,
+  },
+  {
+    id: TabId.HIVE,
+    name: 'HIVE (16-bit JRPG)',
+    description: 'Collaborative governance JRPG – built by the community.',
+    url: env.HIVE_URL,
+    comingSoon: !env.HIVE_URL, // Coming soon unless URL is provided
+  },
+  {
+    id: TabId.WALLET,
+    name: 'Fractal Wallet',
+    description: 'Your MIC balance, shards, and integrity ledger.',
+    useDemo: true, // Wallet is always local UI
+  },
+];
+
+/**
+ * Get a lab definition by TabId
+ */
+export function getLabById(id: TabId): LabDefinition | undefined {
+  return LABS.find(lab => lab.id === id);
+}

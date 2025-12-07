@@ -1,8 +1,25 @@
 import React from 'react';
-import { MOCK_REFLECTIONS } from '../../constants';
+import { MOCK_REFLECTIONS, getLabById } from '../../constants';
+import { TabId } from '../../types';
+import { shouldUseLiveMode } from '../../config/env';
+import { LabFrame } from '../LabFrame';
 import { Calendar, PenTool, Hash, Lock } from 'lucide-react';
 
 export const ReflectionsLab: React.FC = () => {
+  const lab = getLabById(TabId.REFLECTIONS);
+  
+  // If live mode is enabled and URL exists, show iframe
+  if (lab && shouldUseLiveMode(lab.url)) {
+    return (
+      <LabFrame 
+        url={lab.url!} 
+        title={lab.name}
+        description={lab.description}
+      />
+    );
+  }
+
+  // Otherwise show demo UI
   return (
     <div className="h-full overflow-y-auto bg-[#Fdfbf7] p-8"> {/* Paper color */}
         <div className="max-w-4xl mx-auto flex gap-8">

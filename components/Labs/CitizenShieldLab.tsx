@@ -1,8 +1,25 @@
 import React from 'react';
-import { MOCK_ALERTS } from '../../constants';
+import { MOCK_ALERTS, getLabById } from '../../constants';
+import { TabId } from '../../types';
+import { shouldUseLiveMode } from '../../config/env';
+import { LabFrame } from '../LabFrame';
 import { Shield, CheckCircle, Wifi, Lock, Eye, AlertOctagon } from 'lucide-react';
 
 export const CitizenShieldLab: React.FC = () => {
+  const lab = getLabById(TabId.SHIELD);
+  
+  // If live mode is enabled and URL exists, show iframe
+  if (lab && shouldUseLiveMode(lab.url)) {
+    return (
+      <LabFrame 
+        url={lab.url!} 
+        title={lab.name}
+        description={lab.description}
+      />
+    );
+  }
+
+  // Otherwise show demo UI
   return (
     <div className="h-full overflow-y-auto bg-slate-50 p-8 text-slate-900">
         <div className="max-w-5xl mx-auto">
