@@ -27,6 +27,10 @@
             50% { opacity: 0.7; }
         }
         .animate-pulse-subtle { animation: pulse-subtle 2s ease-in-out infinite; }
+        
+        /* Hide scrollbar for tab navigation while keeping scroll functionality */
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
     </style>
 </head>
   <body class="bg-stone-100 text-stone-900 antialiased overflow-hidden">
