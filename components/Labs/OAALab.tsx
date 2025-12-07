@@ -1,11 +1,28 @@
-import React from 'react';
-import { MOCK_THREADS, getLabById } from '../../constants';
+import React, { useState } from 'react';
+import { getLabById } from '../../constants';
 import { TabId } from '../../types';
 import { shouldUseLiveMode } from '../../config/env';
 import { LabFrame } from '../LabFrame';
-import { Map, Compass, Play, Plus, Share2, Atom, Calculator, Dna, Code, FlaskConical, Cpu, Globe, Rocket, ArrowRight } from 'lucide-react';
+import { Map, Compass, Plus, Atom, Calculator, Dna, Code, FlaskConical, Cpu, Globe, Rocket, ArrowRight, ArrowLeft, Send, X } from 'lucide-react';
 
-const SUBJECTS = [
+// Subject type definition
+interface Subject {
+  id: string;
+  title: string;
+  icon: React.FC<{ className?: string }>;
+  color: string;
+  bg: string;
+  border: string;
+  topics: string[];
+}
+
+// Message type for chat
+interface Message {
+  role: 'user' | 'assistant';
+  content: string;
+}
+
+const SUBJECTS: Subject[] = [
     { id: 'math', title: 'Mathematics', icon: Calculator, color: 'text-blue-600', bg: 'bg-blue-50', border: 'border-blue-100', topics: ['Calculus', 'Linear Algebra', 'Statistics & Probability', 'Topology'] },
     { id: 'physics', title: 'Physics', icon: Atom, color: 'text-violet-600', bg: 'bg-violet-50', border: 'border-violet-100', topics: ['Classical Mechanics', 'Quantum Mechanics', 'Thermodynamics', 'Relativity'] },
     { id: 'cs', title: 'Computer Science', icon: Code, color: 'text-emerald-600', bg: 'bg-emerald-50', border: 'border-emerald-100', topics: ['Algorithms & Data Structures', 'Systems Architecture', 'Artificial Intelligence', 'Cybersecurity'] },
@@ -19,6 +36,12 @@ const SUBJECTS = [
 export const OAALab: React.FC = () => {
   const lab = getLabById(TabId.OAA);
   
+  // State for subject selection and chat
+  const [selectedSubject, setSelectedSubject] = useState<Subject | null>(null);
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [input, setInput] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  
   // If live mode is enabled and URL exists, show iframe
   if (lab && shouldUseLiveMode(lab.url)) {
     return (
@@ -30,7 +53,219 @@ export const OAALab: React.FC = () => {
     );
   }
 
-  // Otherwise show demo UI
+  // Handle subject selection
+  const handleSubjectSelect = (subject: Subject) => {
+    setSelectedSubject(subject);
+    setMessages([
+      {
+        role: 'assistant',
+        content: `Welcome to ${subject.title}! 🎓\n\nI'm your AI tutor for ${subject.title}. I'm here to help you learn through:\n• Clear explanations\n• Step-by-step problem solving\n• Answering your questions\n• Exploring concepts deeply\n\nTopics I can help with: ${subject.topics.join(', ')}.\n\nWhat would you like to learn about today?`,
+      },
+    ]);
+    setInput('');
+  };
+
+  // Handle sending a message
+  const handleSendMessage = async () => {
+    if (!input.trim() || !selectedSubject) return;
+
+    const userMessage: Message = {
+      role: 'user',
+      content: input.trim(),
+    };
+
+    setMessages((prev) => [...prev, userMessage]);
+    setInput('');
+    setIsLoading(true);
+
+    try {
+      // TODO: Replace with real API call to OAA backend
+      // For now, simulate tutor response
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+
+      const tutorResponse: Message = {
+        role: 'assistant',
+        content: `Great question about ${selectedSubject.title}!\n\nYour question: "${userMessage.content}"\n\nThis is a placeholder response. Once you connect the OAA API endpoint, real AI tutoring will happen here.\n\nThe tutor will:\n1. Understand your current level\n2. Provide clear, step-by-step explanations\n3. Ask clarifying questions to ensure understanding\n4. Guide you through problem-solving\n5. Adapt to your learning pace\n\nTo wire the real API, update the handleSendMessage function to call your OAA backend.`,
+      };
+
+      setMessages((prev) => [...prev, tutorResponse]);
+    } catch {
+      const errorMessage: Message = {
+        role: 'assistant',
+        content: '⚠️ Unable to reach the tutor service. Please try again.',
+      };
+      setMessages((prev) => [...prev, errorMessage]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Handle key press (Enter to send)
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleSendMessage();
+    }
+  };
+
+  // Handle going back to subject selection
+  const handleBackToSubjects = () => {
+    setSelectedSubject(null);
+    setMessages([]);
+    setInput('');
+  };
+
+  // If a subject is selected, show the tutor interface
+  if (selectedSubject) {
+    const Icon = selectedSubject.icon;
+    
+    return (
+      <div className="h-full flex bg-stone-50">
+        {/* Left Sidebar - Subject Info & Navigation */}
+        <div className="w-72 bg-white border-r border-stone-200 flex flex-col">
+          {/* Back Button */}
+          <div className="p-4 border-b border-stone-100">
+            <button
+              onClick={handleBackToSubjects}
+              className="flex items-center space-x-2 text-sm text-stone-600 hover:text-stone-900 transition-colors"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              <span>All Subjects</span>
+            </button>
+          </div>
+          
+          {/* Current Subject */}
+          <div className="p-6 border-b border-stone-100">
+            <div className={`w-14 h-14 ${selectedSubject.bg} ${selectedSubject.color} rounded-xl flex items-center justify-center mb-4`}>
+              <Icon className="w-7 h-7" />
+            </div>
+            <h2 className="text-xl font-bold text-stone-900">{selectedSubject.title}</h2>
+            <p className="text-sm text-stone-500 mt-1">AI Tutor Session</p>
+          </div>
+          
+          {/* Topics */}
+          <div className="flex-1 overflow-y-auto p-4">
+            <h3 className="text-xs font-semibold text-stone-400 uppercase tracking-wider mb-3">Topics</h3>
+            <div className="space-y-2">
+              {selectedSubject.topics.map((topic) => (
+                <button
+                  key={topic}
+                  onClick={() => setInput(`Tell me about ${topic}`)}
+                  className="w-full text-left px-3 py-2 text-sm text-stone-600 hover:bg-stone-50 hover:text-stone-900 rounded-lg transition-colors"
+                >
+                  {topic}
+                </button>
+              ))}
+            </div>
+          </div>
+          
+          {/* Session Info */}
+          <div className="p-4 border-t border-stone-100">
+            <div className="flex items-center space-x-2">
+              <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
+              <span className="text-xs text-stone-500">AI Tutor Ready</span>
+            </div>
+          </div>
+        </div>
+        
+        {/* Right Panel - Chat Interface */}
+        <div className="flex-1 flex flex-col">
+          {/* Chat Header */}
+          <div className="bg-white border-b border-stone-200 px-6 py-4 flex items-center justify-between">
+            <div className="flex items-center space-x-3">
+              <div className={`w-10 h-10 ${selectedSubject.bg} ${selectedSubject.color} rounded-lg flex items-center justify-center`}>
+                <Icon className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 className="font-semibold text-stone-900">{selectedSubject.title} Tutor</h3>
+                <p className="text-xs text-stone-500">Ask anything • Learn at your pace</p>
+              </div>
+            </div>
+            <button
+              onClick={handleBackToSubjects}
+              className="p-2 text-stone-400 hover:text-stone-600 hover:bg-stone-100 rounded-lg transition-colors"
+              title="End Session"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
+          
+          {/* Messages Area */}
+          <div className="flex-1 overflow-y-auto p-6 space-y-4">
+            {messages.map((message, idx) => (
+              <div
+                key={idx}
+                className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
+              >
+                <div
+                  className={`max-w-2xl rounded-2xl px-4 py-3 ${
+                    message.role === 'user'
+                      ? `${selectedSubject.bg} ${selectedSubject.color.replace('text-', 'bg-').replace('-600', '-600')} text-white`
+                      : 'bg-white border border-stone-200 text-stone-800'
+                  }`}
+                  style={message.role === 'user' ? { backgroundColor: getSubjectBgColor(selectedSubject.id) } : {}}
+                >
+                  <div className="text-sm whitespace-pre-wrap leading-relaxed">
+                    {message.content}
+                  </div>
+                </div>
+              </div>
+            ))}
+            
+            {/* Loading indicator */}
+            {isLoading && (
+              <div className="flex justify-start">
+                <div className="bg-white border border-stone-200 rounded-2xl px-4 py-3">
+                  <div className="flex items-center space-x-2">
+                    <div className="flex space-x-1">
+                      <div className="w-2 h-2 bg-stone-400 rounded-full animate-bounce" />
+                      <div className="w-2 h-2 bg-stone-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }} />
+                      <div className="w-2 h-2 bg-stone-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }} />
+                    </div>
+                    <span className="text-sm text-stone-500">Tutor is thinking...</span>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+          
+          {/* Input Area */}
+          <div className="bg-white border-t border-stone-200 p-4">
+            <div className="max-w-4xl mx-auto">
+              <div className="flex space-x-3">
+                <input
+                  type="text"
+                  value={input}
+                  onChange={(e) => setInput(e.target.value)}
+                  onKeyDown={handleKeyPress}
+                  placeholder={`Ask about ${selectedSubject.title}...`}
+                  disabled={isLoading}
+                  className="flex-1 px-4 py-3 border border-stone-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-stone-400 focus:border-transparent disabled:bg-stone-50 disabled:text-stone-400 text-sm"
+                />
+                <button
+                  onClick={handleSendMessage}
+                  disabled={!input.trim() || isLoading}
+                  className={`px-5 py-3 rounded-xl font-medium transition-colors flex items-center space-x-2 ${
+                    input.trim() && !isLoading
+                      ? 'bg-stone-900 text-white hover:bg-stone-800'
+                      : 'bg-stone-200 text-stone-400 cursor-not-allowed'
+                  }`}
+                >
+                  <Send className="w-4 h-4" />
+                  <span>Send</span>
+                </button>
+              </div>
+              <p className="text-xs text-stone-400 mt-2 text-center">
+                Press Enter to send • Learning is non-linear; follow curiosity
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Subject selection view (default)
   return (
     <div className="h-full overflow-y-auto p-8 bg-stone-50">
       <div className="max-w-7xl mx-auto space-y-10">
@@ -42,7 +277,7 @@ export const OAALab: React.FC = () => {
               OAA Learning Hub
             </h1>
             <p className="text-stone-500 text-lg font-light max-w-2xl">
-              Select a domain to begin your inquiry. Learning here is non-linear; follow curiosity, not a syllabus.
+              Click a subject to start your learning session with an AI tutor. Learning here is non-linear; follow curiosity, not a syllabus.
             </p>
           </div>
            {/* Global Actions */}
@@ -58,30 +293,6 @@ export const OAALab: React.FC = () => {
            </div>
         </div>
 
-        {/* Active Context Banner */}
-        <div className="bg-white rounded-2xl p-6 border border-stone-200 shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-6 group hover:border-indigo-200 transition-colors cursor-pointer">
-             <div className="flex-1">
-                 <div className="flex items-center space-x-2 text-xs font-bold tracking-wider uppercase text-indigo-600 mb-2">
-                    <span className="w-2 h-2 rounded-full bg-indigo-600 animate-pulse"></span>
-                    <span>Resume Learning</span>
-                 </div>
-                 <h3 className="text-xl font-serif text-stone-900 font-medium group-hover:text-indigo-700 transition-colors">Thermodynamics & Information Theory</h3>
-                 <div className="flex items-center space-x-4 text-sm text-stone-500 mt-1">
-                     <span>Physics Module 4.2</span>
-                     <span className="text-stone-300">•</span>
-                     <span>Last active 2 hours ago</span>
-                 </div>
-                 {/* Progress Bar */}
-                 <div className="h-1.5 w-full max-w-md bg-stone-100 rounded-full overflow-hidden mt-4">
-                    <div className="h-full bg-indigo-500 w-[45%]" />
-                 </div>
-             </div>
-             <button className="flex items-center space-x-2 bg-indigo-50 text-indigo-700 px-6 py-3 rounded-xl font-medium hover:bg-indigo-100 transition-colors whitespace-nowrap">
-                <Play className="w-4 h-4 fill-current" />
-                <span>Continue</span>
-             </button>
-        </div>
-
         {/* STEM Domains Grid */}
         <div>
             <div className="flex items-center justify-between mb-6">
@@ -89,18 +300,20 @@ export const OAALab: React.FC = () => {
                     <Compass className="w-5 h-5 mr-2 text-stone-400" />
                     STEM Domains
                 </h2>
-                <button className="text-sm text-stone-500 hover:text-stone-800 flex items-center">
-                    View All Subjects <ArrowRight className="w-4 h-4 ml-1" />
-                </button>
+                <p className="text-sm text-stone-500">Click a subject to start learning</p>
             </div>
             
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
                 {SUBJECTS.map((subject) => {
                     const Icon = subject.icon;
                     return (
-                        <div key={subject.id} className={`group bg-white p-6 rounded-2xl border ${subject.border} shadow-sm hover:shadow-md transition-all cursor-pointer hover:border-opacity-100 border-opacity-60 flex flex-col h-full`}>
+                        <button
+                            key={subject.id}
+                            onClick={() => handleSubjectSelect(subject)}
+                            className={`group bg-white p-6 rounded-2xl border ${subject.border} shadow-sm hover:shadow-lg transition-all cursor-pointer hover:border-opacity-100 border-opacity-60 flex flex-col h-full text-left hover:scale-[1.02] active:scale-[0.98]`}
+                        >
                             <div className="flex justify-between items-start mb-4">
-                                <div className={`w-12 h-12 ${subject.bg} ${subject.color} rounded-xl flex items-center justify-center group-hover:scale-105 transition-transform`}>
+                                <div className={`w-12 h-12 ${subject.bg} ${subject.color} rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform`}>
                                     <Icon className="w-6 h-6" />
                                 </div>
                                 <div className="opacity-0 group-hover:opacity-100 transition-opacity">
@@ -108,17 +321,24 @@ export const OAALab: React.FC = () => {
                                 </div>
                             </div>
                             
-                            <h3 className="font-bold text-stone-800 text-lg mb-3">{subject.title}</h3>
+                            <h3 className="font-bold text-stone-800 text-lg mb-3 group-hover:text-stone-900">{subject.title}</h3>
                             
                             <div className="space-y-2 mt-auto">
                                 {subject.topics.map(topic => (
-                                    <div key={topic} className="text-sm text-stone-500 hover:text-stone-900 flex items-center transition-colors">
-                                        <span className="w-1.5 h-1.5 bg-stone-200 rounded-full mr-2 group-hover:bg-stone-300"></span>
+                                    <div key={topic} className="text-sm text-stone-500 group-hover:text-stone-600 flex items-center transition-colors">
+                                        <span className="w-1.5 h-1.5 bg-stone-200 rounded-full mr-2 group-hover:bg-stone-400"></span>
                                         {topic}
                                     </div>
                                 ))}
                             </div>
-                        </div>
+                            
+                            {/* Hover hint */}
+                            <div className="mt-4 pt-4 border-t border-stone-100 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <span className={`text-xs font-medium ${subject.color}`}>
+                                    Click to start learning →
+                                </span>
+                            </div>
+                        </button>
                     );
                 })}
             </div>
@@ -133,3 +353,18 @@ export const OAALab: React.FC = () => {
     </div>
   );
 };
+
+// Helper function to get subject background color for user messages
+function getSubjectBgColor(subjectId: string): string {
+  const colors: Record<string, string> = {
+    math: '#2563eb',      // blue-600
+    physics: '#7c3aed',   // violet-600
+    cs: '#059669',        // emerald-600
+    bio: '#e11d48',       // rose-600
+    chem: '#d97706',      // amber-600
+    eng: '#475569',       // slate-600
+    astro: '#4f46e5',     // indigo-600
+    earth: '#0d9488',     // teal-600
+  };
+  return colors[subjectId] || '#1f2937';
+}
