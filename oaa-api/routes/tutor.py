@@ -117,7 +117,7 @@ DEFAULT_PROMPT = """You are a helpful, patient tutor. Your role is to:
 Keep responses focused and conversational."""
 
 
-@tutor_bp.route('/tutor', methods=['POST'])
+@tutor_bp.route('/tutor', methods=['POST', 'OPTIONS'])
 def tutor_session():
     """
     Handle tutor conversation requests.
@@ -141,6 +141,10 @@ def tutor_session():
             "subject": "math"
         }
     """
+    # Handle preflight OPTIONS request
+    if request.method == 'OPTIONS':
+        return '', 204
+    
     try:
         data = request.json or {}
         
