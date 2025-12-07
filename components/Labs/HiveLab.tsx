@@ -1,4 +1,8 @@
 import React, { useState } from 'react';
+import { getLabById } from '../../constants';
+import { TabId } from '../../types';
+import { shouldUseLiveMode } from '../../config/env';
+import { LabFrame } from '../LabFrame';
 import { Users, Coins, AlertTriangle, Map, ChevronRight } from 'lucide-react';
 
 // Simple Pixel Art Components using CSS
@@ -56,7 +60,20 @@ const PixelCharacter = ({ x, y, color = 'bg-red-500' }: { x: number, y: number, 
 
 export const HiveLab: React.FC = () => {
     const [selectedOption, setSelectedOption] = useState<number | null>(null);
+    const lab = getLabById(TabId.HIVE);
+    
+    // If live mode is enabled and URL exists, show iframe
+    if (lab && shouldUseLiveMode(lab.url)) {
+      return (
+        <LabFrame 
+          url={lab.url!} 
+          title={lab.name}
+          description={lab.description}
+        />
+      );
+    }
 
+    // Otherwise show demo UI (HIVE game simulation)
     return (
         <div className="h-full bg-[#1a1b26] text-[#c0caf5] font-retro relative overflow-hidden flex flex-col select-none">
             
@@ -171,7 +188,7 @@ export const HiveLab: React.FC = () => {
                             onClick={() => setSelectedOption(idx)}
                             className={`flex-1 flex justify-between items-center px-3 text-[10px] bg-[#1a1b26] border-2 ${selectedOption === idx ? 'border-emerald-500 bg-emerald-900/20' : 'border-[#414868]'} ${opt.color} transition-colors group text-left`}
                          >
-                            <span className="group-hover:translate-x-1 transition-transform">> {opt.label}</span>
+                            <span className="group-hover:translate-x-1 transition-transform">&gt; {opt.label}</span>
                             <span className="text-[8px] opacity-50">{opt.cost}</span>
                          </button>
                      ))}

@@ -6,6 +6,19 @@ export enum TabId {
   WALLET = 'WALLET'
 }
 
+/**
+ * Lab definition for the Mobius Browser Shell
+ * Each lab can either display a live iframe or a demo UI
+ */
+export interface LabDefinition {
+  id: TabId;
+  name: string;
+  description: string;
+  url?: string;           // Live URL for iframe embedding
+  comingSoon?: boolean;   // For labs not yet deployed
+  useDemo?: boolean;      // Force demo mode even if URL exists
+}
+
 export interface Sentinel {
   id: string;
   name: string;
