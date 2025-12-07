@@ -82,32 +82,33 @@ export const HiveLab: React.FC = () => {
             <div className="absolute inset-0 pointer-events-none z-50 bg-gradient-to-b from-white/5 to-transparent h-32 opacity-20" />
 
             {/* 2. Top HUD */}
-            <div className="bg-[#2d2a4a] border-b-4 border-[#1a1b26] p-4 flex justify-between items-center z-40 shadow-xl">
-                <div className="flex items-center space-x-4">
-                    <div className="w-10 h-10 bg-emerald-500 border-2 border-white/20 shadow-[inset_0_0_10px_rgba(0,0,0,0.2)] flex items-center justify-center">
-                         <Map className="w-6 h-6 text-white" />
+            <div className="bg-[#2d2a4a] border-b-4 border-[#1a1b26] p-2 sm:p-4 flex justify-between items-center z-40 shadow-xl">
+                <div className="flex items-center space-x-2 sm:space-x-4">
+                    <div className="w-8 h-8 sm:w-10 sm:h-10 bg-emerald-500 border-2 border-white/20 shadow-[inset_0_0_10px_rgba(0,0,0,0.2)] flex items-center justify-center">
+                         <Map className="w-4 h-4 sm:w-6 sm:h-6 text-white" />
                     </div>
                     <div>
-                        <h2 className="text-xs text-emerald-400 tracking-wider shadow-black drop-shadow-md">SECTOR 7</h2>
-                        <p className="text-[10px] text-slate-400">CYCLE 157 // GOVERNANCE PHASE</p>
+                        <h2 className="text-[10px] sm:text-xs text-emerald-400 tracking-wider shadow-black drop-shadow-md">SECTOR 7</h2>
+                        <p className="text-[8px] sm:text-[10px] text-slate-400">CYCLE 157 // GOVERNANCE</p>
                     </div>
                 </div>
                 
                 {/* Resource Stats */}
-                <div className="flex space-x-6 bg-[#1a1b26] p-2 px-4 rounded border-2 border-[#414868]">
-                    <div className="flex items-center space-x-2 text-yellow-400">
+                <div className="flex space-x-2 sm:space-x-6 bg-[#1a1b26] p-1.5 sm:p-2 px-2 sm:px-4 rounded border-2 border-[#414868]">
+                    <div className="flex items-center space-x-1 sm:space-x-2 text-yellow-400">
                         <Coins className="w-3 h-3" />
-                        <span className="text-[10px]">24,500</span>
+                        <span className="text-[8px] sm:text-[10px]">24.5K</span>
                     </div>
-                    <div className="w-px h-4 bg-[#414868]" />
-                    <div className="flex items-center space-x-2 text-blue-400">
+                    <div className="w-px h-4 bg-[#414868] hidden sm:block" />
+                    <div className="flex items-center space-x-1 sm:space-x-2 text-blue-400">
                         <Users className="w-3 h-3" />
-                        <span className="text-[10px]">8,921</span>
+                        <span className="text-[8px] sm:text-[10px]">8.9K</span>
                     </div>
-                    <div className="w-px h-4 bg-[#414868]" />
-                    <div className="flex items-center space-x-2 text-red-400 animate-pulse">
+                    <div className="w-px h-4 bg-[#414868] hidden sm:block" />
+                    <div className="flex items-center space-x-1 sm:space-x-2 text-red-400 animate-pulse">
                         <AlertTriangle className="w-3 h-3" />
-                        <span className="text-[10px]">WATER CRITICAL</span>
+                        <span className="text-[8px] sm:text-[10px] hidden sm:inline">WATER CRITICAL</span>
+                        <span className="text-[8px] sm:hidden">!</span>
                     </div>
                 </div>
             </div>
@@ -147,49 +148,52 @@ export const HiveLab: React.FC = () => {
             </div>
 
             {/* 4. Bottom Dialog & UI */}
-            <div className="h-48 bg-[#2d2a4a] border-t-4 border-[#1a1b26] p-4 flex gap-4 z-40 relative shadow-[0_-10px_20px_rgba(0,0,0,0.5)]">
-                 {/* Portrait */}
-                 <div className="w-32 h-32 bg-[#1a1b26] border-4 border-[#414868] flex-shrink-0 relative overflow-hidden">
+            <div className="min-h-[140px] sm:min-h-[192px] bg-[#2d2a4a] border-t-4 border-[#1a1b26] p-2 sm:p-4 flex flex-col sm:flex-row gap-2 sm:gap-4 z-40 relative shadow-[0_-10px_20px_rgba(0,0,0,0.5)]">
+                 {/* Portrait - Hidden on small screens */}
+                 <div className="hidden sm:block w-24 lg:w-32 h-24 lg:h-32 bg-[#1a1b26] border-4 border-[#414868] flex-shrink-0 relative overflow-hidden">
                      {/* Placeholder Pixel Art Portrait */}
                      <div className="absolute inset-0 flex items-end justify-center bg-[#2c2c2c]">
-                        <div className="w-20 h-24 bg-[#ffccaa] rounded-t-lg relative">
-                            <div className="w-full h-8 bg-[#5D4037] absolute top-0" /> {/* Hair */}
-                            <div className="flex justify-between px-4 mt-10">
-                                <div className="w-2 h-2 bg-black" />
-                                <div className="w-2 h-2 bg-black" />
+                        <div className="w-16 lg:w-20 h-20 lg:h-24 bg-[#ffccaa] rounded-t-lg relative">
+                            <div className="w-full h-6 lg:h-8 bg-[#5D4037] absolute top-0" /> {/* Hair */}
+                            <div className="flex justify-between px-3 lg:px-4 mt-8 lg:mt-10">
+                                <div className="w-1.5 lg:w-2 h-1.5 lg:h-2 bg-black" />
+                                <div className="w-1.5 lg:w-2 h-1.5 lg:h-2 bg-black" />
                             </div>
-                            <div className="w-12 h-1 bg-[#d4a3a3] mx-auto mt-4" /> {/* Mouth */}
-                            <div className="w-full h-8 bg-blue-900 absolute bottom-0" /> {/* Clothes */}
+                            <div className="w-8 lg:w-12 h-1 bg-[#d4a3a3] mx-auto mt-3 lg:mt-4" /> {/* Mouth */}
+                            <div className="w-full h-6 lg:h-8 bg-blue-900 absolute bottom-0" /> {/* Clothes */}
                         </div>
                      </div>
                  </div>
 
                  {/* Text Box */}
-                 <div className="flex-1 bg-[#1a1b26] border-4 border-[#414868] p-4 relative font-mono text-xs leading-relaxed text-[#a9b1d6]">
-                     <h3 className="text-emerald-400 font-bold mb-2 tracking-widest text-[10px]">ADVISOR KAI</h3>
-                     <p className="typewriter-text">
-                        The aquifer levels are critical. The Industrial District requests a subsidy to retrofit filters, but the Agricultural Combine needs immediate water credits.
+                 <div className="flex-1 bg-[#1a1b26] border-2 sm:border-4 border-[#414868] p-2 sm:p-4 relative font-mono text-[10px] sm:text-xs leading-relaxed text-[#a9b1d6] min-h-[60px] sm:min-h-0">
+                     <h3 className="text-emerald-400 font-bold mb-1 sm:mb-2 tracking-widest text-[8px] sm:text-[10px]">ADVISOR KAI</h3>
+                     <p className="typewriter-text line-clamp-3 sm:line-clamp-none">
+                        The aquifer levels are critical. The Industrial District requests a subsidy, but the Agricultural Combine needs water credits.
                      </p>
                      
-                     <div className="absolute bottom-2 right-2 animate-bounce">
-                        <ChevronRight className="w-4 h-4 text-emerald-500" />
+                     <div className="absolute bottom-1 sm:bottom-2 right-1 sm:right-2 animate-bounce">
+                        <ChevronRight className="w-3 h-3 sm:w-4 sm:h-4 text-emerald-500" />
                      </div>
                  </div>
 
                  {/* Options */}
-                 <div className="w-64 flex flex-col space-y-2">
+                 <div className="flex sm:flex-col gap-1 sm:gap-2 sm:w-48 lg:w-64">
                      {[
-                         { label: 'SUBSIDIZE INDUSTRY', cost: '-500 MIC', color: 'hover:bg-blue-900' },
-                         { label: 'SUPPORT AGRICULTURE', cost: '-500 MIC', color: 'hover:bg-emerald-900' },
-                         { label: 'RATION WATER', cost: '-INTEGRITY', color: 'hover:bg-red-900' },
+                         { label: 'INDUSTRY', fullLabel: 'SUBSIDIZE INDUSTRY', cost: '-500', color: 'hover:bg-blue-900' },
+                         { label: 'AGRI', fullLabel: 'SUPPORT AGRICULTURE', cost: '-500', color: 'hover:bg-emerald-900' },
+                         { label: 'RATION', fullLabel: 'RATION WATER', cost: '-INT', color: 'hover:bg-red-900' },
                      ].map((opt, idx) => (
                          <button 
                             key={idx}
                             onClick={() => setSelectedOption(idx)}
-                            className={`flex-1 flex justify-between items-center px-3 text-[10px] bg-[#1a1b26] border-2 ${selectedOption === idx ? 'border-emerald-500 bg-emerald-900/20' : 'border-[#414868]'} ${opt.color} transition-colors group text-left`}
+                            className={`flex-1 flex justify-between items-center px-2 sm:px-3 py-1.5 sm:py-0 text-[8px] sm:text-[10px] bg-[#1a1b26] border-2 ${selectedOption === idx ? 'border-emerald-500 bg-emerald-900/20' : 'border-[#414868]'} ${opt.color} transition-colors group text-left`}
                          >
-                            <span className="group-hover:translate-x-1 transition-transform">&gt; {opt.label}</span>
-                            <span className="text-[8px] opacity-50">{opt.cost}</span>
+                            <span className="group-hover:translate-x-1 transition-transform truncate">
+                              <span className="sm:hidden">&gt; {opt.label}</span>
+                              <span className="hidden sm:inline">&gt; {opt.fullLabel}</span>
+                            </span>
+                            <span className="text-[6px] sm:text-[8px] opacity-50 ml-1">{opt.cost}</span>
                          </button>
                      ))}
                  </div>
