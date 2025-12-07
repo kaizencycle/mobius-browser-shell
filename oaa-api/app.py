@@ -7,7 +7,7 @@ Start with: python app.py
 Or with gunicorn: gunicorn app:app
 """
 import os
-from flask import Flask, jsonify
+from flask import Flask, jsonify, request
 from flask_cors import CORS
 
 from routes.tutor import tutor_bp
@@ -15,14 +15,42 @@ from routes.tutor import tutor_bp
 # Create Flask app
 app = Flask(__name__)
 
-# Enable CORS for all routes (frontend can call from any origin)
+# Enable CORS for all routes with explicit configuration
+# This handles preflight (OPTIONS) requests properly
 CORS(app, resources={
-    r"/api/*": {
+    r"/*": {
         "origins": "*",
-        "methods": ["GET", "POST", "OPTIONS"],
-        "allow_headers": ["Content-Type", "Authorization"]
+        "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+        "allow_headers": ["Content-Type", "Authorization", "Accept", "Origin", "X-Requested-With"],
+        "expose_headers": ["Content-Type", "Authorization"],
+        "supports_credentials": False,
+        "max_age": 86400  # Cache preflight for 24 hours
     }
 })
+
+
+@app.after_request
+def add_cors_headers(response):
+    """
+    Ensure CORS headers are always present on all responses.
+    This is a fallback to guarantee preflight requests work.
+    """
+    response.headers['Access-Control-Allow-Origin'] = '*'
+    response.headers['Access-Control-Allow-Methods'] = 'GET, POST, PUT, DELETE, OPTIONS'
+    response.headers['Access-Control-Allow-Headers'] = 'Content-Type, Authorization, Accept, Origin, X-Requested-With'
+    response.headers['Access-Control-Max-Age'] = '86400'
+    return response
+
+
+@app.before_request
+def handle_preflight():
+    """
+    Handle preflight OPTIONS requests explicitly.
+    This ensures CORS preflight requests always succeed.
+    """
+    if request.method == 'OPTIONS':
+        response = app.make_default_options_response()
+        return response
 
 # Register blueprints
 app.register_blueprint(tutor_bp, url_prefix='/api')
