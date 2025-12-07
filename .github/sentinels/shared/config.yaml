@@ -1,0 +1,187 @@
+# Mobius Sentinel System Configuration
+# This file defines the settings for all sentinel workflows
+
+version: "1.0"
+system: "mobius-browser-shell"
+
+# Sentinel Definitions
+sentinels:
+  atlas:
+    name: "ATLAS"
+    role: "Architectural Sentinel"
+    weight: 0.30
+    responsibilities:
+      - code_review
+      - security_scan
+      - architecture_validation
+    triggers:
+      - pull_request
+      - push
+
+  aurea:
+    name: "AUREA"
+    role: "Integrity Sentinel"
+    weight: 0.30
+    responsibilities:
+      - integrity_check
+      - tokenomics_verify
+      - mic_health
+      - mii_validation
+    triggers:
+      - pull_request
+      - push
+      - schedule
+
+  eve:
+    name: "EVE"
+    role: "Deployment Sentinel"
+    weight: 0.20
+    responsibilities:
+      - deployment_test
+      - integration_verify
+      - endpoint_health
+    triggers:
+      - deployment
+      - push_to_main
+
+  jade:
+    name: "JADE"
+    role: "Experience Sentinel"
+    weight: 0.20
+    responsibilities:
+      - ux_validation
+      - accessibility_check
+      - design_consistency
+    triggers:
+      - pull_request
+      - push
+
+# Consensus Configuration
+consensus:
+  approval_threshold: 0.80
+  blocking_threshold: 0.50
+  require_all: false  # If true, all sentinels must approve
+  
+  verdict_scores:
+    approved: 1.0
+    needs_revision: 0.5
+    blocked: 0.0
+
+# MII (Mobius Integrity Index) Configuration
+mii:
+  thresholds:
+    critical: 0.50
+    warning: 0.70
+    healthy: 0.85
+    excellent: 0.95
+  
+  components:
+    git_integrity:
+      weight: 0.15
+      description: "Git repository health"
+    test_coverage:
+      weight: 0.15
+      description: "Test coverage percentage"
+    security_score:
+      weight: 0.20
+      description: "Security scan results"
+    constitutional_compliance:
+      weight: 0.20
+      description: "Constitution adherence"
+    deployment_health:
+      weight: 0.15
+      description: "Deployment status"
+    sentinel_consensus:
+      weight: 0.15
+      description: "Multi-sentinel agreement"
+
+# Critical Files (protected by anti-nuke)
+critical_files:
+  - package.json
+  - README.md
+  - App.tsx
+  - index.tsx
+  - index.html
+  - .mobius-constitution
+  - .github/workflows/anti-nuke-sentinel.yml
+  - .github/workflows/anti-nuke-mirror.yml
+
+# Protected Patterns
+protected_patterns:
+  - ".github/workflows/anti-nuke-*"
+  - ".github/sentinels/*"
+  - ".mobius-*"
+
+# Required Structure
+required_structure:
+  components:
+    - Omnibar.tsx
+    - TabNavigation.tsx
+    - SentinelStatus.tsx
+    - LabFrame.tsx
+  components/Labs:
+    - OAALab.tsx
+    - ReflectionsLab.tsx
+    - CitizenShieldLab.tsx
+    - WalletLab.tsx
+    - HiveLab.tsx
+  config:
+    - env.ts
+
+# Design System Guidelines
+design_system:
+  colors:
+    primary:
+      - "#0ea5e9"  # Sky blue
+      - "sky"
+      - "blue"
+    integrity:
+      - "#22c55e"  # Green
+      - "green"
+      - "emerald"
+    warning:
+      - "#f59e0b"  # Amber
+      - "amber"
+      - "yellow"
+    danger:
+      - "#ef4444"  # Red
+      - "red"
+    background:
+      - "#0f172a"  # Slate dark
+      - "slate"
+      - "gray"
+
+# Anti-Nuke Configuration
+anti_nuke:
+  mass_deletion_threshold: 0.10  # 10% of files
+  backup_frequency_hours: 4
+  
+  mirrors:
+    - name: gitlab
+      url: "gitlab.com/mobius-systems/mobius-browser-shell"
+    - name: codeberg
+      url: "codeberg.org/mobius-systems/mobius-browser-shell"
+  
+  archives:
+    - name: ipfs
+      provider: pinata
+    - name: r2
+      provider: cloudflare
+
+# Notification Channels
+notifications:
+  discord:
+    enabled: true
+    webhook_secret: "DISCORD_WEBHOOK"
+  email:
+    enabled: false
+    address: "alerts@mobius.systems"
+
+# Schedule Configuration
+schedules:
+  integrity_monitor:
+    cron: "0 */6 * * *"  # Every 6 hours
+  backup:
+    cron: "0 */4 * * *"  # Every 4 hours
+  nuclear_failsafe:
+    cron: "0 0 1 * *"    # Monthly

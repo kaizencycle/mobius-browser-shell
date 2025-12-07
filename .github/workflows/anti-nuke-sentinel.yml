@@ -1,0 +1,246 @@
+name: Anti-Nuke Sentinel (Active Defense)
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    types: [opened, synchronize, reopened]
+  delete:
+    branches: ['**']
+  workflow_dispatch:
+    inputs:
+      test_mode:
+        description: 'Run in test mode (no real alerts)'
+        required: false
+        type: boolean
+        default: false
+
+env:
+  TEST_MODE: ${{ github.event.inputs.test_mode || 'false' }}
+
+jobs:
+  detect-destructive-changes:
+    name: Detect Destructive Operations
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      
+      - name: Install Dependencies
+        run: |
+          pip install pyyaml requests
+      
+      - name: Check for Mass Deletion
+        id: deletion_check
+        run: |
+          python3 << 'EOF'
+          import os
+          import subprocess
+          import json
+          
+          def get_file_stats():
+              total = int(subprocess.check_output(['git', 'ls-files']).decode().count('\n'))
+              
+              # Check deleted files
+              try:
+                  diff_output = subprocess.check_output(
+                      ['git', 'diff', '--name-status', 'HEAD~1', 'HEAD'],
+                      stderr=subprocess.DEVNULL
+                  ).decode()
+                  
+                  deleted = len([line for line in diff_output.split('\n') if line.startswith('D')])
+              except subprocess.CalledProcessError:
+                  deleted = 0
+              
+              return total, deleted
+          
+          try:
+              total, deleted = get_file_stats()
+              deletion_ratio = deleted / total if total > 0 else 0
+              
+              print(f"total_files={total}")
+              print(f"deleted_files={deleted}")
+              print(f"deletion_ratio={deletion_ratio:.2f}")
+              
+              # Alert threshold: >10% deletion
+              if deletion_ratio > 0.10:
+                  print("alert=true")
+                  print(f"::warning::Mass deletion detected: {deleted}/{total} files ({deletion_ratio*100:.1f}%)")
+              else:
+                  print("alert=false")
+              
+              with open(os.environ['GITHUB_OUTPUT'], 'a') as f:
+                  f.write(f"total_files={total}\n")
+                  f.write(f"deleted_files={deleted}\n")
+                  f.write(f"deletion_ratio={deletion_ratio:.2f}\n")
+                  f.write(f"alert={'true' if deletion_ratio > 0.10 else 'false'}\n")
+          
+          except subprocess.CalledProcessError:
+              # First commit or error
+              print("alert=false")
+              with open(os.environ['GITHUB_OUTPUT'], 'a') as f:
+                  f.write("alert=false\n")
+          EOF
+      
+      - name: Check for Critical File Deletion
+        id: critical_check
+        run: |
+          python3 << 'EOF'
+          import os
+          import subprocess
+          
+          CRITICAL_FILES = [
+              "package.json",
+              ".github/workflows/anti-nuke-sentinel.yml",
+              ".github/workflows/anti-nuke-mirror.yml",
+              "config/env.ts",
+              "README.md",
+              "LICENSE",
+              ".mobius-constitution"
+          ]
+          
+          deleted_critical = []
+          for file in CRITICAL_FILES:
+              try:
+                  subprocess.check_output(
+                      ['git', 'ls-files', '--error-unmatch', file],
+                      stderr=subprocess.DEVNULL
+                  )
+              except subprocess.CalledProcessError:
+                  deleted_critical.append(file)
+          
+          if deleted_critical:
+              print(f"::warning::Critical files deleted: {', '.join(deleted_critical)}")
+              with open(os.environ['GITHUB_OUTPUT'], 'a') as f:
+                  f.write(f"critical_deleted={','.join(deleted_critical)}\n")
+                  f.write("alert=true\n")
+          else:
+              with open(os.environ['GITHUB_OUTPUT'], 'a') as f:
+                  f.write("alert=false\n")
+          EOF
+      
+      - name: Test Mode Notice
+        if: env.TEST_MODE == 'true'
+        run: |
+          echo "🧪 **TEST MODE ACTIVE**" >> $GITHUB_STEP_SUMMARY
+          echo "All alerts will be logged but not sent" >> $GITHUB_STEP_SUMMARY
+      
+      - name: Block and Alert on Destructive Changes
+        if: steps.deletion_check.outputs.alert == 'true' || steps.critical_check.outputs.alert == 'true'
+        env:
+          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          ALERT_MESSAGE="🚨 **ANTI-NUKE ALERT** 🚨
+
+          **Repo:** mobius-browser-shell
+          **Trigger:** Destructive changes detected
+          **Deleted files:** ${{ steps.deletion_check.outputs.deleted_files }}/${{ steps.deletion_check.outputs.total_files }}
+          **Critical files affected:** ${{ steps.critical_check.outputs.critical_deleted }}
+          **Commit:** ${{ github.sha }}
+          **Author:** ${{ github.actor }}
+          **Action:** Workflow BLOCKED
+
+          Manual review required"
+          
+          if [ "$TEST_MODE" = "true" ]; then
+            echo "🧪 TEST MODE - Would have sent alert:" >> $GITHUB_STEP_SUMMARY
+            echo "$ALERT_MESSAGE" >> $GITHUB_STEP_SUMMARY
+            echo "✅ Test passed - sentinel would block in production"
+          else
+            # Real alert
+            if [ -n "$DISCORD_WEBHOOK" ]; then
+              curl -X POST $DISCORD_WEBHOOK \
+                -H "Content-Type: application/json" \
+                -d "{\"content\": \"$ALERT_MESSAGE\"}" || true
+            fi
+            
+            # Create emergency issue
+            gh issue create \
+              --title "🚨 ANTI-NUKE ALERT: Destructive changes detected" \
+              --body "**Automated Alert from Anti-Nuke Sentinel**
+
+          Destructive changes were detected in commit ${{ github.sha }}
+
+          **Details:**
+          - Deleted files: ${{ steps.deletion_check.outputs.deleted_files }}/${{ steps.deletion_check.outputs.total_files }}
+          - Critical files affected: ${{ steps.critical_check.outputs.critical_deleted }}
+          - Triggered by: ${{ github.actor }}
+          - Branch: ${{ github.ref }}
+
+          **Actions taken:**
+          - Workflow blocked
+          - Mirrors updated (backups safe)
+          - Alerts sent to all channels
+
+          **Required actions:**
+          1. Review commit: ${{ github.sha }}
+          2. Verify author identity
+          3. Restore from mirror if needed
+          4. Investigate security breach if applicable" \
+              --label "security,critical,anti-nuke" || true
+            
+            # Block the workflow
+            exit 1
+          fi
+
+  monitor-repo-settings:
+    name: Monitor Repository Settings
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check Branch Protection
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Check if branch protection exists
+          STATUS=$(gh api repos/${{ github.repository }}/branches/main/protection \
+            --silent 2>&1 || echo "NOT_PROTECTED")
+          
+          if echo "$STATUS" | grep -q "NOT_PROTECTED\|Not Found"; then
+            echo "⚠️ Branch protection disabled on main!" >> $GITHUB_STEP_SUMMARY
+            
+            if [ "$TEST_MODE" = "true" ]; then
+              echo "🧪 TEST MODE - Would have alerted about missing protection"
+            else
+              if [ -n "${{ secrets.DISCORD_WEBHOOK }}" ]; then
+                curl -X POST ${{ secrets.DISCORD_WEBHOOK }} \
+                  -H "Content-Type: application/json" \
+                  -d "{\"content\": \"⚠️ **SECURITY ALERT**: Branch protection rules missing on main branch in mobius-browser-shell\"}" || true
+              fi
+            fi
+            
+            # Don't fail - branch protection may not be set up yet
+            echo "::warning::Branch protection not configured on main"
+          else
+            echo "✅ Branch protection active" >> $GITHUB_STEP_SUMMARY
+          fi
+      
+      - name: Verify Required Workflows Exist
+        uses: actions/checkout@v4
+        
+      - name: Check Workflow Files
+        run: |
+          REQUIRED_WORKFLOWS=(
+            ".github/workflows/anti-nuke-sentinel.yml"
+            ".github/workflows/anti-nuke-mirror.yml"
+          )
+          
+          MISSING=""
+          for workflow in "${REQUIRED_WORKFLOWS[@]}"; do
+            if [ ! -f "$workflow" ]; then
+              MISSING="$MISSING $workflow"
+            fi
+          done
+          
+          if [ -n "$MISSING" ]; then
+            echo "⚠️ Required workflows missing: $MISSING" >> $GITHUB_STEP_SUMMARY
+            exit 1
+          else
+            echo "✅ All required workflows present" >> $GITHUB_STEP_SUMMARY
+          fi

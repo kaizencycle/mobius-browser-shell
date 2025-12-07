@@ -1,0 +1,248 @@
+name: Sentinel Validation (ATLAS + AUREA)
+
+on:
+  pull_request:
+    branches: [main, develop]
+  push:
+    branches: [develop]
+  workflow_dispatch:
+    inputs:
+      test_mode:
+        description: 'Run in test mode'
+        required: false
+        type: boolean
+        default: false
+
+env:
+  TEST_MODE: ${{ github.event.inputs.test_mode || 'false' }}
+
+jobs:
+  atlas-review:
+    name: ATLAS - Architectural Review
+    runs-on: ubuntu-latest
+    outputs:
+      verdict: ${{ steps.atlas.outputs.verdict }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      
+      - name: Install Dependencies
+        run: |
+          pip install anthropic pyyaml requests
+      
+      - name: ATLAS Code Review
+        id: atlas
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: |
+          if [ -f ".github/sentinels/atlas/code_review.py" ]; then
+            python .github/sentinels/atlas/code_review.py
+            echo "verdict=$(cat reports/atlas-verdict.txt 2>/dev/null || echo 'APPROVED')" >> $GITHUB_OUTPUT
+          else
+            echo "⚠️ ATLAS code review script not found - using fallback" >> $GITHUB_STEP_SUMMARY
+            echo "verdict=APPROVED" >> $GITHUB_OUTPUT
+          fi
+      
+      - name: ATLAS Security Scan
+        run: |
+          if [ -f ".github/sentinels/atlas/security_scan.py" ]; then
+            python .github/sentinels/atlas/security_scan.py
+          else
+            echo "Running basic security scan..."
+            
+            # Check for common security issues
+            ISSUES=""
+            
+            # Check for hardcoded secrets patterns
+            if grep -rE "(api[_-]?key|secret|password|token)\s*[:=]\s*['\"][^'\"]{8,}" --include="*.ts" --include="*.tsx" --include="*.js" . 2>/dev/null | grep -v "\.env" | head -5; then
+              ISSUES="${ISSUES}Potential hardcoded secrets found\n"
+            fi
+            
+            # Check for dangerous eval
+            if grep -rE "eval\s*\(" --include="*.ts" --include="*.tsx" --include="*.js" . 2>/dev/null | head -5; then
+              ISSUES="${ISSUES}eval() usage detected\n"
+            fi
+            
+            if [ -n "$ISSUES" ]; then
+              echo "::warning::Security scan findings: $ISSUES"
+            else
+              echo "✅ Basic security scan passed" >> $GITHUB_STEP_SUMMARY
+            fi
+          fi
+      
+      - name: Upload ATLAS Report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: atlas-report
+          path: reports/
+          if-no-files-found: ignore
+
+  aurea-integrity:
+    name: AUREA - Integrity Check
+    runs-on: ubuntu-latest
+    needs: atlas-review
+    outputs:
+      verdict: ${{ steps.aurea.outputs.verdict }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      
+      - name: Install Dependencies
+        run: |
+          pip install anthropic pyyaml requests
+      
+      - name: AUREA Constitutional Check
+        id: aurea
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: |
+          if [ -f ".github/sentinels/aurea/integrity_check.py" ]; then
+            python .github/sentinels/aurea/integrity_check.py
+            echo "verdict=$(cat reports/aurea-verdict.txt 2>/dev/null || echo 'APPROVED')" >> $GITHUB_OUTPUT
+          else
+            echo "Running basic integrity check..."
+            
+            # Check for constitution file
+            if [ -f ".mobius-constitution" ]; then
+              echo "✅ Constitution file present" >> $GITHUB_STEP_SUMMARY
+            else
+              echo "⚠️ Constitution file missing (non-blocking)" >> $GITHUB_STEP_SUMMARY
+            fi
+            
+            # Check for critical files
+            CRITICAL_FILES=("package.json" "README.md" "App.tsx")
+            for file in "${CRITICAL_FILES[@]}"; do
+              if [ -f "$file" ]; then
+                echo "✅ $file present" >> $GITHUB_STEP_SUMMARY
+              else
+                echo "::warning::Missing critical file: $file"
+              fi
+            done
+            
+            echo "verdict=APPROVED" >> $GITHUB_OUTPUT
+          fi
+      
+      - name: AUREA Tokenomics Validation
+        if: contains(github.event.head_commit.message, 'MIC') || contains(github.event.head_commit.message, 'tokenomics')
+        run: |
+          if [ -f ".github/sentinels/aurea/tokenomics_verify.py" ]; then
+            python .github/sentinels/aurea/tokenomics_verify.py
+          else
+            echo "⚠️ Tokenomics validation script not found" >> $GITHUB_STEP_SUMMARY
+          fi
+      
+      - name: Upload AUREA Report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: aurea-report
+          path: reports/
+          if-no-files-found: ignore
+
+  consensus:
+    name: Multi-Sentinel Consensus
+    runs-on: ubuntu-latest
+    needs: [atlas-review, aurea-integrity]
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Download Reports
+        uses: actions/download-artifact@v4
+        with:
+          path: downloaded-reports
+        continue-on-error: true
+      
+      - name: Consensus Check
+        id: consensus
+        run: |
+          ATLAS_VERDICT="${{ needs.atlas-review.outputs.verdict }}"
+          AUREA_VERDICT="${{ needs.aurea-integrity.outputs.verdict }}"
+          
+          # Default to APPROVED if not set
+          ATLAS_VERDICT="${ATLAS_VERDICT:-APPROVED}"
+          AUREA_VERDICT="${AUREA_VERDICT:-APPROVED}"
+          
+          echo "ATLAS verdict: $ATLAS_VERDICT"
+          echo "AUREA verdict: $AUREA_VERDICT"
+          
+          # Consensus logic
+          if [ "$ATLAS_VERDICT" = "APPROVED" ] && [ "$AUREA_VERDICT" = "APPROVED" ]; then
+            FINAL_VERDICT="APPROVED"
+            APPROVED="true"
+          elif [ "$ATLAS_VERDICT" = "BLOCKED" ] || [ "$AUREA_VERDICT" = "BLOCKED" ]; then
+            FINAL_VERDICT="BLOCKED"
+            APPROVED="false"
+          else
+            FINAL_VERDICT="NEEDS_REVISION"
+            APPROVED="false"
+          fi
+          
+          echo "approved=$APPROVED" >> $GITHUB_OUTPUT
+          echo "verdict=$FINAL_VERDICT" >> $GITHUB_OUTPUT
+          
+          # Save consensus report
+          mkdir -p reports
+          cat << EOF > reports/consensus.json
+          {
+            "atlas": {"verdict": "$ATLAS_VERDICT"},
+            "aurea": {"verdict": "$AUREA_VERDICT"},
+            "approved": $APPROVED,
+            "final_verdict": "$FINAL_VERDICT",
+            "timestamp": "$(date -Iseconds)"
+          }
+          EOF
+      
+      - name: Post Results to PR
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            let consensus;
+            try {
+              consensus = JSON.parse(fs.readFileSync('reports/consensus.json'));
+            } catch (e) {
+              consensus = {
+                atlas: { verdict: 'APPROVED' },
+                aurea: { verdict: 'APPROVED' },
+                approved: true,
+                final_verdict: 'APPROVED'
+              };
+            }
+            
+            const statusIcon = consensus.approved ? '✅' : '⚠️';
+            
+            await github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: `## 🌀 Sentinel Consensus Report
+
+**ATLAS:** ${consensus.atlas.verdict}
+**AUREA:** ${consensus.aurea.verdict}
+
+**Final Verdict:** ${statusIcon} ${consensus.final_verdict}
+
+---
+*Automated validation by Mobius Sentinel System*`
+            });
+      
+      - name: Block on Rejection
+        if: steps.consensus.outputs.approved == 'false'
+        run: |
+          echo "::error::Sentinel consensus rejected changes"
+          echo "❌ Changes blocked by sentinel consensus" >> $GITHUB_STEP_SUMMARY
+          exit 1

@@ -1,0 +1,194 @@
+name: Deployment Verification (EVE + JADE)
+
+on:
+  push:
+    branches: [main]
+  deployment_status:
+  workflow_dispatch:
+    inputs:
+      shell_url:
+        description: 'Shell URL to verify'
+        required: false
+        default: ''
+
+jobs:
+  eve-health-check:
+    name: EVE - Deployment Health
+    runs-on: ubuntu-latest
+    outputs:
+      healthy: ${{ steps.health.outputs.healthy }}
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      
+      - name: Install Dependencies
+        run: |
+          pip install requests anthropic pyyaml
+      
+      - name: EVE Endpoint Tests
+        id: health
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          SHELL_URL: ${{ github.event.inputs.shell_url || secrets.SHELL_URL || 'https://mobius-browser.vercel.app' }}
+        run: |
+          if [ -f ".github/sentinels/eve/deployment_test.py" ]; then
+            python .github/sentinels/eve/deployment_test.py
+            echo "healthy=$(cat reports/eve-health.txt 2>/dev/null || echo 'true')" >> $GITHUB_OUTPUT
+          else
+            echo "Running basic deployment check..."
+            
+            # Basic health check
+            if [ -n "$SHELL_URL" ]; then
+              HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" "$SHELL_URL" --max-time 30 || echo "000")
+              
+              if [ "$HTTP_STATUS" = "200" ] || [ "$HTTP_STATUS" = "304" ]; then
+                echo "✅ Shell endpoint healthy (HTTP $HTTP_STATUS)" >> $GITHUB_STEP_SUMMARY
+                echo "healthy=true" >> $GITHUB_OUTPUT
+              else
+                echo "::warning::Shell endpoint returned HTTP $HTTP_STATUS"
+                echo "healthy=false" >> $GITHUB_OUTPUT
+              fi
+            else
+              echo "⚠️ No SHELL_URL configured for health check" >> $GITHUB_STEP_SUMMARY
+              echo "healthy=true" >> $GITHUB_OUTPUT
+            fi
+          fi
+      
+      - name: EVE Integration Check
+        env:
+          OAA_URL: ${{ secrets.VITE_OAA_URL }}
+          REFLECTIONS_URL: ${{ secrets.VITE_REFLECTIONS_URL }}
+          SHIELD_URL: ${{ secrets.VITE_CITIZEN_SHIELD_URL }}
+        run: |
+          if [ -f ".github/sentinels/eve/integration_verify.py" ]; then
+            python .github/sentinels/eve/integration_verify.py
+          else
+            echo "Running basic integration check..."
+            
+            # Check each Lab endpoint if configured
+            for endpoint_var in OAA_URL REFLECTIONS_URL SHIELD_URL; do
+              eval endpoint=\$$endpoint_var
+              if [ -n "$endpoint" ]; then
+                HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" "$endpoint" --max-time 15 || echo "000")
+                if [ "$HTTP_STATUS" = "200" ] || [ "$HTTP_STATUS" = "304" ]; then
+                  echo "✅ $endpoint_var reachable" >> $GITHUB_STEP_SUMMARY
+                else
+                  echo "⚠️ $endpoint_var returned HTTP $HTTP_STATUS" >> $GITHUB_STEP_SUMMARY
+                fi
+              fi
+            done
+          fi
+
+  jade-ux-validation:
+    name: JADE - UX Validation
+    runs-on: ubuntu-latest
+    needs: eve-health-check
+    if: needs.eve-health-check.outputs.healthy == 'true'
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      
+      - name: Install Dependencies
+        run: |
+          npm ci || npm install
+          pip install pyyaml
+      
+      - name: JADE UI Consistency Check
+        run: |
+          if [ -f ".github/sentinels/jade/ux_validation.py" ]; then
+            python .github/sentinels/jade/ux_validation.py
+          else
+            echo "Running basic UX validation..."
+            
+            # Check for required UI components
+            COMPONENTS=("App.tsx" "components/Omnibar.tsx" "components/TabNavigation.tsx")
+            for comp in "${COMPONENTS[@]}"; do
+              if [ -f "$comp" ]; then
+                echo "✅ $comp present" >> $GITHUB_STEP_SUMMARY
+              else
+                echo "⚠️ Missing component: $comp" >> $GITHUB_STEP_SUMMARY
+              fi
+            done
+          fi
+      
+      - name: JADE Accessibility Audit
+        env:
+          SHELL_URL: ${{ secrets.SHELL_URL }}
+        run: |
+          if [ -f ".github/sentinels/jade/accessibility_check.py" ]; then
+            python .github/sentinels/jade/accessibility_check.py
+          else
+            echo "Basic accessibility checks..."
+            
+            # Check for ARIA attributes in components
+            if grep -r "aria-" --include="*.tsx" components/ 2>/dev/null | head -5; then
+              echo "✅ ARIA attributes found in components" >> $GITHUB_STEP_SUMMARY
+            else
+              echo "⚠️ Consider adding ARIA attributes for accessibility" >> $GITHUB_STEP_SUMMARY
+            fi
+            
+            # Check for alt text patterns
+            if grep -r 'alt=' --include="*.tsx" . 2>/dev/null | head -5; then
+              echo "✅ Alt text usage detected" >> $GITHUB_STEP_SUMMARY
+            fi
+          fi
+
+  post-deploy-report:
+    name: Post-Deployment Report
+    runs-on: ubuntu-latest
+    needs: [eve-health-check, jade-ux-validation]
+    if: always()
+    steps:
+      - name: Generate Deployment Report
+        run: |
+          EVE_STATUS="${{ needs.eve-health-check.result }}"
+          JADE_STATUS="${{ needs.jade-ux-validation.result }}"
+          
+          if [ "$EVE_STATUS" = "success" ] && [ "$JADE_STATUS" = "success" ]; then
+            STATUS="✅ Deployment verified successfully"
+          elif [ "$EVE_STATUS" = "success" ]; then
+            STATUS="⚠️ Deployment healthy, UX validation skipped/failed"
+          else
+            STATUS="❌ Deployment verification issues detected"
+          fi
+          
+          cat << EOF >> $GITHUB_STEP_SUMMARY
+          ## 🚀 Deployment Verification Report
+          
+          | Sentinel | Status |
+          |----------|--------|
+          | EVE (Health) | $EVE_STATUS |
+          | JADE (UX) | $JADE_STATUS |
+          
+          **Overall:** $STATUS
+          
+          **Commit:** ${{ github.sha }}
+          **Time:** $(date -Iseconds)
+          EOF
+      
+      - name: Post to Webhook
+        if: always() && secrets.DEPLOYMENT_WEBHOOK != ''
+        env:
+          WEBHOOK_URL: ${{ secrets.DEPLOYMENT_WEBHOOK }}
+        run: |
+          EVE_STATUS="${{ needs.eve-health-check.result }}"
+          JADE_STATUS="${{ needs.jade-ux-validation.result }}"
+          
+          if [ -n "$WEBHOOK_URL" ]; then
+            curl -X POST $WEBHOOK_URL \
+              -H "Content-Type: application/json" \
+              -d "{\"content\": \"🚀 **Deployment Verification Complete**\n\nEVE: $EVE_STATUS\nJADE: $JADE_STATUS\nCommit: ${{ github.sha }}\"}" || true
+          fi

@@ -1,0 +1,171 @@
+name: Integrity Monitor (Scheduled)
+
+on:
+  schedule:
+    - cron: '0 */6 * * *'  # Every 6 hours
+  workflow_dispatch:
+    inputs:
+      full_check:
+        description: 'Run full integrity check'
+        required: false
+        type: boolean
+        default: false
+
+jobs:
+  mic-integrity-check:
+    name: MIC/MII Integrity Scan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      
+      - name: Install Dependencies
+        run: |
+          pip install requests pyyaml
+      
+      - name: Check MIC API Health
+        env:
+          MIC_API_BASE: ${{ secrets.VITE_MIC_API_BASE }}
+        run: |
+          if [ -f ".github/sentinels/aurea/mic_health_check.py" ]; then
+            python .github/sentinels/aurea/mic_health_check.py
+          else
+            echo "Running basic MIC health check..."
+            
+            if [ -n "$MIC_API_BASE" ]; then
+              HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" "$MIC_API_BASE/health" --max-time 30 || echo "000")
+              
+              if [ "$HTTP_STATUS" = "200" ]; then
+                echo "✅ MIC API healthy" >> $GITHUB_STEP_SUMMARY
+              else
+                echo "::warning::MIC API returned HTTP $HTTP_STATUS"
+              fi
+            else
+              echo "ℹ️ MIC API not configured - skipping" >> $GITHUB_STEP_SUMMARY
+            fi
+          fi
+      
+      - name: Validate MII Thresholds
+        run: |
+          if [ -f ".github/sentinels/aurea/mii_validator.py" ]; then
+            python .github/sentinels/aurea/mii_validator.py
+          else
+            echo "MII validator not yet implemented" >> $GITHUB_STEP_SUMMARY
+          fi
+      
+      - name: Repository Health Check
+        run: |
+          echo "## Repository Health Check" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          # Check constitution
+          if [ -f ".mobius-constitution" ]; then
+            echo "✅ Constitution file present" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "⚠️ Constitution file missing" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          # Check critical workflows
+          WORKFLOWS=(
+            ".github/workflows/anti-nuke-sentinel.yml"
+            ".github/workflows/anti-nuke-mirror.yml"
+            ".github/workflows/sentinel-validation.yml"
+          )
+          
+          for wf in "${WORKFLOWS[@]}"; do
+            if [ -f "$wf" ]; then
+              echo "✅ $wf present" >> $GITHUB_STEP_SUMMARY
+            else
+              echo "❌ $wf missing!" >> $GITHUB_STEP_SUMMARY
+            fi
+          done
+          
+          # Check git integrity
+          if git fsck --quiet 2>/dev/null; then
+            echo "✅ Git repository integrity verified" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "⚠️ Git repository may have integrity issues" >> $GITHUB_STEP_SUMMARY
+          fi
+      
+      - name: Alert on Anomalies
+        if: failure()
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh issue create \
+            --title "⚠️ Integrity Monitor Alert - $(date +%Y-%m-%d)" \
+            --body "**Automated Alert from Integrity Monitor**
+
+The scheduled integrity check detected anomalies.
+
+**Time:** $(date -Iseconds)
+**Workflow Run:** ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+
+Please review the workflow logs for details." \
+            --label "integrity,automated-alert" || true
+
+  cross-lab-sync:
+    name: Cross-Lab Sync Check
+    runs-on: ubuntu-latest
+    if: github.event.inputs.full_check == 'true'
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Check Lab Configurations
+        env:
+          OAA_URL: ${{ secrets.VITE_OAA_URL }}
+          REFLECTIONS_URL: ${{ secrets.VITE_REFLECTIONS_URL }}
+          SHIELD_URL: ${{ secrets.VITE_CITIZEN_SHIELD_URL }}
+          WALLET_URL: ${{ secrets.VITE_WALLET_URL }}
+          HIVE_URL: ${{ secrets.VITE_HIVE_URL }}
+        run: |
+          echo "## Lab Configuration Status" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          # Check each lab
+          declare -A LABS=(
+            ["OAA"]="$OAA_URL"
+            ["Reflections"]="$REFLECTIONS_URL"
+            ["Citizen Shield"]="$SHIELD_URL"
+            ["Wallet"]="$WALLET_URL"
+            ["Hive"]="$HIVE_URL"
+          )
+          
+          for lab in "${!LABS[@]}"; do
+            url="${LABS[$lab]}"
+            if [ -n "$url" ]; then
+              HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" "$url" --max-time 15 || echo "000")
+              if [ "$HTTP_STATUS" = "200" ] || [ "$HTTP_STATUS" = "304" ]; then
+                echo "✅ $lab: Configured and reachable" >> $GITHUB_STEP_SUMMARY
+              else
+                echo "⚠️ $lab: Configured but returned HTTP $HTTP_STATUS" >> $GITHUB_STEP_SUMMARY
+              fi
+            else
+              echo "ℹ️ $lab: Not configured" >> $GITHUB_STEP_SUMMARY
+            fi
+          done
+      
+      - name: Verify Lab Component Files
+        run: |
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## Lab Components" >> $GITHUB_STEP_SUMMARY
+          
+          LAB_FILES=(
+            "components/Labs/OAALab.tsx"
+            "components/Labs/ReflectionsLab.tsx"
+            "components/Labs/CitizenShieldLab.tsx"
+            "components/Labs/WalletLab.tsx"
+            "components/Labs/HiveLab.tsx"
+          )
+          
+          for file in "${LAB_FILES[@]}"; do
+            if [ -f "$file" ]; then
+              echo "✅ $file" >> $GITHUB_STEP_SUMMARY
+            else
+              echo "❌ $file missing" >> $GITHUB_STEP_SUMMARY
+            fi
+          done

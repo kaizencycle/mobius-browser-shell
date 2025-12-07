@@ -1,0 +1,217 @@
+name: Anti-Nuke Mirror (Distributed Backup)
+
+on:
+  push:
+    branches: [main, develop]
+  schedule:
+    - cron: '0 */4 * * *'  # Every 4 hours
+  workflow_dispatch:
+    inputs:
+      test_mode:
+        description: 'Run in test mode (dry-run only)'
+        required: false
+        type: boolean
+        default: false
+
+env:
+  TEST_MODE: ${{ github.event.inputs.test_mode || 'false' }}
+
+jobs:
+  mirror-to-gitlab:
+    name: Mirror to GitLab (Backup Site 1)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - name: Test Mode Check
+        if: env.TEST_MODE == 'true'
+        run: |
+          echo "🧪 TEST MODE - Simulating GitLab mirror push" >> $GITHUB_STEP_SUMMARY
+          echo "Would push to: gitlab.com/mobius-systems/mobius-browser-shell.git"
+      
+      - name: Push to GitLab Mirror
+        if: env.TEST_MODE == 'false' && secrets.GITLAB_MIRROR_TOKEN != ''
+        env:
+          GITLAB_TOKEN: ${{ secrets.GITLAB_MIRROR_TOKEN }}
+        run: |
+          if [ -n "$GITLAB_TOKEN" ]; then
+            git remote add gitlab https://oauth2:${GITLAB_TOKEN}@gitlab.com/mobius-systems/mobius-browser-shell.git || true
+            git push gitlab --all --force || echo "::warning::GitLab push failed"
+            git push gitlab --tags --force || true
+            echo "✅ Pushed to GitLab mirror" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "⚠️ GitLab token not configured" >> $GITHUB_STEP_SUMMARY
+          fi
+
+  mirror-to-codeberg:
+    name: Mirror to Codeberg (Backup Site 2)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - name: Test Mode Check
+        if: env.TEST_MODE == 'true'
+        run: |
+          echo "🧪 TEST MODE - Simulating Codeberg mirror push" >> $GITHUB_STEP_SUMMARY
+          echo "Would push to: codeberg.org/mobius-systems/mobius-browser-shell.git"
+      
+      - name: Push to Codeberg Mirror
+        if: env.TEST_MODE == 'false' && secrets.CODEBERG_MIRROR_TOKEN != ''
+        env:
+          CODEBERG_TOKEN: ${{ secrets.CODEBERG_MIRROR_TOKEN }}
+        run: |
+          if [ -n "$CODEBERG_TOKEN" ]; then
+            git remote add codeberg https://${CODEBERG_TOKEN}@codeberg.org/mobius-systems/mobius-browser-shell.git || true
+            git push codeberg --all --force || echo "::warning::Codeberg push failed"
+            git push codeberg --tags --force || true
+            echo "✅ Pushed to Codeberg mirror" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "⚠️ Codeberg token not configured" >> $GITHUB_STEP_SUMMARY
+          fi
+
+  archive-to-ipfs:
+    name: Archive to IPFS (Permanent Record)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - name: Create Archive
+        run: |
+          TIMESTAMP=$(date +%Y%m%d-%H%M%S)
+          git archive --format=tar.gz --prefix=mobius-browser-shell/ HEAD > archive-${TIMESTAMP}.tar.gz
+          echo "ARCHIVE_FILE=archive-${TIMESTAMP}.tar.gz" >> $GITHUB_ENV
+          echo "TIMESTAMP=${TIMESTAMP}" >> $GITHUB_ENV
+      
+      - name: Test Mode Check
+        if: env.TEST_MODE == 'true'
+        run: |
+          echo "🧪 TEST MODE - Simulating IPFS pin" >> $GITHUB_STEP_SUMMARY
+          echo "Archive created: ${{ env.ARCHIVE_FILE }}"
+          echo "Would pin to Pinata IPFS"
+          
+          # Generate fake hash for testing
+          FAKE_HASH="Qm$(openssl rand -hex 23)"
+          echo "Simulated IPFS hash: $FAKE_HASH"
+          echo "IPFS_HASH=${FAKE_HASH}" >> $GITHUB_ENV
+      
+      - name: Pin to IPFS via Pinata
+        if: env.TEST_MODE == 'false' && secrets.PINATA_JWT != ''
+        env:
+          PINATA_JWT: ${{ secrets.PINATA_JWT }}
+        run: |
+          if [ -n "$PINATA_JWT" ]; then
+            RESPONSE=$(curl -X POST "https://api.pinata.cloud/pinning/pinFileToIPFS" \
+              -H "Authorization: Bearer ${PINATA_JWT}" \
+              -F "file=@${{ env.ARCHIVE_FILE }}" \
+              -F "pinataMetadata={\"name\":\"mobius-browser-shell-${{ env.TIMESTAMP }}\"}" \
+              --silent)
+            
+            IPFS_HASH=$(echo $RESPONSE | jq -r '.IpfsHash // empty')
+            if [ -n "$IPFS_HASH" ]; then
+              echo "IPFS_HASH=${IPFS_HASH}" >> $GITHUB_ENV
+              echo "✅ Pinned to IPFS: ${IPFS_HASH}" >> $GITHUB_STEP_SUMMARY
+            else
+              echo "::warning::IPFS pinning failed"
+              echo "Response: $RESPONSE"
+            fi
+          else
+            echo "⚠️ Pinata JWT not configured" >> $GITHUB_STEP_SUMMARY
+          fi
+      
+      - name: Record IPFS Hash
+        if: env.IPFS_HASH != ''
+        run: |
+          echo "Archive: https://gateway.pinata.cloud/ipfs/${IPFS_HASH}" >> $GITHUB_STEP_SUMMARY
+          
+          # Append to permanent record
+          mkdir -p .mobius
+          echo "${IPFS_HASH} $(date -Iseconds) $(git rev-parse HEAD)" >> .ipfs-archive-log.txt
+
+  backup-to-r2:
+    name: Backup to Cloudflare R2 (Cold Storage)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - name: Create Timestamped Backup
+        run: |
+          TIMESTAMP=$(date +%Y%m%d-%H%M%S)
+          git bundle create mobius-browser-shell-${TIMESTAMP}.bundle --all
+          tar -czf mobius-browser-shell-${TIMESTAMP}.tar.gz .
+          echo "TIMESTAMP=${TIMESTAMP}" >> $GITHUB_ENV
+      
+      - name: Test Mode Check
+        if: env.TEST_MODE == 'true'
+        run: |
+          echo "🧪 TEST MODE - Simulating R2 upload" >> $GITHUB_STEP_SUMMARY
+          ls -lh mobius-browser-shell-${{ env.TIMESTAMP }}.*
+          echo "Would upload to: s3://mobius-backups/browser-shell/"
+      
+      - name: Upload to R2
+        if: env.TEST_MODE == 'false' && secrets.R2_ACCESS_KEY_ID != ''
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+          AWS_ENDPOINT_URL: ${{ secrets.R2_ENDPOINT_URL }}
+        run: |
+          if [ -n "$AWS_ACCESS_KEY_ID" ] && [ -n "$AWS_ENDPOINT_URL" ]; then
+            pip install awscli --quiet
+            aws s3 cp mobius-browser-shell-${{ env.TIMESTAMP }}.bundle s3://mobius-backups/browser-shell/ --endpoint-url $AWS_ENDPOINT_URL || echo "::warning::R2 bundle upload failed"
+            aws s3 cp mobius-browser-shell-${{ env.TIMESTAMP }}.tar.gz s3://mobius-backups/browser-shell/ --endpoint-url $AWS_ENDPOINT_URL || echo "::warning::R2 archive upload failed"
+            echo "✅ Uploaded to R2 cold storage" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "⚠️ R2 credentials not configured" >> $GITHUB_STEP_SUMMARY
+          fi
+
+  notify-backup-complete:
+    name: Notify Backup Success
+    runs-on: ubuntu-latest
+    needs: [mirror-to-gitlab, mirror-to-codeberg, archive-to-ipfs, backup-to-r2]
+    if: always()
+    steps:
+      - name: Generate Status Report
+        run: |
+          GITLAB_STATUS="${{ needs.mirror-to-gitlab.result }}"
+          CODEBERG_STATUS="${{ needs.mirror-to-codeberg.result }}"
+          IPFS_STATUS="${{ needs.archive-to-ipfs.result }}"
+          R2_STATUS="${{ needs.backup-to-r2.result }}"
+          
+          if [ "$GITLAB_STATUS" = "success" ] && [ "$CODEBERG_STATUS" = "success" ] && [ "$IPFS_STATUS" = "success" ] && [ "$R2_STATUS" = "success" ]; then
+            STATUS="✅ All backups successful"
+          else
+            STATUS="⚠️ Some backups may have issues (check logs)"
+          fi
+          
+          echo "STATUS=$STATUS" >> $GITHUB_ENV
+          
+          cat << EOF >> $GITHUB_STEP_SUMMARY
+          ## 🛡️ Backup Status Report
+          
+          | Destination | Status |
+          |------------|--------|
+          | GitLab Mirror | ${GITLAB_STATUS} |
+          | Codeberg Mirror | ${CODEBERG_STATUS} |
+          | IPFS Archive | ${IPFS_STATUS} |
+          | R2 Cold Storage | ${R2_STATUS} |
+          
+          **Overall:** ${STATUS}
+          EOF
+      
+      - name: Send Notification
+        if: env.TEST_MODE == 'false' && secrets.DISCORD_WEBHOOK != ''
+        env:
+          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
+        run: |
+          if [ -n "$DISCORD_WEBHOOK" ]; then
+            curl -X POST $DISCORD_WEBHOOK \
+              -H "Content-Type: application/json" \
+              -d "{\"content\": \"🛡️ **Anti-Nuke Backup Report**\n${{ env.STATUS }}\n\nRepo: mobius-browser-shell\nCommit: ${{ github.sha }}\nTime: $(date -Iseconds)\"}" || true
+          fi

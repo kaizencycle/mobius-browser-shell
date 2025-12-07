@@ -1,0 +1,10 @@
+# Mobius Browser Shell - Arweave Archive Log
+# Format: ARWEAVE_TX_ID TIMESTAMP GIT_COMMIT
+# This file is updated by the nuclear-failsafe workflow (monthly)
+#
+# To retrieve an archive:
+#   Visit https://arweave.net/{TX_ID}
+#
+# Arweave provides permanent, immutable storage (200+ year guarantee)
+#
+# --- Archive History ---
