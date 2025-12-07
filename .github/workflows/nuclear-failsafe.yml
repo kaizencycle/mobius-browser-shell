@@ -1,0 +1,119 @@
+name: Nuclear Failsafe (Arweave Permanent Storage)
+
+on:
+  workflow_dispatch:  # Manual trigger only
+    inputs:
+      test_mode:
+        description: 'Run in test mode (dry-run only)'
+        required: false
+        type: boolean
+        default: false
+  schedule:
+    - cron: '0 0 1 * *'  # Monthly snapshot on 1st of each month
+
+env:
+  TEST_MODE: ${{ github.event.inputs.test_mode || 'false' }}
+
+jobs:
+  permanent-archive:
+    name: Upload to Arweave (Permanent, Immutable)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      
+      - name: Create Archive
+        run: |
+          TIMESTAMP=$(date +%Y%m%d-%H%M%S)
+          git archive --format=tar.gz --prefix=mobius-browser-shell/ HEAD > mobius-browser-shell-permanent-${TIMESTAMP}.tar.gz
+          echo "ARCHIVE_FILE=mobius-browser-shell-permanent-${TIMESTAMP}.tar.gz" >> $GITHUB_ENV
+          echo "TIMESTAMP=${TIMESTAMP}" >> $GITHUB_ENV
+          
+          # Create metadata file
+          cat << EOF > archive-metadata.json
+          {
+            "repo": "mobius-browser-shell",
+            "commit": "${{ github.sha }}",
+            "timestamp": "$(date -Iseconds)",
+            "branch": "${{ github.ref_name }}",
+            "archive_type": "nuclear_failsafe"
+          }
+          EOF
+      
+      - name: Test Mode Check
+        if: env.TEST_MODE == 'true'
+        run: |
+          echo "🧪 TEST MODE - Simulating Arweave upload" >> $GITHUB_STEP_SUMMARY
+          echo "Archive created: ${{ env.ARCHIVE_FILE }}"
+          echo "Archive size: $(ls -lh ${{ env.ARCHIVE_FILE }} | awk '{print $5}')"
+          echo "Would upload to Arweave permanent storage"
+          
+          # Generate fake TX ID for testing
+          FAKE_TX="$(openssl rand -hex 22)"
+          echo "Simulated Arweave TX: $FAKE_TX"
+          echo "TX_ID=${FAKE_TX}" >> $GITHUB_ENV
+      
+      - name: Upload to Arweave
+        if: env.TEST_MODE == 'false' && secrets.ARWEAVE_WALLET_KEY != ''
+        env:
+          ARWEAVE_KEY: ${{ secrets.ARWEAVE_WALLET_KEY }}
+        run: |
+          if [ -n "$ARWEAVE_KEY" ]; then
+            # Install arkb (Arweave bundler)
+            npm install -g arkb
+            
+            # Upload archive
+            TX_ID=$(arkb deploy ${{ env.ARCHIVE_FILE }} \
+              --wallet $ARWEAVE_KEY \
+              --tag-name "Repo" --tag-value "mobius-browser-shell" \
+              --tag-name "Commit" --tag-value "${{ github.sha }}" \
+              --tag-name "Date" --tag-value "$(date -Iseconds)" \
+              --tag-name "Type" --tag-value "nuclear_failsafe" \
+              2>/dev/null | grep -oP 'https://arweave.net/\K[^"]+' || true)
+            
+            if [ -n "$TX_ID" ]; then
+              echo "TX_ID=${TX_ID}" >> $GITHUB_ENV
+              echo "✅ Permanent archive uploaded to Arweave" >> $GITHUB_STEP_SUMMARY
+              echo "Transaction: https://arweave.net/${TX_ID}" >> $GITHUB_STEP_SUMMARY
+            else
+              echo "::warning::Arweave upload may have failed - check manually"
+            fi
+          else
+            echo "⚠️ Arweave wallet key not configured" >> $GITHUB_STEP_SUMMARY
+          fi
+      
+      - name: Record Arweave Transaction
+        if: env.TX_ID != ''
+        run: |
+          # Append to permanent record
+          mkdir -p .mobius
+          echo "${{ env.TX_ID }} $(date -Iseconds) ${{ github.sha }}" >> .arweave-archive-log.txt
+          
+          cat << EOF >> $GITHUB_STEP_SUMMARY
+          
+          ## 🏛️ Nuclear Failsafe Complete
+          
+          **Arweave Transaction:** https://arweave.net/${{ env.TX_ID }}
+          **Commit:** ${{ github.sha }}
+          **Timestamp:** $(date -Iseconds)
+          
+          This archive is now **permanently stored** on the Arweave permaweb.
+          Estimated permanence: 200+ years
+          EOF
+      
+      - name: Notify Success
+        if: env.TX_ID != '' && secrets.DISCORD_WEBHOOK != ''
+        env:
+          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
+        run: |
+          if [ -n "$DISCORD_WEBHOOK" ]; then
+            curl -X POST $DISCORD_WEBHOOK \
+              -H "Content-Type: application/json" \
+              -d "{\"content\": \"🏛️ **Nuclear Failsafe Complete**\n\nPermanent archive created on Arweave\nTX: https://arweave.net/${{ env.TX_ID }}\nCommit: ${{ github.sha }}\"}" || true
+          fi

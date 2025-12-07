@@ -1,0 +1,9 @@
+# Mobius Browser Shell - IPFS Archive Log
+# Format: IPFS_HASH TIMESTAMP GIT_COMMIT
+# This file is updated automatically by the anti-nuke-mirror workflow
+#
+# To retrieve an archive:
+#   curl https://gateway.pinata.cloud/ipfs/{HASH} -o archive.tar.gz
+#   tar -xzf archive.tar.gz
+#
+# --- Archive History ---

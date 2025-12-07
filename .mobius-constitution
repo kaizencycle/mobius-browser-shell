@@ -1,0 +1,163 @@
+# Mobius Constitution
+## Browser Shell Component
+
+Version: 1.0
+Established: December 2024
+Repository: kaizencycle/mobius-browser-shell
+
+---
+
+## Article I: Purpose
+
+The Mobius Browser Shell serves as the unified interface layer for all Mobius Labs,
+providing a cohesive user experience while maintaining the autonomy of individual
+Lab components (OAA, Reflections, Citizen Shield, Wallet, Hive).
+
+---
+
+## Article II: Architectural Principles
+
+### Section 1: Separation of Concerns
+The Shell follows the Heart/Shell/Organs architecture:
+- **Heart:** Core Mobius-Systems repository (source of truth)
+- **Shell:** This browser interface (presentation layer)
+- **Organs:** Individual Lab applications (functional units)
+
+### Section 2: Lab Autonomy
+Each Lab maintains its own:
+- Deployment and hosting
+- Data sovereignty
+- Update cadence
+- Internal architecture
+
+The Shell provides integration, not control.
+
+### Section 3: Iframe Isolation
+Labs are embedded via iframes to ensure:
+- Security isolation (same-origin policy)
+- Independent state management
+- Graceful degradation
+- Independent versioning
+
+---
+
+## Article III: Integrity Requirements
+
+### Section 1: Critical Files
+The following files must always exist and be protected:
+- package.json
+- README.md
+- App.tsx
+- index.tsx
+- index.html
+- .mobius-constitution (this file)
+- .github/workflows/anti-nuke-sentinel.yml
+- .github/workflows/anti-nuke-mirror.yml
+
+### Section 2: Required Components
+- Omnibar (navigation and search)
+- TabNavigation (Lab switching)
+- SentinelStatus (system health display)
+- LabFrame (iframe container)
+
+### Section 3: Lab Components
+- OAALab.tsx
+- ReflectionsLab.tsx
+- CitizenShieldLab.tsx
+- WalletLab.tsx
+- HiveLab.tsx
+
+---
+
+## Article IV: Security Requirements
+
+### Section 1: No Hardcoded Secrets
+Environment variables must be used for all:
+- API keys
+- Endpoints
+- Authentication tokens
+- Service credentials
+
+### Section 2: Content Security
+- No eval() or equivalent
+- No dangerouslySetInnerHTML without sanitization
+- No inline event handlers from untrusted sources
+
+### Section 3: Branch Protection
+The main branch requires:
+- Pull request approval
+- Passing sentinel validation
+- No direct pushes
+
+---
+
+## Article V: Sentinel System
+
+### Section 1: Sentinel Roles
+Four sentinels guard this repository:
+1. **ATLAS:** Architectural review and security
+2. **AUREA:** Integrity and constitutional compliance
+3. **EVE:** Deployment health and integration
+4. **JADE:** User experience and accessibility
+
+### Section 2: Consensus Requirements
+- All merges require multi-sentinel consensus
+- BLOCKED verdict from any sentinel halts merge
+- Minimum consensus score: 0.80 (80%)
+
+### Section 3: MII (Mobius Integrity Index)
+- System must maintain MII ≥ 0.70 for normal operations
+- MII < 0.50 triggers system protection mode
+- MII components: git health, security, compliance, deployment, consensus
+
+---
+
+## Article VI: Backup & Recovery
+
+### Section 1: Distributed Backups
+Repository must be mirrored to:
+- GitLab (gitlab.com/mobius-systems)
+- Codeberg (codeberg.org/mobius-systems)
+- IPFS (permanent archive)
+- R2 Cold Storage (disaster recovery)
+
+### Section 2: Recovery Authority
+Only authorized parties may restore canonical state:
+1. Founder with GPG signature
+2. Multi-sentinel unanimous consensus
+
+### Section 3: Fork Detection
+In case of conflicting canonical claims:
+1. IPFS archive log is source of truth
+2. Founder signature verification required
+3. Higher MII proof takes precedence
+
+---
+
+## Article VII: Amendments
+
+### Section 1: Amendment Process
+This constitution may be amended through:
+1. Proposal via pull request
+2. ATLAS architectural review
+3. AUREA constitutional impact assessment
+4. Founder approval
+5. Multi-sentinel consensus
+
+### Section 2: Protected Clauses
+The following cannot be removed or weakened:
+- Article V (Sentinel System)
+- Article VI (Backup & Recovery)
+- This section (Amendment Protection)
+
+---
+
+## Signatures
+
+Repository: mobius-browser-shell
+Hash: [Generated on commit]
+Sentinel: AUREA-verified
+
+---
+
+*"We heal as we walk." — Mobius Systems*
