@@ -33,32 +33,37 @@ export const MOCK_ALERTS: ShieldAlert[] = [
  * 2. Demo mode: Shows the local mock UI
  * 
  * Set VITE_USE_LIVE_LABS=true and provide URLs to enable live mode
+ * 
+ * Real Render Endpoints:
+ * - OAA Learning Hub: https://lab7-proof.onrender.com
+ * - Reflections: https://hive-api-2le8.onrender.com
+ * - Citizen Shield: https://lab6-proof-api.onrender.com
  */
 export const LABS: LabDefinition[] = [
   {
     id: TabId.OAA,
     name: 'OAA Learning Hub',
     description: 'Multi-model AI tutoring across STEM subjects.',
-    url: env.OAA_URL,
+    url: env.labs.oaa,
   },
   {
     id: TabId.REFLECTIONS,
     name: 'Reflections',
     description: 'AI-assisted journaling and E.O.M.M. cycles.',
-    url: env.REFLECTIONS_URL,
+    url: env.labs.reflections,
   },
   {
     id: TabId.SHIELD,
     name: 'Citizen Shield',
     description: 'Digital safety & civic resilience practice.',
-    url: env.CITIZEN_SHIELD_URL,
+    url: env.labs.citizenShield,
   },
   {
     id: TabId.HIVE,
     name: 'HIVE (16-bit JRPG)',
     description: 'Collaborative governance JRPG – built by the community.',
-    url: env.HIVE_URL,
-    comingSoon: !env.HIVE_URL, // Coming soon unless URL is provided
+    url: env.labs.hive,
+    comingSoon: !env.labs.hive, // Coming soon unless URL is provided
   },
   {
     id: TabId.WALLET,
@@ -73,4 +78,18 @@ export const LABS: LabDefinition[] = [
  */
 export function getLabById(id: TabId): LabDefinition | undefined {
   return LABS.find(lab => lab.id === id);
+}
+
+/**
+ * Get all labs that have live URLs
+ */
+export function getActiveLabs(): LabDefinition[] {
+  return LABS.filter(lab => lab.url && !lab.comingSoon);
+}
+
+/**
+ * Get all labs that are coming soon
+ */
+export function getComingSoonLabs(): LabDefinition[] {
+  return LABS.filter(lab => lab.comingSoon);
 }
