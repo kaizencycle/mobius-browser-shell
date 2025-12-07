@@ -1,0 +1,15 @@
+# OAA API - Dependencies
+# Model-Agnostic AI Tutoring System
+
+# Core
+flask>=3.0.0
+flask-cors>=4.0.0
+gunicorn>=21.0.0
+
+# LLM Providers (install the ones you need)
+anthropic>=0.34.0      # For Claude
+openai>=1.40.0         # For GPT
+google-generativeai>=0.7.0  # For Gemini
+
+# Utilities
+python-dotenv>=1.0.0   # For local .env loading

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { getLabById } from '../../constants';
 import { TabId } from '../../types';
-import { shouldUseLiveMode } from '../../config/env';
+import { shouldUseLiveMode, env } from '../../config/env';
 import { LabFrame } from '../LabFrame';
 import { Map, Compass, Plus, Atom, Calculator, Dna, Code, FlaskConical, Cpu, Globe, Rocket, ArrowRight, ArrowLeft, Send, X, BookOpen, ChevronDown } from 'lucide-react';
 
@@ -66,7 +66,7 @@ export const OAALab: React.FC = () => {
     setInput('');
   };
 
-  // Handle sending a message
+  // Handle sending a message - Wired to real AI backend
   const handleSendMessage = async () => {
     if (!input.trim() || !selectedSubject) return;
 
@@ -80,20 +80,47 @@ export const OAALab: React.FC = () => {
     setIsLoading(true);
 
     try {
-      // TODO: Replace with real API call to OAA backend
-      // For now, simulate tutor response
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      // Call the real OAA API with model-agnostic backend
+      const apiBase = env.api.oaa || 'https://oaa-api-library.onrender.com';
+      
+      const response = await fetch(`${apiBase}/api/tutor`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          subject: selectedSubject.id,
+          message: userMessage.content,
+          conversationHistory: messages.map(m => ({
+            role: m.role,
+            content: m.content
+          })),
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
+      }
+
+      const data = await response.json();
 
       const tutorResponse: Message = {
         role: 'assistant',
-        content: `Great question about ${selectedSubject.title}!\n\nYour question: "${userMessage.content}"\n\nThis is a placeholder response. Once you connect the OAA API endpoint, real AI tutoring will happen here.\n\nThe tutor will:\n1. Understand your current level\n2. Provide clear, step-by-step explanations\n3. Ask clarifying questions to ensure understanding\n4. Guide you through problem-solving\n5. Adapt to your learning pace\n\nTo wire the real API, update the handleSendMessage function to call your OAA backend.`,
+        content: data.response,
       };
 
       setMessages((prev) => [...prev, tutorResponse]);
-    } catch {
+
+      // Log which model responded (for debugging in dev mode)
+      if (env.features.debugMode && data.model) {
+        console.log(`🤖 Response from: ${data.model} (${data.provider})`);
+      }
+    } catch (error) {
+      console.error('Tutor API error:', error);
+      
       const errorMessage: Message = {
         role: 'assistant',
-        content: '⚠️ Unable to reach the tutor service. Please try again.',
+        content: '⚠️ Unable to reach the tutor service. Please try again in a moment.\n\nIf this persists, the AI service may be waking up (cold start). Try again in 30 seconds.',
       };
       setMessages((prev) => [...prev, errorMessage]);
     } finally {
