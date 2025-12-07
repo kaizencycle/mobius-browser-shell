@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { SENTINELS } from './constants';
 import { TabId } from './types';
@@ -8,6 +9,7 @@ import { OAALab } from './components/Labs/OAALab';
 import { HiveLab } from './components/Labs/HiveLab';
 import { ReflectionsLab } from './components/Labs/ReflectionsLab';
 import { CitizenShieldLab } from './components/Labs/CitizenShieldLab';
+import { WalletLab } from './components/Labs/WalletLab';
 import { Tornado } from 'lucide-react'; // Simulating the Mobius Sigil
 
 const App: React.FC = () => {
@@ -19,11 +21,7 @@ const App: React.FC = () => {
       case TabId.HIVE: return <HiveLab />;
       case TabId.REFLECTIONS: return <ReflectionsLab />;
       case TabId.SHIELD: return <CitizenShieldLab />;
-      case TabId.WALLET: return (
-        <div className="flex items-center justify-center h-full bg-stone-50 text-stone-400 font-mono text-sm">
-            Wallet Interface // MIC Ledger: Connected
-        </div>
-      );
+      case TabId.WALLET: return <WalletLab />;
       default: return <OAALab />;
     }
   };
