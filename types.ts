@@ -3,6 +3,7 @@ export enum TabId {
   HIVE = 'HIVE_LAB',
   REFLECTIONS = 'REFLECTIONS',
   SHIELD = 'CITIZEN_SHIELD',
+  JADE = 'JADE_CHAMBER',
   WALLET = 'WALLET'
 }
 
