@@ -26,6 +26,9 @@ export const env = {
     ledger: import.meta.env.VITE_LEDGER_API as string || 'https://civic-protocol-core-ledger.onrender.com',
     micIndexer: import.meta.env.VITE_MIC_API_BASE as string || 'https://gic-indexer.onrender.com',
     thoughtBroker: import.meta.env.VITE_THOUGHT_BROKER_API as string || 'https://mobius-systems.onrender.com',
+    // Identity & MIC Wallet services
+    identity: import.meta.env.VITE_IDENTITY_API_BASE as string || 'https://mobius-identity-service.onrender.com',
+    micWallet: import.meta.env.VITE_MIC_WALLET_API_BASE as string || 'https://mobius-mic-wallet-service.onrender.com',
   },
 
   // === FEATURE FLAGS ===
@@ -33,6 +36,13 @@ export const env = {
     useLiveLabs: import.meta.env.VITE_USE_LIVE_LABS === 'true',
     micEnabled: import.meta.env.VITE_MIC_ENABLED === 'true',
     debugMode: import.meta.env.VITE_DEBUG_MODE === 'true' || import.meta.env.DEV,
+  },
+
+  // === NETWORK CONFIG ===
+  network: {
+    name: import.meta.env.VITE_NETWORK as string || 'testnet',
+    isTestnet: (import.meta.env.VITE_NETWORK as string || 'testnet') === 'testnet',
+    isMainnet: (import.meta.env.VITE_NETWORK as string || 'testnet') === 'mainnet',
   },
 
   // === DEPLOYMENT INFO ===

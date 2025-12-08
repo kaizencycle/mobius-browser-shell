@@ -10,14 +10,22 @@ import { HiveLab } from './components/Labs/HiveLab';
 import { ReflectionsLab } from './components/Labs/ReflectionsLab';
 import { CitizenShieldLab } from './components/Labs/CitizenShieldLab';
 import { WalletLab } from './components/Labs/WalletLab';
-import { Tornado, Coffee, CheckCircle, Menu, X } from 'lucide-react';
+import { Tornado, Coffee, CheckCircle, Menu, X, User, LogOut } from 'lucide-react';
 import { wakeAllServices, env } from './config/env';
+import { useAuth } from './contexts/AuthContext';
+import { useWallet } from './contexts/WalletContext';
+import { AuthModal } from './components/AuthModal';
 
 const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<TabId>(TabId.OAA);
   const [isWaking, setIsWaking] = useState(false);
   const [wakeComplete, setWakeComplete] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [showAuthModal, setShowAuthModal] = useState(false);
+
+  // Auth & Wallet hooks
+  const { user, loading: authLoading, logout } = useAuth();
+  const { wallet } = useWallet();
 
   const handleWakeAllLabs = async () => {
     setIsWaking(true);
@@ -91,18 +99,61 @@ const App: React.FC = () => {
                 )}
               </button>
 
-              {/* MIC/MII Status (when enabled) */}
-              {env.features.micEnabled && (
-                <div className="flex items-center space-x-2">
-                  <div className="flex items-center space-x-1 px-2 py-1 bg-indigo-50 rounded text-xs">
-                    <span className="text-indigo-400">MII</span>
-                    <span className="font-mono font-medium text-indigo-600">0.95</span>
-                  </div>
-                  <div className="flex items-center space-x-1 px-2 py-1 bg-amber-50 rounded text-xs">
-                    <span className="text-amber-400">MIC</span>
-                    <span className="font-mono font-medium text-amber-600">0.00</span>
-                  </div>
+              {/* MIC/MII Status with Testnet Badge */}
+              <div className="flex items-center space-x-2">
+                {/* Testnet Badge */}
+                {env.network.isTestnet && (
+                  <span className="px-1.5 py-0.5 bg-yellow-400 text-yellow-900 text-[9px] font-bold rounded uppercase">
+                    Testnet
+                  </span>
+                )}
+                
+                {/* MII Display */}
+                <div className="flex items-center space-x-1 px-2 py-1 bg-indigo-50 rounded text-xs">
+                  <span className="text-indigo-400">MII</span>
+                  <span className="font-mono font-medium text-indigo-600">0.95</span>
                 </div>
+                
+                {/* MIC Balance with Testnet indicator */}
+                <div className="flex items-center space-x-1 px-2 py-1 bg-gradient-to-r from-amber-50 to-yellow-50 rounded text-xs border border-amber-200">
+                  <span className="text-amber-500">MIC</span>
+                  <span className="font-mono font-medium text-amber-600">
+                    {wallet ? wallet.balance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '0.00'}
+                  </span>
+                  {env.network.isTestnet && (
+                    <span className="px-1 py-0.5 bg-yellow-300/50 text-yellow-800 text-[8px] font-bold rounded">
+                      T
+                    </span>
+                  )}
+                </div>
+              </div>
+              
+              {/* User Auth Status */}
+              {!authLoading && (
+                user ? (
+                  <div className="flex items-center space-x-2">
+                    <div className="flex items-center space-x-1.5 px-2 py-1 bg-stone-100 rounded text-xs">
+                      <User className="w-3 h-3 text-stone-500" />
+                      <span className="text-stone-600 font-medium max-w-[100px] truncate">
+                        {user.name || user.email.split('@')[0]}
+                      </span>
+                    </div>
+                    <button
+                      onClick={logout}
+                      className="p-1.5 text-stone-400 hover:text-stone-600 hover:bg-stone-100 rounded transition-colors"
+                      title="Logout"
+                    >
+                      <LogOut className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    onClick={() => setShowAuthModal(true)}
+                    className="px-3 py-1.5 bg-stone-900 text-white text-xs font-medium rounded hover:bg-stone-800 transition-colors"
+                  >
+                    Login
+                  </button>
+                )
               )}
 
               <SentinelStatus sentinels={SENTINELS} />
@@ -155,21 +206,61 @@ const App: React.FC = () => {
             </button>
             
             {/* Status Pills - Mobile */}
-            <div className="flex items-center justify-center space-x-3">
-              {env.features.micEnabled && (
-                <>
-                  <div className="flex items-center space-x-1 px-2 py-1 bg-indigo-50 rounded text-xs">
-                    <span className="text-indigo-400">MII</span>
-                    <span className="font-mono font-medium text-indigo-600">0.95</span>
-                  </div>
-                  <div className="flex items-center space-x-1 px-2 py-1 bg-amber-50 rounded text-xs">
-                    <span className="text-amber-400">MIC</span>
-                    <span className="font-mono font-medium text-amber-600">0.00</span>
-                  </div>
-                </>
+            <div className="flex flex-wrap items-center justify-center gap-2">
+              {/* Testnet Badge - Mobile */}
+              {env.network.isTestnet && (
+                <span className="px-2 py-1 bg-yellow-400 text-yellow-900 text-[10px] font-bold rounded uppercase">
+                  Testnet
+                </span>
               )}
+              
+              <div className="flex items-center space-x-1 px-2 py-1 bg-indigo-50 rounded text-xs">
+                <span className="text-indigo-400">MII</span>
+                <span className="font-mono font-medium text-indigo-600">0.95</span>
+              </div>
+              <div className="flex items-center space-x-1 px-2 py-1 bg-gradient-to-r from-amber-50 to-yellow-50 rounded text-xs border border-amber-200">
+                <span className="text-amber-500">MIC</span>
+                <span className="font-mono font-medium text-amber-600">
+                  {wallet ? wallet.balance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '0.00'}
+                </span>
+              </div>
               <SentinelStatus sentinels={SENTINELS} />
             </div>
+            
+            {/* User Auth - Mobile */}
+            {!authLoading && (
+              <div className="flex items-center justify-center pt-2">
+                {user ? (
+                  <div className="flex items-center space-x-2">
+                    <div className="flex items-center space-x-1.5 px-3 py-1.5 bg-stone-100 rounded text-xs">
+                      <User className="w-3 h-3 text-stone-500" />
+                      <span className="text-stone-600 font-medium">
+                        {user.name || user.email.split('@')[0]}
+                      </span>
+                    </div>
+                    <button
+                      onClick={() => {
+                        logout();
+                        setIsMobileMenuOpen(false);
+                      }}
+                      className="px-3 py-1.5 text-stone-500 hover:text-stone-700 text-xs font-medium"
+                    >
+                      Logout
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    onClick={() => {
+                      setShowAuthModal(true);
+                      setIsMobileMenuOpen(false);
+                    }}
+                    className="px-4 py-2 bg-stone-900 text-white text-sm font-medium rounded-lg hover:bg-stone-800 transition-colors"
+                  >
+                    Login / Sign Up
+                  </button>
+                )}
+              </div>
+            )}
           </div>
         )}
 
@@ -188,6 +279,9 @@ const App: React.FC = () => {
       <main className="flex-1 overflow-hidden relative shadow-inner">
         {renderContent()}
       </main>
+
+      {/* Auth Modal */}
+      {showAuthModal && <AuthModal onClose={() => setShowAuthModal(false)} />}
 
     </div>
   );
