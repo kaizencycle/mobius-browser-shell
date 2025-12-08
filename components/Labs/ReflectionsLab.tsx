@@ -1,118 +1,394 @@
-import React from 'react';
-import { MOCK_REFLECTIONS, getLabById } from '../../constants';
-import { TabId } from '../../types';
-import { shouldUseLiveMode } from '../../config/env';
-import { LabFrame } from '../LabFrame';
-import { Calendar, PenTool, Hash, Lock } from 'lucide-react';
+// components/Labs/ReflectionsLab.tsx
+import React, { useEffect, useState } from 'react';
+import {
+  Plus,
+  BookOpen,
+  Sparkles,
+  ChevronRight,
+  PenLine,
+  Trash2,
+} from 'lucide-react';
+
+type PhaseId = 'raw' | 'mirror' | 'reframe' | 'recode';
+
+interface Phase {
+  id: PhaseId;
+  label: string;
+  prompt: string;
+  helper: string;
+  content: string;
+}
+
+interface ReflectionEntry {
+  id: string;
+  createdAt: string;
+  title: string;
+  phases: Phase[];
+}
+
+const STORAGE_KEY = 'mobius_reflections_v1';
+
+const PHASE_TEMPLATE: Omit<Phase, 'content'>[] = [
+  {
+    id: 'raw',
+    label: 'I. Raw',
+    prompt: 'Write exactly what happened / what you feel — unfiltered.',
+    helper:
+      'No need to be poetic. Just dump the moment: who, what, where, when. Let it be messy.',
+  },
+  {
+    id: 'mirror',
+    label: 'II. Mirror',
+    prompt: 'What would an outside observer see if they watched this moment?',
+    helper:
+      'Describe it as if you were a camera or a narrator. What facts stay when your emotions step back a little?',
+  },
+  {
+    id: 'reframe',
+    label: 'III. Reframe',
+    prompt: 'If this was happening to someone you love, how would you reframe it for them?',
+    helper:
+      'What compassion, context, or alternative angle would you offer them? What would you remind them of?',
+  },
+  {
+    id: 'recode',
+    label: 'IV. Recode',
+    prompt:
+      'What tiny action, mindset shift, or new story do you want to carry forward from this?',
+    helper:
+      'One sentence. One micro-commitment. Something your future self can actually practice.',
+  },
+];
+
+function createNewEntry(): ReflectionEntry {
+  const id =
+    typeof crypto !== 'undefined' && 'randomUUID' in crypto
+      ? crypto.randomUUID()
+      : `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+
+  return {
+    id,
+    createdAt: new Date().toISOString(),
+    title: 'Untitled reflection',
+    phases: PHASE_TEMPLATE.map((p) => ({
+      ...p,
+      content: '',
+    })),
+  };
+}
 
 export const ReflectionsLab: React.FC = () => {
-  const lab = getLabById(TabId.REFLECTIONS);
-  
-  // If live mode is enabled and URL exists, show iframe
-  if (lab && shouldUseLiveMode(lab.url)) {
-    return (
-      <LabFrame 
-        url={lab.url!} 
-        title={lab.name}
-        description={lab.description}
-      />
+  const [entries, setEntries] = useState<ReflectionEntry[]>([]);
+  const [activeEntryId, setActiveEntryId] = useState<string | null>(null);
+  const [activePhaseId, setActivePhaseId] = useState<PhaseId>('raw');
+
+  // Load from localStorage on mount
+  useEffect(() => {
+    try {
+      const raw = window.localStorage.getItem(STORAGE_KEY);
+      if (!raw) return;
+      const parsed = JSON.parse(raw) as ReflectionEntry[];
+      if (Array.isArray(parsed) && parsed.length) {
+        setEntries(parsed);
+        setActiveEntryId(parsed[0].id);
+      }
+    } catch (e) {
+      console.error('Failed to load reflections from storage', e);
+    }
+  }, []);
+
+  // Persist to localStorage on change
+  useEffect(() => {
+    try {
+      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(entries));
+    } catch (e) {
+      console.error('Failed to save reflections to storage', e);
+    }
+  }, [entries]);
+
+  const handleNewEntry = () => {
+    const entry = createNewEntry();
+    setEntries((prev) => [entry, ...prev]);
+    setActiveEntryId(entry.id);
+    setActivePhaseId('raw');
+  };
+
+  const handleSelectEntry = (id: string) => {
+    setActiveEntryId(id);
+    setActivePhaseId('raw');
+  };
+
+  const handleDeleteEntry = (id: string) => {
+    setEntries((prev) => prev.filter((entry) => entry.id !== id));
+    if (activeEntryId === id) {
+      const remaining = entries.filter((e) => e.id !== id);
+      setActiveEntryId(remaining.length > 0 ? remaining[0].id : null);
+    }
+  };
+
+  const handleTitleChange = (title: string) => {
+    if (!activeEntryId) return;
+    setEntries((prev) =>
+      prev.map((entry) =>
+        entry.id === activeEntryId ? { ...entry, title } : entry
+      )
     );
-  }
+  };
 
-  // Otherwise show demo UI
+  const handlePhaseChange = (phaseId: PhaseId, content: string) => {
+    if (!activeEntryId) return;
+
+    setEntries((prev) =>
+      prev.map((entry) =>
+        entry.id === activeEntryId
+          ? {
+              ...entry,
+              phases: entry.phases.map((phase) =>
+                phase.id === phaseId ? { ...phase, content } : phase
+              ),
+            }
+          : entry
+      )
+    );
+  };
+
+  const activeEntry =
+    activeEntryId && entries.find((e) => e.id === activeEntryId)
+      ? entries.find((e) => e.id === activeEntryId)!
+      : null;
+
+  const activePhase =
+    activeEntry?.phases.find((p) => p.id === activePhaseId) ?? null;
+
   return (
-    <div className="h-full overflow-y-auto bg-[#Fdfbf7] p-4 sm:p-6 lg:p-8"> {/* Paper color */}
-        <div className="max-w-4xl mx-auto flex flex-col lg:flex-row gap-4 lg:gap-8">
-            
-            {/* Mobile New Entry Button */}
-            <div className="lg:hidden">
-                <button className="w-full bg-stone-900 text-amber-50 py-2.5 rounded-lg font-serif italic text-base hover:bg-stone-800 transition-colors shadow-sm flex items-center justify-center space-x-2">
-                    <PenTool className="w-4 h-4" />
-                    <span>New Entry</span>
-                </button>
+    <div className="h-full flex flex-col bg-stone-50">
+      {/* Header */}
+      <div className="flex items-center justify-between px-4 sm:px-6 py-3 border-b border-stone-200 bg-white">
+        <div className="flex items-center space-x-2">
+          <div className="p-1.5 rounded-md bg-stone-900 text-stone-50">
+            <BookOpen className="w-4 h-4" />
+          </div>
+          <div>
+            <div className="text-sm font-semibold tracking-tight text-stone-900">
+              Reflections Lab
             </div>
-
-            {/* Sidebar / Timeline - Desktop only */}
-            <div className="w-64 hidden lg:block">
-                <div className="sticky top-8 space-y-8">
-                    <button className="w-full bg-stone-900 text-amber-50 py-3 rounded-lg font-serif italic text-lg hover:bg-stone-800 transition-colors shadow-sm flex items-center justify-center space-x-2">
-                        <PenTool className="w-4 h-4" />
-                        <span>New Entry</span>
-                    </button>
-
-                    <div className="space-y-4">
-                        <h3 className="text-xs font-bold text-stone-400 uppercase tracking-widest">Timeline</h3>
-                        <div className="border-l-2 border-stone-200 pl-4 space-y-4">
-                            <div className="text-sm font-medium text-stone-800 cursor-pointer">Today</div>
-                            <div className="text-sm text-stone-500 cursor-pointer hover:text-stone-800">Yesterday</div>
-                            <div className="text-sm text-stone-500 cursor-pointer hover:text-stone-800">Last Week</div>
-                            <div className="text-sm text-stone-500 cursor-pointer hover:text-stone-800">October 2025</div>
-                        </div>
-                    </div>
-
-                    <div className="bg-white p-4 rounded-xl border border-stone-100 shadow-sm">
-                        <h3 className="text-xs font-bold text-stone-400 uppercase tracking-widest mb-3">Pattern Surface</h3>
-                        <p className="text-xs text-stone-600 leading-relaxed italic">
-                            "JADE has noticed a recurring theme of 'Systems Thinking' appearing in your entries whenever you engage with the HIVE lab. Consider exploring: <span className="underline decoration-indigo-300 cursor-pointer">Feedback Loops</span>."
-                        </p>
-                    </div>
-                </div>
+            <div className="text-xs text-stone-500 hidden sm:block">
+              Strange Metamorphosis Loop — journaling as transformation
             </div>
-
-            {/* Main Content */}
-            <div className="flex-1 space-y-4 sm:space-y-6 lg:space-y-8">
-                
-                {/* Header */}
-                <div className="border-b border-stone-200 pb-4 sm:pb-6 flex flex-col sm:flex-row sm:justify-between sm:items-end gap-2 sm:gap-0">
-                    <div>
-                        <h1 className="text-2xl sm:text-3xl font-serif text-stone-900">Reflections</h1>
-                        <p className="text-stone-500 mt-1 sm:mt-2 font-mono text-xs sm:text-sm">E.O.M.M. / Private / Encrypted <Lock className="w-3 h-3 inline ml-1"/></p>
-                    </div>
-                    <div className="flex space-x-2">
-                        <span className="px-2 sm:px-3 py-1 bg-stone-100 rounded-full text-[10px] sm:text-xs text-stone-600 font-medium">14 Day Streak</span>
-                    </div>
-                </div>
-
-                {/* Entry List */}
-                <div className="space-y-4 sm:space-y-6">
-                    {MOCK_REFLECTIONS.map((entry) => (
-                        <div key={entry.id} className="group bg-white rounded-none border-l-4 border-stone-200 pl-4 sm:pl-6 py-3 sm:py-4 hover:border-indigo-400 transition-all cursor-pointer">
-                            <div className="flex items-center justify-between mb-2">
-                                <div className="flex items-center space-x-2 sm:space-x-3">
-                                    <span className="text-stone-400 font-mono text-[10px] sm:text-xs uppercase">{entry.date}</span>
-                                    <span className={`text-[8px] sm:text-[10px] px-1.5 sm:px-2 py-0.5 rounded-full uppercase tracking-wide font-bold
-                                        ${entry.mood === 'Curious' ? 'bg-indigo-50 text-indigo-600' : 'bg-amber-50 text-amber-600'}
-                                    `}>
-                                        {entry.mood}
-                                    </span>
-                                </div>
-                            </div>
-                            <p className="text-base sm:text-lg text-stone-800 font-serif leading-relaxed line-clamp-2 group-hover:text-black">
-                                {entry.preview}
-                            </p>
-                            <div className="flex flex-wrap items-center gap-2 sm:gap-3 mt-3 sm:mt-4">
-                                {entry.tags.map(tag => (
-                                    <span key={tag} className="flex items-center text-[10px] sm:text-xs text-stone-400 group-hover:text-indigo-500 transition-colors">
-                                        <Hash className="w-2.5 h-2.5 sm:w-3 sm:h-3 mr-0.5 opacity-50" /> {tag}
-                                    </span>
-                                ))}
-                            </div>
-                        </div>
-                    ))}
-                </div>
-
-                {/* Blank State / Prompt */}
-                <div className="mt-8 sm:mt-12 p-4 sm:p-8 border-2 border-dashed border-stone-200 rounded-xl flex flex-col items-center justify-center text-center hover:border-stone-300 transition-colors cursor-pointer bg-stone-50/50">
-                    <div className="w-10 h-10 sm:w-12 sm:h-12 bg-white rounded-full flex items-center justify-center shadow-sm mb-3 sm:mb-4">
-                        <Calendar className="w-5 h-5 sm:w-6 sm:h-6 text-stone-400" />
-                    </div>
-                    <h3 className="text-base sm:text-lg font-medium text-stone-700">Daily Reflection</h3>
-                    <p className="text-stone-500 max-w-sm mt-1 sm:mt-2 text-xs sm:text-sm">
-                        What was the most surprising connection you made today?
-                    </p>
-                </div>
-            </div>
+          </div>
         </div>
+
+        <button
+          onClick={handleNewEntry}
+          className="inline-flex items-center space-x-2 px-3 py-1.5 rounded-md text-xs font-medium bg-stone-900 text-stone-50 hover:bg-stone-800 transition"
+        >
+          <Plus className="w-3 h-3" />
+          <span>New entry</span>
+        </button>
+      </div>
+
+      {/* Body: sidebar + editor */}
+      <div className="flex-1 flex min-h-0">
+        {/* Left: entries list */}
+        <aside className="w-64 border-r border-stone-200 bg-stone-100/60 flex-col hidden md:flex">
+          <div className="px-4 py-2 flex items-center justify-between">
+            <span className="text-xs font-semibold text-stone-600 tracking-wide">
+              ENTRIES
+            </span>
+            {entries.length > 0 && (
+              <span className="text-[10px] text-stone-400">
+                {entries.length} saved
+              </span>
+            )}
+          </div>
+
+          <div className="flex-1 overflow-auto px-2 pb-2 space-y-1">
+            {entries.length === 0 && (
+              <div className="text-xs text-stone-400 px-2 py-4">
+                No reflections yet.
+                <br />
+                Click <span className="font-semibold">New entry</span> to
+                begin the loop.
+              </div>
+            )}
+
+            {entries.map((entry) => {
+              const date = new Date(entry.createdAt);
+              const isActive = entry.id === activeEntryId;
+
+              const progress =
+                entry.phases.filter((p) => p.content.trim().length > 0)
+                  .length / entry.phases.length;
+
+              return (
+                <button
+                  key={entry.id}
+                  onClick={() => handleSelectEntry(entry.id)}
+                  className={`w-full text-left px-3 py-2 rounded-md border text-xs mb-1 flex flex-col space-y-1 ${
+                    isActive
+                      ? 'border-stone-900 bg-white shadow-sm'
+                      : 'border-stone-200 bg-white/60 hover:border-stone-400'
+                  }`}
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="font-semibold text-[11px] text-stone-900 truncate mr-2">
+                      {entry.title || 'Untitled reflection'}
+                    </span>
+                    <ChevronRight className="w-3 h-3 text-stone-300" />
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] text-stone-400">
+                      {date.toLocaleDateString(undefined, {
+                        month: 'short',
+                        day: 'numeric',
+                      })}
+                    </span>
+                    <div className="flex items-center space-x-1">
+                      <div className="w-12 h-1.5 rounded-full bg-stone-200 overflow-hidden">
+                        <div
+                          className="h-full bg-stone-900"
+                          style={{ width: `${progress * 100}%` }}
+                        />
+                      </div>
+                      <span className="text-[9px] text-stone-400">
+                        {Math.round(progress * 100)}%
+                      </span>
+                    </div>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        </aside>
+
+        {/* Mobile entry selector dropdown */}
+        {entries.length > 0 && (
+          <div className="md:hidden border-b border-stone-200 bg-white px-4 py-2">
+            <select
+              value={activeEntryId || ''}
+              onChange={(e) => handleSelectEntry(e.target.value)}
+              className="w-full px-3 py-2 text-sm border border-stone-200 rounded-md bg-white"
+            >
+              {entries.map((entry) => (
+                <option key={entry.id} value={entry.id}>
+                  {entry.title || 'Untitled reflection'} —{' '}
+                  {new Date(entry.createdAt).toLocaleDateString(undefined, {
+                    month: 'short',
+                    day: 'numeric',
+                  })}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
+
+        {/* Right: editor */}
+        <section className="flex-1 flex flex-col min-w-0">
+          {!activeEntry && (
+            <div className="h-full flex flex-col items-center justify-center text-center px-6">
+              <Sparkles className="w-8 h-8 text-stone-300 mb-3" />
+              <div className="text-sm font-semibold text-stone-800">
+                Start a Strange Metamorphosis Loop
+              </div>
+              <p className="text-xs text-stone-500 mt-2 max-w-sm">
+                Each entry walks through four phases: Raw → Mirror → Reframe →
+                Recode. You write the story of the moment — then slowly teach
+                your future self how to carry it.
+              </p>
+              <button
+                onClick={handleNewEntry}
+                className="mt-4 inline-flex items-center space-x-2 px-3 py-1.5 rounded-md text-xs font-medium bg-stone-900 text-stone-50 hover:bg-stone-800"
+              >
+                <Plus className="w-3 h-3" />
+                <span>Begin new entry</span>
+              </button>
+            </div>
+          )}
+
+          {activeEntry && activePhase && (
+            <>
+              {/* Title + phase tabs */}
+              <div className="border-b border-stone-200 bg-white px-4 sm:px-6 py-3 flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+                <div className="flex-1 min-w-0 flex items-center space-x-2">
+                  <PenLine className="w-4 h-4 text-stone-400 flex-none" />
+                  <input
+                    className="w-full bg-transparent border-none outline-none text-sm font-semibold text-stone-900 placeholder:text-stone-400"
+                    value={activeEntry.title}
+                    onChange={(e) => handleTitleChange(e.target.value)}
+                    placeholder="Give this reflection a name…"
+                  />
+                  <button
+                    onClick={() => handleDeleteEntry(activeEntry.id)}
+                    className="p-1.5 text-stone-400 hover:text-red-500 hover:bg-red-50 rounded transition-colors"
+                    title="Delete entry"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
+
+                <div className="flex items-center space-x-2 mt-2 md:mt-0 overflow-x-auto pb-1 md:pb-0">
+                  {PHASE_TEMPLATE.map((phaseDef) => {
+                    const done = !!activeEntry.phases.find(
+                      (p) =>
+                        p.id === phaseDef.id && p.content.trim().length > 0
+                    );
+                    const isActive = activePhaseId === phaseDef.id;
+
+                    return (
+                      <button
+                        key={phaseDef.id}
+                        onClick={() => setActivePhaseId(phaseDef.id)}
+                        className={`px-2 py-1 rounded-full text-[10px] font-medium border flex items-center space-x-1 whitespace-nowrap ${
+                          isActive
+                            ? 'bg-stone-900 text-stone-50 border-stone-900'
+                            : 'bg-stone-50 text-stone-600 border-stone-200 hover:border-stone-400'
+                        }`}
+                      >
+                        <span>{phaseDef.label}</span>
+                        {done && (
+                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Phase editor */}
+              <div className="flex-1 flex flex-col min-h-0 px-4 sm:px-6 py-4 space-y-3 overflow-auto">
+                <div>
+                  <div className="text-xs font-semibold text-stone-700 tracking-wide">
+                    {activePhase.label}
+                  </div>
+                  <p className="text-xs text-stone-500 mt-1 max-w-xl">
+                    {activePhase.prompt}
+                  </p>
+                </div>
+
+                <textarea
+                  className="flex-1 w-full min-h-[200px] resize-none rounded-md border border-stone-200 bg-white px-3 py-2 text-sm text-stone-900 placeholder:text-stone-400 focus:outline-none focus:ring-1 focus:ring-stone-900/60 focus:border-stone-900/60"
+                  value={activePhase.content}
+                  onChange={(e) =>
+                    handlePhaseChange(activePhase.id, e.target.value)
+                  }
+                  placeholder={activePhase.helper}
+                />
+
+                <div className="text-[11px] text-stone-400 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 pt-1">
+                  <span>
+                    💾 Your words are stored locally in this browser only. Future
+                    Mobius versions can sync this to your HIVE node.
+                  </span>
+                  <span className="hidden sm:inline text-stone-400">
+                    Tip: You can always return later to complete the remaining
+                    phases.
+                  </span>
+                </div>
+              </div>
+            </>
+          )}
+        </section>
+      </div>
     </div>
   );
 };
