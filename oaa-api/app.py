@@ -12,6 +12,7 @@ from flask_cors import CORS
 
 from routes.tutor import tutor_bp
 from routes.civic_radar import civic_radar_bp
+from routes.jade import jade_bp
 
 # Create Flask app
 app = Flask(__name__)
@@ -56,6 +57,7 @@ def handle_preflight():
 # Register blueprints
 app.register_blueprint(tutor_bp, url_prefix='/api')
 app.register_blueprint(civic_radar_bp, url_prefix='/api')
+app.register_blueprint(jade_bp, url_prefix='/api')
 
 
 # ============================================
@@ -67,19 +69,22 @@ def index():
     """API root - returns basic info"""
     return jsonify({
         "name": "OAA API",
-        "version": "1.1.0",
-        "description": "Model-Agnostic AI Tutoring System + Civic Intelligence",
+        "version": "1.2.0",
+        "description": "Model-Agnostic AI Tutoring System + Civic Intelligence + Pattern Oracle",
         "endpoints": {
             "tutor": "/api/tutor",
             "providers": "/api/tutor/providers",
             "health": "/api/tutor/health",
             "civic_radar": "/api/civic-radar",
             "civic_radar_categories": "/api/civic-radar/categories",
-            "civic_radar_health": "/api/civic-radar/health"
+            "civic_radar_health": "/api/civic-radar/health",
+            "jade": "/api/jade",
+            "jade_health": "/api/jade/health"
         },
         "docs": {
             "tutor": "POST /api/tutor with {subject, message, conversationHistory}",
-            "civic_radar": "GET /api/civic-radar?limit=5&min_severity=medium&categories=security,breach"
+            "civic_radar": "GET /api/civic-radar?limit=5&min_severity=medium&categories=security,breach",
+            "jade": "POST /api/jade with {message, history[], reflections_context[]}"
         }
     })
 
@@ -115,7 +120,7 @@ if __name__ == '__main__':
     print(f"""
 ╔══════════════════════════════════════════════════════════════╗
 ║                    OAA API Server                             ║
-║        Model-Agnostic AI Tutoring + Civic Intelligence        ║
+║    Model-Agnostic AI + Civic Intelligence + Pattern Oracle    ║
 ╠══════════════════════════════════════════════════════════════╣
 ║  Port: {port}                                                   ║
 ║  Debug: {debug}                                                 ║
@@ -129,6 +134,10 @@ if __name__ == '__main__':
 ║    GET /api/civic-radar     - Security intelligence feed     ║
 ║    GET /api/civic-radar/categories - Available categories    ║
 ║    GET /api/civic-radar/health - Radar service health        ║
+║                                                              ║
+║  JADE (Pattern Oracle) Endpoints:                            ║
+║    POST /api/jade           - Speak with Jade                ║
+║    GET  /api/jade/health    - Oracle status                  ║
 ║                                                              ║
 ║  Environment Variables:                                      ║
 ║    LLM_PROVIDER     - Default provider (anthropic/openai/google)║

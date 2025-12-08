@@ -10,6 +10,7 @@ import { HiveLab } from './components/Labs/HiveLab';
 import { ReflectionsLab } from './components/Labs/ReflectionsLab';
 import { CitizenShieldLab } from './components/Labs/CitizenShieldLab';
 import { WalletLab } from './components/Labs/WalletLab';
+import { JadeLab } from './components/Labs/JadeLab';
 import { Tornado, Coffee, CheckCircle, Menu, X, User, LogOut } from 'lucide-react';
 import { wakeAllServices, env } from './config/env';
 import { useAuth } from './contexts/AuthContext';
@@ -45,6 +46,7 @@ const App: React.FC = () => {
       case TabId.HIVE: return <HiveLab />;
       case TabId.REFLECTIONS: return <ReflectionsLab />;
       case TabId.SHIELD: return <CitizenShieldLab />;
+      case TabId.JADE: return <JadeLab />;
       case TabId.WALLET: return <WalletLab />;
       default: return <OAALab />;
     }
