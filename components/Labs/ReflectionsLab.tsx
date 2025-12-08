@@ -31,32 +31,31 @@ const STORAGE_KEY = 'mobius_reflections_v1';
 const PHASE_TEMPLATE: Omit<Phase, 'content'>[] = [
   {
     id: 'raw',
-    label: 'I. Raw',
-    prompt: 'Write exactly what happened / what you feel — unfiltered.',
+    label: 'I. Today',
+    prompt: "What's your intent for today?",
     helper:
-      'No need to be poetic. Just dump the moment: who, what, where, when. Let it be messy.',
+      "Name your focus for *this* cycle. What would make today feel meaningful, even in a small way?",
   },
   {
     id: 'mirror',
-    label: 'II. Mirror',
-    prompt: 'What would an outside observer see if they watched this moment?',
+    label: 'II. Worldview',
+    prompt: "How's your worldview right now?",
     helper:
-      'Describe it as if you were a camera or a narrator. What facts stay when your emotions step back a little?',
+      "Describe how you're seeing the world at this moment — hopeful, tired, curious, anxious, inspired? Why?",
   },
   {
     id: 'reframe',
-    label: 'III. Reframe',
-    prompt: 'If this was happening to someone you love, how would you reframe it for them?',
+    label: 'III. Tomorrow',
+    prompt: "What is your intent for tomorrow?",
     helper:
-      'What compassion, context, or alternative angle would you offer them? What would you remind them of?',
+      "If tomorrow were a quiet upgrade from today, what would you want to practice, fix, or gently improve?",
   },
   {
     id: 'recode',
-    label: 'IV. Recode',
-    prompt:
-      'What tiny action, mindset shift, or new story do you want to carry forward from this?',
+    label: 'IV. Future World',
+    prompt: "What are your goals for the future world?",
     helper:
-      'One sentence. One micro-commitment. Something your future self can actually practice.',
+      "Zoom out. What kind of world do you want to help build — and what tiny action connects you to that horizon?",
   },
 ];
 
@@ -173,7 +172,7 @@ export const ReflectionsLab: React.FC = () => {
               Reflections Lab
             </div>
             <div className="text-xs text-stone-500 hidden sm:block">
-              Strange Metamorphosis Loop — journaling as transformation
+              Intent & Horizon Loop — daily kaizen through awareness
             </div>
           </div>
         </div>
@@ -288,12 +287,11 @@ export const ReflectionsLab: React.FC = () => {
             <div className="h-full flex flex-col items-center justify-center text-center px-6">
               <Sparkles className="w-8 h-8 text-stone-300 mb-3" />
               <div className="text-sm font-semibold text-stone-800">
-                Start a Strange Metamorphosis Loop
+                Start an Intent & Horizon Loop
               </div>
               <p className="text-xs text-stone-500 mt-2 max-w-sm">
-                Each entry walks through four phases: Raw → Mirror → Reframe →
-                Recode. You write the story of the moment — then slowly teach
-                your future self how to carry it.
+                Each entry walks through four phases: Today → Worldview →
+                Tomorrow → Future World. Small corrections, over and over, with dignity.
               </p>
               <button
                 onClick={handleNewEntry}
