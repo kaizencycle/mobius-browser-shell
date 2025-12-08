@@ -21,6 +21,8 @@ export const env = {
     oaa: import.meta.env.VITE_OAA_API_BASE as string || 'https://oaa-api-library.onrender.com',
     reflections: import.meta.env.VITE_REFLECTIONS_API_BASE as string || 'https://hive-api-2le8.onrender.com',
     citizenShield: import.meta.env.VITE_CITIZEN_SHIELD_API_BASE as string || 'https://lab6-proof-api.onrender.com',
+    // Civic Radar API - defaults to OAA API which hosts the civic-radar route
+    civicRadar: import.meta.env.VITE_CIVIC_RADAR_API_BASE as string || import.meta.env.VITE_OAA_API_BASE as string || 'https://oaa-api-library.onrender.com',
     ledger: import.meta.env.VITE_LEDGER_API as string || 'https://civic-protocol-core-ledger.onrender.com',
     micIndexer: import.meta.env.VITE_MIC_API_BASE as string || 'https://gic-indexer.onrender.com',
     thoughtBroker: import.meta.env.VITE_THOUGHT_BROKER_API as string || 'https://mobius-systems.onrender.com',

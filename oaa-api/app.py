@@ -11,6 +11,7 @@ from flask import Flask, jsonify, request
 from flask_cors import CORS
 
 from routes.tutor import tutor_bp
+from routes.civic_radar import civic_radar_bp
 
 # Create Flask app
 app = Flask(__name__)
@@ -54,6 +55,7 @@ def handle_preflight():
 
 # Register blueprints
 app.register_blueprint(tutor_bp, url_prefix='/api')
+app.register_blueprint(civic_radar_bp, url_prefix='/api')
 
 
 # ============================================
@@ -65,14 +67,20 @@ def index():
     """API root - returns basic info"""
     return jsonify({
         "name": "OAA API",
-        "version": "1.0.0",
-        "description": "Model-Agnostic AI Tutoring System",
+        "version": "1.1.0",
+        "description": "Model-Agnostic AI Tutoring System + Civic Intelligence",
         "endpoints": {
             "tutor": "/api/tutor",
             "providers": "/api/tutor/providers",
-            "health": "/api/tutor/health"
+            "health": "/api/tutor/health",
+            "civic_radar": "/api/civic-radar",
+            "civic_radar_categories": "/api/civic-radar/categories",
+            "civic_radar_health": "/api/civic-radar/health"
         },
-        "docs": "POST /api/tutor with {subject, message, conversationHistory}"
+        "docs": {
+            "tutor": "POST /api/tutor with {subject, message, conversationHistory}",
+            "civic_radar": "GET /api/civic-radar?limit=5&min_severity=medium&categories=security,breach"
+        }
     })
 
 
@@ -107,15 +115,20 @@ if __name__ == '__main__':
     print(f"""
 ╔══════════════════════════════════════════════════════════════╗
 ║                    OAA API Server                             ║
-║              Model-Agnostic AI Tutoring                       ║
+║        Model-Agnostic AI Tutoring + Civic Intelligence        ║
 ╠══════════════════════════════════════════════════════════════╣
 ║  Port: {port}                                                   ║
 ║  Debug: {debug}                                                 ║
 ║                                                              ║
-║  Endpoints:                                                  ║
+║  Tutor Endpoints:                                            ║
 ║    POST /api/tutor          - Chat with AI tutor             ║
 ║    GET  /api/tutor/providers - List available providers      ║
 ║    GET  /api/tutor/health   - Health check                   ║
+║                                                              ║
+║  Civic Radar Endpoints:                                      ║
+║    GET /api/civic-radar     - Security intelligence feed     ║
+║    GET /api/civic-radar/categories - Available categories    ║
+║    GET /api/civic-radar/health - Radar service health        ║
 ║                                                              ║
 ║  Environment Variables:                                      ║
 ║    LLM_PROVIDER     - Default provider (anthropic/openai/google)║
