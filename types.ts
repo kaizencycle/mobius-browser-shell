@@ -49,3 +49,46 @@ export interface ShieldAlert {
   message: string;
   source: string;
 }
+
+// ============================================
+// Civic Radar Types
+// Real-time security intelligence for Citizen Shield
+// ============================================
+
+export type CivicAlertSeverity = 'low' | 'medium' | 'high' | 'critical';
+export type CivicAlertCategory = 'security' | 'breach' | 'policy' | 'misinformation' | 'privacy';
+
+export interface CivicAlertAction {
+  text: string;
+  url?: string;
+  module?: string;
+}
+
+export interface CivicAlertSource {
+  name: string;
+  url: string;
+}
+
+export interface CivicRadarAlert {
+  id: string;
+  timestamp: string;
+  severity: CivicAlertSeverity;
+  category: CivicAlertCategory;
+  title: string;
+  summary: string;
+  impact: string;
+  tags: string[];
+  actions: CivicAlertAction[];
+  sources: CivicAlertSource[];
+}
+
+export interface CivicRadarMetadata {
+  lastUpdated: string;
+  alertCount: number;
+  criticalCount: number;
+}
+
+export interface CivicRadarResponse {
+  alerts: CivicRadarAlert[];
+  metadata: CivicRadarMetadata;
+}

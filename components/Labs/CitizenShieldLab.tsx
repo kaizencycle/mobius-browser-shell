@@ -1,9 +1,10 @@
 import React from 'react';
-import { MOCK_ALERTS, getLabById } from '../../constants';
+import { getLabById } from '../../constants';
 import { TabId } from '../../types';
 import { shouldUseLiveMode } from '../../config/env';
 import { LabFrame } from '../LabFrame';
 import { Shield, CheckCircle, Wifi, Lock, Eye, AlertOctagon } from 'lucide-react';
+import { CivicRadar } from '../CitizenShield';
 
 export const CitizenShieldLab: React.FC = () => {
   const lab = getLabById(TabId.SHIELD);
@@ -85,30 +86,16 @@ export const CitizenShieldLab: React.FC = () => {
                 </div>
             </div>
 
-            {/* Alerts Section */}
+            {/* Civic Radar Section - Real-time Security Intelligence */}
             <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-                <div className="bg-slate-50 px-4 sm:px-6 py-3 sm:py-4 border-b border-slate-200 flex justify-between items-center">
-                    <h3 className="font-semibold text-slate-700 text-sm sm:text-base">Active Signals</h3>
-                    <button className="text-[10px] sm:text-xs font-medium text-indigo-600 hover:text-indigo-800">Scan Now</button>
-                </div>
-                <div className="divide-y divide-slate-100">
-                    {MOCK_ALERTS.map((alert) => (
-                        <div key={alert.id} className="px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between hover:bg-slate-50 transition-colors gap-3">
-                            <div className="flex items-center space-x-3 sm:space-x-4 min-w-0">
-                                <div className={`w-2 h-2 rounded-full flex-shrink-0 ${alert.level === 'medium' ? 'bg-orange-500' : 'bg-blue-500'}`} />
-                                <div className="min-w-0">
-                                    <p className="text-xs sm:text-sm font-medium text-slate-800 truncate">{alert.message}</p>
-                                    <p className="text-[10px] sm:text-xs text-slate-400">Source: {alert.source}</p>
-                                </div>
-                            </div>
-                            <button className="px-2 sm:px-3 py-1 text-[10px] sm:text-xs border border-slate-300 rounded hover:bg-white hover:border-slate-400 transition-colors flex-shrink-0">
-                                Review
-                            </button>
-                        </div>
-                    ))}
-                    <div className="px-4 sm:px-6 py-3 sm:py-4 text-center text-xs sm:text-sm text-slate-400 italic">
-                        No critical threats detected. System nominal.
-                    </div>
+                <div className="p-4 sm:p-6">
+                    <CivicRadar 
+                        maxAlerts={4}
+                        onModuleNavigate={(moduleId) => {
+                            console.log('Navigate to Shield module:', moduleId);
+                            // TODO: Wire up to module navigation when modules are interactive
+                        }}
+                    />
                 </div>
             </div>
 
