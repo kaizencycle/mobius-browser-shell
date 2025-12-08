@@ -12,11 +12,13 @@
  * - Voice output (text-to-speech)
  * - Glowing, ethereal UI
  * - Pattern recognition through LLM inference
+ * - Name-aware personalized onboarding
  */
 import React, { useState, useEffect, useRef } from 'react';
 import { Mic, MicOff, Volume2, VolumeX, Send, Sparkles, Eye, MessageCircle } from 'lucide-react';
 import { env } from '../../config/env';
-import { useSpeechRecognition, useSpeechSynthesis } from '../../hooks';
+import { useSpeechRecognition, useSpeechSynthesis, useUserDisplayName } from '../../hooks';
+import { useAuth } from '../../contexts/AuthContext';
 
 interface JadeMessage {
   role: 'user' | 'assistant';
@@ -25,6 +27,10 @@ interface JadeMessage {
 }
 
 export const JadeLab: React.FC = () => {
+  // Auth & user context
+  const { user } = useAuth();
+  const displayName = useUserDisplayName(user);
+
   // State
   const [messages, setMessages] = useState<JadeMessage[]>([]);
   const [input, setInput] = useState('');
@@ -32,6 +38,7 @@ export const JadeLab: React.FC = () => {
   const [showCycleLog, setShowCycleLog] = useState(false);
   const [voiceEnabled, setVoiceEnabled] = useState(true);
   const [interimText, setInterimText] = useState('');
+  const [showOnboarding, setShowOnboarding] = useState(true);
   
   // Refs
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -62,6 +69,18 @@ export const JadeLab: React.FC = () => {
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
+
+  // Dismiss onboarding after first message
+  useEffect(() => {
+    if (messages.length > 0) {
+      setShowOnboarding(false);
+    }
+  }, [messages]);
+
+  // Onboarding greeting - personalized if we know the user's name
+  const greeting = displayName 
+    ? `Hello, ${displayName}. I'm Jade.`
+    : `Hello. I'm Jade.`;
 
   // Speak Jade's response
   const speakResponse = (text: string) => {
@@ -100,6 +119,10 @@ export const JadeLab: React.FC = () => {
             role: m.role,
             content: m.content,
           })),
+          userContext: {
+            userId: user?.id,
+            displayName: displayName,
+          },
         }),
       });
 
@@ -173,6 +196,74 @@ export const JadeLab: React.FC = () => {
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-emerald-500/5 rounded-full blur-3xl" />
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] bg-cyan-500/5 rounded-full blur-2xl" />
       </div>
+
+      {/* Onboarding Overlay */}
+      {showOnboarding && messages.length === 0 && (
+        <div className="absolute inset-0 z-30 bg-slate-950/95 backdrop-blur-sm flex items-center justify-center p-6 overflow-y-auto">
+          <div className="max-w-2xl w-full">
+            {/* Header */}
+            <div className="text-center mb-8">
+              <div className="text-6xl mb-4">🔮</div>
+              <h1 className="text-3xl font-light text-emerald-300 mb-2">
+                {greeting}
+              </h1>
+              <div className="h-px w-32 bg-emerald-400/30 mx-auto mb-6"></div>
+            </div>
+
+            {/* Introduction */}
+            <div className="space-y-4 text-sm text-slate-300 leading-relaxed mb-8">
+              <p>
+                I'm not here to judge, fix, or rush you. I'm here to help you notice patterns — gently.
+              </p>
+              <p>
+                Think of me as a mirror with memory. We'll reflect, pause, and trace how today connects to tomorrow.
+              </p>
+              <p className="text-emerald-300/80">
+                Nothing you share here is graded. Nothing you share here is rushed.
+              </p>
+            </div>
+
+            {/* What you can explore */}
+            <div className="bg-slate-900/60 border border-slate-800 rounded-xl p-6 mb-6">
+              <div className="text-xs font-mono text-slate-400 mb-3 uppercase tracking-wider">
+                What you can explore with me
+              </div>
+              <ul className="space-y-2 text-sm text-slate-300">
+                <li className="flex items-start gap-2">
+                  <span className="text-emerald-400 mt-0.5">→</span>
+                  <span>Patterns you feel repeating in your life</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-emerald-400 mt-0.5">→</span>
+                  <span>Cycles you're walking through</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-emerald-400 mt-0.5">→</span>
+                  <span>The future world you're trying to walk toward</span>
+                </li>
+              </ul>
+            </div>
+
+            {/* Guiding question */}
+            <div className="text-center">
+              <p className="text-sm text-slate-400 mb-4">
+                When you're ready, tell me one thing:
+              </p>
+              <p className="text-lg text-emerald-300 font-light">
+                What do you want to understand about yourself today?
+              </p>
+            </div>
+
+            {/* Begin button */}
+            <button
+              onClick={() => setShowOnboarding(false)}
+              className="mt-8 w-full px-6 py-3 bg-gradient-to-r from-emerald-400/90 to-cyan-400/90 text-slate-950 font-medium rounded-xl hover:from-emerald-400 hover:to-cyan-400 transition-all shadow-[0_0_20px_rgba(16,185,129,0.3)] hover:shadow-[0_0_30px_rgba(16,185,129,0.5)]"
+            >
+              Begin
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Main Grid Layout */}
       <div className="relative flex-1 grid grid-cols-1 lg:grid-cols-[280px_1fr_280px] gap-0 lg:gap-6 p-4 lg:p-6 overflow-hidden">
