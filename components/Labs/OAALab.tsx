@@ -3,7 +3,8 @@ import { getLabById } from '../../constants';
 import { TabId } from '../../types';
 import { shouldUseLiveMode, env } from '../../config/env';
 import { LabFrame } from '../LabFrame';
-import { Map, Compass, Plus, Atom, Calculator, Dna, Code, FlaskConical, Cpu, Globe, Rocket, ArrowRight, ArrowLeft, Send, X, BookOpen, ChevronDown } from 'lucide-react';
+import { Map, Compass, Plus, Atom, Calculator, Dna, Code, FlaskConical, Cpu, Globe, Rocket, ArrowRight, ArrowLeft, Send, X, BookOpen, ChevronDown, GraduationCap, Award } from 'lucide-react';
+import { LearningProgressTracker } from '../Learning';
 
 // Subject type definition
 interface Subject {
@@ -33,8 +34,14 @@ const SUBJECTS: Subject[] = [
     { id: 'earth', title: 'Earth Science', icon: Globe, color: 'text-teal-600', bg: 'bg-teal-50', border: 'border-teal-100', topics: ['Geology', 'Meteorology', 'Oceanography', 'Climate Science'] },
 ];
 
+// View mode for OAA Lab
+type OAAView = 'subjects' | 'learning';
+
 export const OAALab: React.FC = () => {
   const lab = getLabById(TabId.OAA);
+  
+  // State for view mode
+  const [currentView, setCurrentView] = useState<OAAView>('subjects');
   
   // State for subject selection and chat
   const [selectedSubject, setSelectedSubject] = useState<Subject | null>(null);
@@ -327,6 +334,37 @@ export const OAALab: React.FC = () => {
     );
   }
 
+  // Learning Hub view
+  if (currentView === 'learning') {
+    return (
+      <div className="h-full overflow-y-auto bg-stone-50">
+        {/* Header with back button */}
+        <div className="bg-white border-b border-stone-200 px-4 sm:px-6 py-4">
+          <div className="max-w-7xl mx-auto flex items-center justify-between">
+            <button
+              onClick={() => setCurrentView('subjects')}
+              className="flex items-center gap-2 text-stone-600 hover:text-stone-900 transition-colors"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              <span className="text-sm font-medium">Back to Subjects</span>
+            </button>
+            <h1 className="text-lg sm:text-xl font-bold text-stone-900 flex items-center gap-2">
+              <GraduationCap className="w-5 h-5 text-amber-500" />
+              <span className="hidden sm:inline">Learn & Earn MIC</span>
+              <span className="sm:hidden">Learn & Earn</span>
+            </h1>
+            <div className="w-24" /> {/* Spacer for centering */}
+          </div>
+        </div>
+        
+        {/* Learning Progress Tracker */}
+        <div className="max-w-5xl mx-auto">
+          <LearningProgressTracker />
+        </div>
+      </div>
+    );
+  }
+
   // Subject selection view (default)
   return (
     <div className="h-full overflow-y-auto p-4 sm:p-6 lg:p-8 bg-stone-50">
@@ -343,7 +381,16 @@ export const OAALab: React.FC = () => {
             </p>
           </div>
            {/* Global Actions */}
-           <div className="flex space-x-2 sm:space-x-3">
+           <div className="flex flex-wrap gap-2 sm:space-x-3">
+             {/* Learn & Earn Button - NEW */}
+             <button 
+               onClick={() => setCurrentView('learning')}
+               className="flex items-center space-x-1.5 sm:space-x-2 bg-gradient-to-r from-amber-400 to-yellow-500 text-stone-900 px-3 sm:px-5 py-2 sm:py-2.5 rounded-lg sm:rounded-xl text-xs sm:text-sm font-semibold hover:from-amber-500 hover:to-yellow-600 transition-all shadow-sm"
+             >
+                <Award className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                <span className="hidden sm:inline">Learn & Earn MIC</span>
+                <span className="sm:hidden">Earn MIC</span>
+             </button>
              <button className="flex items-center space-x-1.5 sm:space-x-2 bg-white border border-stone-200 px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg sm:rounded-xl text-xs sm:text-sm font-medium hover:border-stone-300 hover:bg-stone-50 transition-colors shadow-sm text-stone-600">
                 <Map className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                 <span className="hidden sm:inline">Knowledge Graph</span>

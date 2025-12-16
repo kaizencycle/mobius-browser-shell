@@ -13,6 +13,7 @@ from flask_cors import CORS
 from routes.tutor import tutor_bp
 from routes.civic_radar import civic_radar_bp
 from routes.jade import jade_bp
+from routes.learning import learning_bp
 
 # Create Flask app
 app = Flask(__name__)
@@ -58,6 +59,7 @@ def handle_preflight():
 app.register_blueprint(tutor_bp, url_prefix='/api')
 app.register_blueprint(civic_radar_bp, url_prefix='/api')
 app.register_blueprint(jade_bp, url_prefix='/api')
+app.register_blueprint(learning_bp, url_prefix='/api')
 
 
 # ============================================
@@ -69,8 +71,8 @@ def index():
     """API root - returns basic info"""
     return jsonify({
         "name": "OAA API",
-        "version": "1.2.0",
-        "description": "Model-Agnostic AI Tutoring System + Civic Intelligence + Pattern Oracle",
+        "version": "1.3.0",
+        "description": "Model-Agnostic AI Tutoring System + Civic Intelligence + Pattern Oracle + Learning Hub",
         "endpoints": {
             "tutor": "/api/tutor",
             "providers": "/api/tutor/providers",
@@ -79,12 +81,16 @@ def index():
             "civic_radar_categories": "/api/civic-radar/categories",
             "civic_radar_health": "/api/civic-radar/health",
             "jade": "/api/jade",
-            "jade_health": "/api/jade/health"
+            "jade_health": "/api/jade/health",
+            "learning_modules": "/api/learning/modules",
+            "learning_complete": "/api/learning/complete",
+            "learning_health": "/api/learning/health"
         },
         "docs": {
             "tutor": "POST /api/tutor with {subject, message, conversationHistory}",
             "civic_radar": "GET /api/civic-radar?limit=5&min_severity=medium&categories=security,breach",
-            "jade": "POST /api/jade with {message, history[], reflections_context[]}"
+            "jade": "POST /api/jade with {message, history[], reflections_context[]}",
+            "learning": "GET /api/learning/modules, POST /api/learning/complete with {module_id, accuracy, streak}"
         }
     })
 
