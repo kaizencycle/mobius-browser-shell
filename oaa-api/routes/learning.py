@@ -17,6 +17,9 @@ learning_bp = Blueprint('learning', __name__)
 # ============================================
 
 LEARNING_MODULES = [
+    # ===================
+    # CORE MOBIUS MODULES (5)
+    # ===================
     {
         "id": "constitutional-ai-101",
         "title": "Constitutional AI Fundamentals",
@@ -66,6 +69,176 @@ LEARNING_MODULES = [
         "micReward": 40,
         "topics": ["Integrity", "Ecology", "Custodianship", "Kintsugi Philosophy"],
         "questionCount": 3
+    },
+    
+    # ===================
+    # STEM: MATHEMATICS (3)
+    # ===================
+    {
+        "id": "calculus-fundamentals",
+        "title": "Calculus I: Limits and Derivatives",
+        "description": "Master the foundational concepts of calculus including limits, continuity, and differentiation. Learn how rates of change power modern AI and optimization.",
+        "difficulty": "intermediate",
+        "estimatedMinutes": 60,
+        "micReward": 100,
+        "topics": ["Calculus", "Derivatives", "Limits", "Mathematics"],
+        "questionCount": 3
+    },
+    {
+        "id": "linear-algebra-ml",
+        "title": "Linear Algebra for Machine Learning",
+        "description": "Understand matrices, vectors, and transformations that power modern AI systems. Learn how neural networks use linear algebra at their core.",
+        "difficulty": "intermediate",
+        "estimatedMinutes": 50,
+        "micReward": 90,
+        "topics": ["Linear Algebra", "Machine Learning", "Mathematics", "AI"],
+        "questionCount": 2
+    },
+    {
+        "id": "probability-statistics-ai",
+        "title": "Probability & Statistics for AI",
+        "description": "Master probability theory and statistical methods that underpin machine learning, from Bayes' theorem to confidence intervals.",
+        "difficulty": "intermediate",
+        "estimatedMinutes": 55,
+        "micReward": 85,
+        "topics": ["Probability", "Statistics", "Machine Learning", "Data Science"],
+        "questionCount": 2
+    },
+    
+    # ===================
+    # STEM: COMPUTER SCIENCE (3)
+    # ===================
+    {
+        "id": "algorithms-complexity",
+        "title": "Algorithms & Complexity Theory",
+        "description": "Learn algorithmic thinking, Big O notation, and computational complexity. Understand why some problems are hard and how to design efficient solutions.",
+        "difficulty": "intermediate",
+        "estimatedMinutes": 65,
+        "micReward": 95,
+        "topics": ["Algorithms", "Computer Science", "Complexity", "Optimization"],
+        "questionCount": 2
+    },
+    {
+        "id": "data-structures-fundamentals",
+        "title": "Data Structures Fundamentals",
+        "description": "Master essential data structures: arrays, linked lists, trees, graphs, hash tables. Learn when and why to use each structure.",
+        "difficulty": "beginner",
+        "estimatedMinutes": 45,
+        "micReward": 70,
+        "topics": ["Data Structures", "Computer Science", "Programming"],
+        "questionCount": 2
+    },
+    {
+        "id": "cryptography-blockchain",
+        "title": "Cryptography & Blockchain Fundamentals",
+        "description": "Understand cryptographic primitives, hash functions, public-key cryptography, and how blockchains ensure integrity and decentralization.",
+        "difficulty": "advanced",
+        "estimatedMinutes": 70,
+        "micReward": 120,
+        "topics": ["Cryptography", "Blockchain", "Security", "Distributed Systems"],
+        "questionCount": 2
+    },
+    
+    # ===================
+    # STEM: ARTIFICIAL INTELLIGENCE (3)
+    # ===================
+    {
+        "id": "neural-networks-intro",
+        "title": "Introduction to Neural Networks",
+        "description": "Understand how artificial neural networks learn from data. Master backpropagation, activation functions, and network architectures.",
+        "difficulty": "intermediate",
+        "estimatedMinutes": 60,
+        "micReward": 100,
+        "topics": ["Neural Networks", "Deep Learning", "AI", "Machine Learning"],
+        "questionCount": 3
+    },
+    {
+        "id": "transformers-attention",
+        "title": "Transformers & Attention Mechanisms",
+        "description": "Learn the architecture behind GPT, BERT, and Claude. Understand self-attention, positional encoding, and why transformers revolutionized AI.",
+        "difficulty": "advanced",
+        "estimatedMinutes": 75,
+        "micReward": 130,
+        "topics": ["Transformers", "Attention", "NLP", "Deep Learning"],
+        "questionCount": 2
+    },
+    {
+        "id": "reinforcement-learning",
+        "title": "Reinforcement Learning Fundamentals",
+        "description": "Master RL concepts: agents, environments, rewards, Q-learning, policy gradients. Learn how AI systems learn optimal behavior through trial and error.",
+        "difficulty": "advanced",
+        "estimatedMinutes": 65,
+        "micReward": 110,
+        "topics": ["Reinforcement Learning", "AI", "Optimization", "Game Theory"],
+        "questionCount": 2
+    },
+    
+    # ===================
+    # STEM: PHYSICS & ENGINEERING (3)
+    # ===================
+    {
+        "id": "quantum-computing-intro",
+        "title": "Quantum Computing Fundamentals",
+        "description": "Introduction to qubits, superposition, entanglement, and quantum algorithms. Understand how quantum computers will impact AI and cryptography.",
+        "difficulty": "advanced",
+        "estimatedMinutes": 70,
+        "micReward": 125,
+        "topics": ["Quantum Computing", "Physics", "Computer Science"],
+        "questionCount": 2
+    },
+    {
+        "id": "network-theory-systems",
+        "title": "Network Theory & Complex Systems",
+        "description": "Study how networks behave, from social graphs to neural networks. Learn about emergence, scale-free networks, and system dynamics.",
+        "difficulty": "intermediate",
+        "estimatedMinutes": 55,
+        "micReward": 90,
+        "topics": ["Network Theory", "Complex Systems", "Graph Theory", "Systems Science"],
+        "questionCount": 2
+    },
+    {
+        "id": "information-theory",
+        "title": "Information Theory & Entropy",
+        "description": "Learn Shannon entropy, information content, compression, and how information theory connects to AI, cryptography, and thermodynamics.",
+        "difficulty": "advanced",
+        "estimatedMinutes": 60,
+        "micReward": 105,
+        "topics": ["Information Theory", "Entropy", "Computer Science", "Physics"],
+        "questionCount": 2
+    },
+    
+    # ===================
+    # STEM: SCIENCE (3)
+    # ===================
+    {
+        "id": "molecular-biology-ai",
+        "title": "Molecular Biology & AI Applications",
+        "description": "Understand DNA, proteins, and cellular systems. Learn how AI is revolutionizing drug discovery, protein folding, and genomics.",
+        "difficulty": "intermediate",
+        "estimatedMinutes": 50,
+        "micReward": 85,
+        "topics": ["Biology", "Bioinformatics", "AI Applications", "Healthcare"],
+        "questionCount": 2
+    },
+    {
+        "id": "climate-science-ai",
+        "title": "Climate Science & AI Modeling",
+        "description": "Learn climate system dynamics, carbon cycles, and how AI helps model and mitigate climate change.",
+        "difficulty": "intermediate",
+        "estimatedMinutes": 55,
+        "micReward": 90,
+        "topics": ["Climate Science", "Environmental Science", "AI Applications", "Ecology"],
+        "questionCount": 2
+    },
+    {
+        "id": "bioinformatics-genomics",
+        "title": "Bioinformatics & Genomic Analysis",
+        "description": "Explore computational approaches to biological data, genome sequencing, and how AI accelerates biomedical research.",
+        "difficulty": "advanced",
+        "estimatedMinutes": 65,
+        "micReward": 115,
+        "topics": ["Bioinformatics", "Genomics", "AI", "Data Science", "Healthcare"],
+        "questionCount": 2
     }
 ]
 
