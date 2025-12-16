@@ -93,3 +93,76 @@ export interface CivicRadarResponse {
   alerts: CivicRadarAlert[];
   metadata: CivicRadarMetadata;
 }
+
+// ============================================
+// Learning Hub Types
+// Learn-to-earn system with MIC rewards
+// ============================================
+
+export type LearningDifficulty = 'beginner' | 'intermediate' | 'advanced';
+export type LearningModuleStatus = 'not_started' | 'in_progress' | 'completed';
+
+export interface LearningTopic {
+  id: string;
+  name: string;
+}
+
+export interface QuizQuestion {
+  id: string;
+  question: string;
+  options: string[];
+  correctAnswer: number;
+  explanation: string;
+  difficulty: 'easy' | 'medium' | 'hard';
+  points: number;
+}
+
+export interface LearningModule {
+  id: string;
+  title: string;
+  description: string;
+  difficulty: LearningDifficulty;
+  estimatedMinutes: number;
+  micReward: number;
+  topics: string[];
+  questions: QuizQuestion[];
+  completed: boolean;
+  progress: number; // 0-100
+  completedAt?: string;
+}
+
+export interface LearningSession {
+  moduleId: string;
+  startTime: Date;
+  endTime?: Date;
+  questionsAnswered: number;
+  correctAnswers: number;
+  micEarned: number;
+}
+
+export interface UserLearningProgress {
+  totalMicEarned: number;
+  modulesCompleted: number;
+  currentStreak: number;
+  totalLearningMinutes: number;
+  level: number;
+  experiencePoints: number;
+  lastActivityDate?: string;
+}
+
+export interface QuizAttempt {
+  questionId: string;
+  selectedAnswer: number;
+  isCorrect: boolean;
+  timeSpentSeconds: number;
+}
+
+export interface ModuleCompletionResult {
+  moduleId: string;
+  accuracy: number;
+  micEarned: number;
+  xpEarned: number;
+  newLevel?: number;
+  streakBonus?: number;
+  perfectScoreBonus?: boolean;
+}
