@@ -1,0 +1,245 @@
+// ===================================================
+// Mobius Systems - Auth + Wallet Database Schema
+// Constitutional AI Architecture
+// ===================================================
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ===================================================
+// User & Authentication
+// ===================================================
+
+model User {
+  id            String    @id @default(uuid())
+  handle        String    @unique
+  email         String    @unique
+  passwordHash  String?   // Nullable for magic-link only users
+  displayName   String?
+  avatarUrl     String?
+  
+  // Verification
+  emailVerified Boolean   @default(false)
+  verifiedAt    DateTime?
+  
+  // Integrity metrics
+  integrityScore Float    @default(1.0)
+  trustLevel     Int      @default(1)
+  
+  // Founder status
+  isFounder     Boolean   @default(false)
+  founderSealedAt DateTime?
+  
+  // Timestamps
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  lastLoginAt   DateTime?
+  
+  // Relations
+  wallet        Wallet?
+  identityEvents IdentityEvent[]
+  magicLinks    MagicLink[]
+  passkeys      Passkey[]
+  sessions      Session[]
+  
+  @@index([email])
+  @@index([handle])
+}
+
+// ===================================================
+// WebAuthn Passkeys (Future)
+// ===================================================
+
+model Passkey {
+  id              String   @id @default(uuid())
+  userId          String
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // WebAuthn credential
+  credentialId    String   @unique
+  publicKey       Bytes
+  counter         BigInt   @default(0)
+  
+  // Device info
+  deviceType      String?  // "platform" | "cross-platform"
+  deviceName      String?
+  transports      String[] // ["usb", "nfc", "ble", "internal"]
+  
+  // Timestamps
+  createdAt       DateTime @default(now())
+  lastUsedAt      DateTime?
+  
+  @@index([userId])
+  @@index([credentialId])
+}
+
+// ===================================================
+// Sessions
+// ===================================================
+
+model Session {
+  id            String   @id @default(uuid())
+  userId        String
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Session data
+  tokenHash     String   @unique // SHA256 of JWT for revocation
+  userAgent     String?
+  ipAddress     String?
+  
+  // Expiration
+  expiresAt     DateTime
+  createdAt     DateTime @default(now())
+  revokedAt     DateTime?
+  
+  @@index([userId])
+  @@index([tokenHash])
+  @@index([expiresAt])
+}
+
+// ===================================================
+// Magic Links (Passwordless Auth)
+// ===================================================
+
+model MagicLink {
+  id            String   @id @default(uuid())
+  userId        String
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Token (hashed for security)
+  tokenHash     String   @unique
+  
+  // Link type
+  type          String   @default("login") // "login" | "verify_email" | "reset_password"
+  
+  // Expiration & usage
+  expiresAt     DateTime
+  usedAt        DateTime?
+  
+  createdAt     DateTime @default(now())
+  
+  @@index([tokenHash])
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+// ===================================================
+// MIC Wallet (Custodial)
+// ===================================================
+
+model Wallet {
+  id              String   @id @default(uuid())
+  userId          String   @unique
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Custodial wallet (server-managed)
+  publicKey       String   @unique
+  
+  // Founder wallet (self-custody, sealed on creation)
+  isFounderWallet Boolean  @default(false)
+  founderPublicKey String?  @unique
+  founderSealedAt DateTime?
+  
+  // Derived balance (from ledger, cached for performance)
+  cachedBalance   Float    @default(0)
+  lastBalanceSync DateTime @default(now())
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  // Relations
+  ledgerEntries   MICLedger[]
+  
+  @@index([publicKey])
+  @@index([founderPublicKey])
+}
+
+// ===================================================
+// MIC Ledger (Append-Only)
+// ===================================================
+
+model MICLedger {
+  id              String   @id @default(uuid())
+  walletId        String
+  wallet          Wallet   @relation(fields: [walletId], references: [id])
+  
+  // Transaction details
+  amount          Float
+  reason          String   // LEARN, EARN, CORRECTION, BONUS, REFLECTION, CIVIC, TRANSFER
+  source          String   // learning_module_completion, etc.
+  
+  // Integrity context
+  integrityScore  Float    @default(1.0)
+  gii             Float    @default(0.95) // Global Integrity Index at time of entry
+  
+  // Metadata
+  meta            Json     @default("{}")
+  
+  // Audit trail
+  txHash          String?  @unique // SHA256 hash for merkle anchoring
+  anchoredAt      DateTime?        // When anchored to Civic-Protocol-Core
+  
+  createdAt       DateTime @default(now())
+  
+  @@index([walletId])
+  @@index([createdAt])
+  @@index([txHash])
+}
+
+// ===================================================
+// Identity Events (Append-Only Audit Log)
+// ===================================================
+
+model IdentityEvent {
+  id            String   @id @default(uuid())
+  userId        String
+  user          User     @relation(fields: [userId], references: [id])
+  
+  // Event details
+  eventType     String   // USER_CREATED, LOGIN, LOGOUT, WALLET_CREATED, etc.
+  eventData     Json     @default("{}")
+  
+  // Integrity hash (for merkle anchoring)
+  eventHash     String   @unique
+  previousHash  String?  // Hash of previous event (chain)
+  
+  // Anchoring
+  anchoredAt    DateTime?
+  anchorTxId    String?
+  
+  createdAt     DateTime @default(now())
+  
+  @@index([userId])
+  @@index([eventType])
+  @@index([eventHash])
+  @@index([createdAt])
+}
+
+// ===================================================
+// Founder Wallet Registry (Immutable)
+// ===================================================
+
+model FounderWallet {
+  id              String   @id @default(uuid())
+  
+  // Public key only - private key NEVER stored
+  publicKey       String   @unique
+  
+  // Initial allocation
+  initialBalance  Float    // 1,000,000 MIC for founder
+  
+  // Seal information
+  sealedAt        DateTime @default(now())
+  sealHash        String   @unique // SHA256 of (publicKey + initialBalance + timestamp)
+  
+  // Verification
+  verified        Boolean  @default(true)
+  
+  @@index([publicKey])
+}
