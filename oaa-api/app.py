@@ -14,6 +14,7 @@ from routes.tutor import tutor_bp
 from routes.civic_radar import civic_radar_bp
 from routes.jade import jade_bp
 from routes.learning import learning_bp
+from routes.wallet import wallet_bp
 
 # Create Flask app
 app = Flask(__name__)
@@ -60,6 +61,7 @@ app.register_blueprint(tutor_bp, url_prefix='/api')
 app.register_blueprint(civic_radar_bp, url_prefix='/api')
 app.register_blueprint(jade_bp, url_prefix='/api')
 app.register_blueprint(learning_bp, url_prefix='/api')
+app.register_blueprint(wallet_bp, url_prefix='/api')  # MIC Wallet & Ledger
 
 
 # ============================================
@@ -71,8 +73,8 @@ def index():
     """API root - returns basic info"""
     return jsonify({
         "name": "OAA API",
-        "version": "1.3.0",
-        "description": "Model-Agnostic AI Tutoring System + Civic Intelligence + Pattern Oracle + Learning Hub",
+        "version": "1.4.0",
+        "description": "Model-Agnostic AI Tutoring System + Civic Intelligence + Pattern Oracle + Learning Hub + MIC Wallet",
         "endpoints": {
             "tutor": "/api/tutor",
             "providers": "/api/tutor/providers",
@@ -84,13 +86,20 @@ def index():
             "jade_health": "/api/jade/health",
             "learning_modules": "/api/learning/modules",
             "learning_complete": "/api/learning/complete",
-            "learning_health": "/api/learning/health"
+            "learning_health": "/api/learning/health",
+            "mic_wallet": "/api/mic/wallet",
+            "mic_events": "/api/mic/events",
+            "mic_earn": "/api/mic/earn",
+            "mic_ledger": "/api/mic/ledger",
+            "mic_health": "/api/mic/health"
         },
         "docs": {
             "tutor": "POST /api/tutor with {subject, message, conversationHistory}",
             "civic_radar": "GET /api/civic-radar?limit=5&min_severity=medium&categories=security,breach",
             "jade": "POST /api/jade with {message, history[], reflections_context[]}",
-            "learning": "GET /api/learning/modules, POST /api/learning/complete with {module_id, accuracy, streak}"
+            "learning": "GET /api/learning/modules, POST /api/learning/complete with {module_id, accuracy, streak}",
+            "mic_wallet": "GET /api/mic/wallet (requires Bearer token) - Get wallet balance",
+            "mic_earn": "POST /api/mic/earn with {source, meta} - Earn MIC for completed actions"
         }
     })
 
@@ -125,8 +134,8 @@ if __name__ == '__main__':
     
     print(f"""
 ╔══════════════════════════════════════════════════════════════╗
-║                    OAA API Server                             ║
-║    Model-Agnostic AI + Civic Intelligence + Pattern Oracle    ║
+║                    OAA API Server v1.4.0                      ║
+║    Model-Agnostic AI + Civic Intelligence + MIC Wallet        ║
 ╠══════════════════════════════════════════════════════════════╣
 ║  Port: {port}                                                   ║
 ║  Debug: {debug}                                                 ║
@@ -134,22 +143,21 @@ if __name__ == '__main__':
 ║  Tutor Endpoints:                                            ║
 ║    POST /api/tutor          - Chat with AI tutor             ║
 ║    GET  /api/tutor/providers - List available providers      ║
-║    GET  /api/tutor/health   - Health check                   ║
 ║                                                              ║
-║  Civic Radar Endpoints:                                      ║
+║  Learning Endpoints:                                         ║
+║    GET  /api/learning/modules - List learning modules        ║
+║    POST /api/learning/complete - Complete module + earn MIC  ║
+║                                                              ║
+║  MIC Wallet Endpoints (NEW):                                 ║
+║    GET  /api/mic/wallet     - Get wallet balance (auth req)  ║
+║    GET  /api/mic/events     - Get recent earnings            ║
+║    POST /api/mic/earn       - Earn MIC for actions           ║
+║    GET  /api/mic/ledger     - Full ledger history            ║
+║    GET  /api/mic/health     - Wallet system health           ║
+║                                                              ║
+║  Civic Radar / JADE:                                         ║
 ║    GET /api/civic-radar     - Security intelligence feed     ║
-║    GET /api/civic-radar/categories - Available categories    ║
-║    GET /api/civic-radar/health - Radar service health        ║
-║                                                              ║
-║  JADE (Pattern Oracle) Endpoints:                            ║
 ║    POST /api/jade           - Speak with Jade                ║
-║    GET  /api/jade/health    - Oracle status                  ║
-║                                                              ║
-║  Environment Variables:                                      ║
-║    LLM_PROVIDER     - Default provider (anthropic/openai/google)║
-║    ANTHROPIC_API_KEY - For Claude                            ║
-║    OPENAI_API_KEY    - For GPT                               ║
-║    GOOGLE_API_KEY    - For Gemini                            ║
 ╚══════════════════════════════════════════════════════════════╝
     """)
     

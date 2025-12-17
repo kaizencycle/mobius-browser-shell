@@ -28,7 +28,11 @@ export const env = {
     thoughtBroker: import.meta.env.VITE_THOUGHT_BROKER_API as string || 'https://mobius-systems.onrender.com',
     // Identity & MIC Wallet services
     identity: import.meta.env.VITE_IDENTITY_API_BASE as string || 'https://mobius-identity-service.onrender.com',
-    micWallet: import.meta.env.VITE_MIC_WALLET_API_BASE as string || 'https://mobius-mic-wallet-service.onrender.com',
+    // MIC Wallet - can use dedicated service OR OAA API (which now has /api/mic/* endpoints)
+    // Set VITE_USE_OAA_WALLET=true to use OAA API for wallet operations
+    micWallet: (import.meta.env.VITE_USE_OAA_WALLET === 'true' 
+      ? (import.meta.env.VITE_OAA_API_BASE as string || 'https://oaa-api-library.onrender.com') + '/api'
+      : import.meta.env.VITE_MIC_WALLET_API_BASE as string || 'https://mobius-mic-wallet-service.onrender.com'),
   },
 
   // === FEATURE FLAGS ===
