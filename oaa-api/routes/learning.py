@@ -3,11 +3,20 @@
 OAA Learning Hub API Route
 Learn-to-earn system with MIC rewards
 Constitutional Principle: Democratic access to knowledge.
+
+MIC Flow:
+1. User completes module quiz
+2. Backend calculates reward based on accuracy, difficulty, GII
+3. Reward is written to MIC ledger (append-only source of truth)
+4. Frontend refreshes wallet to show new balance
 """
 import os
 import json
 from datetime import datetime
 from flask import Blueprint, request, jsonify
+
+# Import MIC ledger functions for writing rewards
+from routes.wallet import write_to_ledger, get_user_balance, MICReason, get_current_gii, check_circuit_breaker
 
 learning_bp = Blueprint('learning', __name__)
 
@@ -446,7 +455,7 @@ def calculate_reward():
 @learning_bp.route('/learning/complete', methods=['POST'])
 def complete_module():
     """
-    Record module completion and calculate rewards.
+    Record module completion, calculate rewards, and write to MIC ledger.
     
     Request body:
         {
@@ -455,11 +464,12 @@ def complete_module():
             "questions_answered": 3,
             "correct_answers": 2,
             "time_spent_seconds": 1200,
-            "streak": 5
+            "streak": 5,
+            "user_id": "optional-user-identifier"
         }
     
     Returns:
-        Completion result with MIC reward
+        Completion result with MIC reward and ledger proof
     """
     data = request.json or {}
     
@@ -470,6 +480,16 @@ def complete_module():
     time_spent = data.get('time_spent_seconds', 0)
     streak = data.get('streak', 0)
     
+    # Get user_id from request body or auth header
+    user_id = data.get('user_id')
+    if not user_id:
+        # Try to extract from Authorization header
+        auth_header = request.headers.get('Authorization', '')
+        if auth_header.startswith('Bearer '):
+            token = auth_header[7:]
+            if token and len(token) > 10:
+                user_id = f"user_{hash(token) % 1000000:06d}"
+    
     # Find module
     module = next((m for m in LEARNING_MODULES if m['id'] == module_id), None)
     if not module:
@@ -479,8 +499,11 @@ def complete_module():
     if not isinstance(accuracy, (int, float)) or accuracy < 0 or accuracy > 1:
         return jsonify({"error": "Accuracy must be between 0 and 1"}), 400
     
-    # Simulate GII
-    gii = 0.95
+    # Get real GII from MIC system
+    gii = get_current_gii()
+    
+    # Check circuit breaker before calculating rewards
+    is_halted, halt_message = check_circuit_breaker()
     
     # Calculate reward
     reward = calculate_mic_reward(
@@ -494,11 +517,44 @@ def complete_module():
     # Calculate XP (2 XP per MIC earned)
     xp_earned = reward.get('mic_earned', 0) * 2
     
-    # In production, this would:
-    # 1. Verify the completion via session tracking
-    # 2. Call the MIC wallet API to mint rewards
-    # 3. Update user progress in database
-    # 4. Check for badge achievements
+    # ============================================
+    # 🔥 CRITICAL: Write to MIC Ledger
+    # This is what makes "Earn MIC" actually reflect in wallet
+    # ============================================
+    ledger_entry = None
+    ledger_proof = None
+    new_balance = None
+    
+    if user_id and reward.get('mic_earned', 0) > 0 and not is_halted:
+        try:
+            # Write to append-only ledger
+            ledger_entry = write_to_ledger(
+                user_id=user_id,
+                amount=reward['mic_earned'],
+                reason=MICReason.LEARN,
+                source="learning_module_completion",
+                meta={
+                    "module_id": module_id,
+                    "module_title": module['title'],
+                    "accuracy": accuracy,
+                    "difficulty": module['difficulty'],
+                    "base_reward": module['micReward'],
+                    "questions_answered": questions_answered,
+                    "correct_answers": correct_answers,
+                    "time_spent_seconds": time_spent,
+                    "streak": streak,
+                    "breakdown": reward.get('breakdown', {}),
+                    "multipliers": reward.get('multipliers', {})
+                },
+                integrity_score=accuracy  # Use accuracy as integrity proxy
+            )
+            
+            ledger_proof = f"ledger:{ledger_entry['id']}"
+            new_balance = get_user_balance(user_id)
+            
+        except ValueError as e:
+            # Circuit breaker or other error
+            reward['ledger_write_error'] = str(e)
     
     return jsonify({
         "status": "completed",
@@ -515,7 +571,16 @@ def complete_module():
             **reward,
             "xp_earned": xp_earned
         },
-        "new_streak": streak + 1 if reward.get('mic_earned', 0) > 0 else 0
+        "new_streak": streak + 1 if reward.get('mic_earned', 0) > 0 else 0,
+        # MIC Ledger proof - this is what frontend needs to verify the earning
+        "ledger": {
+            "written": ledger_entry is not None,
+            "proof": ledger_proof,
+            "entry_id": ledger_entry['id'] if ledger_entry else None,
+            "new_balance": round(new_balance, 2) if new_balance is not None else None
+        } if user_id else None,
+        "gii": gii,
+        "circuit_breaker_active": is_halted
     })
 
 

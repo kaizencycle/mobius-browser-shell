@@ -1036,19 +1036,36 @@ export const LearningProgressTracker: React.FC = () => {
     // Save to localStorage
     saveProgress(newProgress, updatedModules);
 
-    // Earn MIC if user is logged in
+    // ============================================
+    // 🔥 CRITICAL: Earn MIC and sync to wallet
+    // This writes to the MIC ledger and refreshes wallet
+    // ============================================
     if (user) {
+      console.log('📝 Writing MIC to ledger:', {
+        module: activeModule.id,
+        mic_earned: totalMicEarned,
+        accuracy
+      });
+      
       const success = await earnMIC('learning_module_completion', {
         module_id: activeModule.id,
         module_title: activeModule.title,
         accuracy: accuracy,
         mic_earned: totalMicEarned,
-        perfect_score: accuracy === 1.0
+        perfect_score: accuracy === 1.0,
+        difficulty: activeModule.difficulty,
+        base_reward: activeModule.micReward,
+        streak: userProgress.currentStreak
       });
       
       if (success) {
-        await refreshWallet();
+        console.log('✅ MIC earned successfully, wallet will refresh');
+        // Wallet refresh is already triggered by earnMIC
+      } else {
+        console.warn('⚠️ MIC earning may have failed - wallet may not reflect new balance');
       }
+    } else {
+      console.log('ℹ️ User not logged in - MIC earned locally only (not persisted to ledger)');
     }
 
     // Close quiz

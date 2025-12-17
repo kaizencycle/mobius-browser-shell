@@ -17,6 +17,11 @@ const SHARD_ARCHETYPES = [
 
 // Earning source labels for display
 const EARNING_SOURCE_LABELS: Record<string, { icon: string; label: string; color: string }> = {
+  'learning_module_completion': {
+    icon: '📚',
+    label: 'Learning Module',
+    color: 'text-amber-600 bg-amber-50'
+  },
   'oaa_tutor_question': {
     icon: '🎓',
     label: 'OAA Question',
