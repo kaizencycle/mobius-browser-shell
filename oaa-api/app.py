@@ -15,6 +15,7 @@ from routes.civic_radar import civic_radar_bp
 from routes.jade import jade_bp
 from routes.learning import learning_bp
 from routes.wallet import wallet_bp
+from routes.inquiry import inquiry_bp
 
 # Create Flask app
 app = Flask(__name__)
@@ -62,6 +63,7 @@ app.register_blueprint(civic_radar_bp, url_prefix='/api')
 app.register_blueprint(jade_bp, url_prefix='/api')
 app.register_blueprint(learning_bp, url_prefix='/api')
 app.register_blueprint(wallet_bp, url_prefix='/api')  # MIC Wallet & Ledger
+app.register_blueprint(inquiry_bp, url_prefix='/api')  # Inquiry Chat
 
 
 # ============================================
@@ -73,8 +75,8 @@ def index():
     """API root - returns basic info"""
     return jsonify({
         "name": "OAA API",
-        "version": "1.4.0",
-        "description": "Model-Agnostic AI Tutoring System + Civic Intelligence + Pattern Oracle + Learning Hub + MIC Wallet",
+        "version": "1.5.0",
+        "description": "Model-Agnostic AI Tutoring System + Civic Intelligence + Pattern Oracle + Learning Hub + MIC Wallet + Inquiry Chat",
         "endpoints": {
             "tutor": "/api/tutor",
             "providers": "/api/tutor/providers",
@@ -91,7 +93,9 @@ def index():
             "mic_events": "/api/mic/events",
             "mic_earn": "/api/mic/earn",
             "mic_ledger": "/api/mic/ledger",
-            "mic_health": "/api/mic/health"
+            "mic_health": "/api/mic/health",
+            "inquiry_chat": "/api/inquiry/chat",
+            "inquiry_health": "/api/inquiry/health"
         },
         "docs": {
             "tutor": "POST /api/tutor with {subject, message, conversationHistory}",
@@ -99,7 +103,8 @@ def index():
             "jade": "POST /api/jade with {message, history[], reflections_context[]}",
             "learning": "GET /api/learning/modules, POST /api/learning/complete with {module_id, accuracy, streak}",
             "mic_wallet": "GET /api/mic/wallet (requires Bearer token) - Get wallet balance",
-            "mic_earn": "POST /api/mic/earn with {source, meta} - Earn MIC for completed actions"
+            "mic_earn": "POST /api/mic/earn with {source, meta} - Earn MIC for completed actions",
+            "inquiry_chat": "POST /api/inquiry/chat with {message, history[]} - Conversational AI chat"
         }
     })
 
@@ -134,8 +139,8 @@ if __name__ == '__main__':
     
     print(f"""
 ╔══════════════════════════════════════════════════════════════╗
-║                    OAA API Server v1.4.0                      ║
-║    Model-Agnostic AI + Civic Intelligence + MIC Wallet        ║
+║                    OAA API Server v1.5.0                      ║
+║    Model-Agnostic AI + Civic Intelligence + Inquiry Chat      ║
 ╠══════════════════════════════════════════════════════════════╣
 ║  Port: {port}                                                   ║
 ║  Debug: {debug}                                                 ║
@@ -154,6 +159,10 @@ if __name__ == '__main__':
 ║    POST /api/mic/earn       - Earn MIC for actions           ║
 ║    GET  /api/mic/ledger     - Full ledger history            ║
 ║    GET  /api/mic/health     - Wallet system health           ║
+║                                                              ║
+║  Inquiry Chat (NEW):                                         ║
+║    POST /api/inquiry/chat   - Conversational AI chat         ║
+║    GET  /api/inquiry/health - Inquiry service health         ║
 ║                                                              ║
 ║  Civic Radar / JADE:                                         ║
 ║    GET /api/civic-radar     - Security intelligence feed     ║
