@@ -16,6 +16,7 @@ import { wakeAllServices, env } from './config/env';
 import { useAuth } from './contexts/AuthContext';
 import { useWallet } from './contexts/WalletContext';
 import { AuthModal } from './components/AuthModal';
+import { InquiryChatModal } from './components/InquiryChatModal';
 
 const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<TabId>(TabId.OAA);
@@ -284,6 +285,9 @@ const App: React.FC = () => {
 
       {/* Auth Modal */}
       {showAuthModal && <AuthModal onClose={() => setShowAuthModal(false)} />}
+
+      {/* Inquiry Chat Modal - Floating button */}
+      <InquiryChatModal />
 
     </div>
   );
