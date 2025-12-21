@@ -1,6 +1,6 @@
 import React from 'react';
 import { TabId } from '../types';
-import { BookOpen, Hexagon, Feather, Shield, Wallet, Sparkles } from 'lucide-react';
+import { BookOpen, Hexagon, Feather, Shield, Wallet, Sparkles, Network } from 'lucide-react';
 
 interface TabNavigationProps {
   activeTab: TabId;
@@ -11,6 +11,7 @@ const TABS = [
   { id: TabId.OAA, label: 'OAA Hub', shortLabel: 'OAA', icon: BookOpen },
   { id: TabId.HIVE, label: 'HIVE Lab', shortLabel: 'HIVE', icon: Hexagon },
   { id: TabId.REFLECTIONS, label: 'Reflections', shortLabel: 'Reflect', icon: Feather },
+  { id: TabId.KNOWLEDGE_GRAPH, label: 'Knowledge', shortLabel: 'Graph', icon: Network },
   { id: TabId.SHIELD, label: 'Citizen Shield', shortLabel: 'Shield', icon: Shield },
   { id: TabId.JADE, label: 'Jade', shortLabel: 'Jade', icon: Sparkles },
 ];

@@ -1,5 +1,5 @@
 // components/Labs/ReflectionsLab.tsx
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import {
   Plus,
   BookOpen,
@@ -7,7 +7,9 @@ import {
   ChevronRight,
   PenLine,
   Trash2,
+  Network,
 } from 'lucide-react';
+import { useKnowledgeGraph } from '../../contexts/KnowledgeGraphContext';
 
 type PhaseId = 'raw' | 'mirror' | 'reframe' | 'recode';
 
@@ -80,6 +82,10 @@ export const ReflectionsLab: React.FC = () => {
   const [entries, setEntries] = useState<ReflectionEntry[]>([]);
   const [activeEntryId, setActiveEntryId] = useState<string | null>(null);
   const [activePhaseId, setActivePhaseId] = useState<PhaseId>('raw');
+  const [conceptsExtracted, setConceptsExtracted] = useState(false);
+  
+  // Knowledge Graph integration
+  const { extractAndAddConcepts, stats } = useKnowledgeGraph();
 
   // Load from localStorage on mount
   useEffect(() => {
@@ -149,7 +155,30 @@ export const ReflectionsLab: React.FC = () => {
           : entry
       )
     );
+    
+    // Reset concepts extracted flag when content changes
+    setConceptsExtracted(false);
   };
+
+  // Extract concepts from reflection and add to knowledge graph
+  const handleExtractConcepts = useCallback(() => {
+    if (!activeEntryId) return;
+    
+    const entry = entries.find((e) => e.id === activeEntryId);
+    if (!entry) return;
+    
+    // Combine all phase content
+    const allContent = entry.phases
+      .map((p) => p.content)
+      .filter((c) => c.trim().length > 0)
+      .join(' ');
+    
+    if (allContent.trim().length < 20) return; // Need some content
+    
+    // Extract concepts and add to knowledge graph
+    extractAndAddConcepts(allContent, 'reflection', `reflection-${entry.id}`);
+    setConceptsExtracted(true);
+  }, [activeEntryId, entries, extractAndAddConcepts]);
 
   const activeEntry =
     activeEntryId && entries.find((e) => e.id === activeEntryId)
@@ -377,10 +406,29 @@ export const ReflectionsLab: React.FC = () => {
                     💾 Your words are stored locally in this browser only. Future
                     Mobius versions can sync this to your HIVE node.
                   </span>
-                  <span className="hidden sm:inline text-stone-400">
-                    Tip: You can always return later to complete the remaining
-                    phases.
-                  </span>
+                  <div className="flex items-center gap-3">
+                    <span className="hidden sm:inline text-stone-400">
+                      Tip: You can always return later to complete the remaining
+                      phases.
+                    </span>
+                    {/* Knowledge Graph Integration */}
+                    <button
+                      onClick={handleExtractConcepts}
+                      className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-medium transition-all ${
+                        conceptsExtracted
+                          ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                          : 'bg-stone-100 text-stone-600 border border-stone-200 hover:bg-stone-200 hover:border-stone-300'
+                      }`}
+                      title="Extract concepts and add to your Knowledge Graph"
+                    >
+                      <Network className="w-3 h-3" />
+                      {conceptsExtracted ? (
+                        <span>Added to Graph ✓</span>
+                      ) : (
+                        <span>Map to Graph</span>
+                      )}
+                    </button>
+                  </div>
                 </div>
               </div>
             </>

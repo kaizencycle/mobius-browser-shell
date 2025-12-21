@@ -5,6 +5,7 @@ import {
 } from 'lucide-react';
 import { useWallet } from '../../contexts/WalletContext';
 import { useAuth } from '../../contexts/AuthContext';
+import { useKnowledgeGraph } from '../../contexts/KnowledgeGraphContext';
 import { 
   LearningModule, 
   UserLearningProgress, 
@@ -951,6 +952,7 @@ const INITIAL_PROGRESS: UserLearningProgress = {
 export const LearningProgressTracker: React.FC = () => {
   const { user } = useAuth();
   const { earnMIC, refreshWallet } = useWallet();
+  const { addNode, addEdge, extractAndAddConcepts } = useKnowledgeGraph();
   
   const [modules, setModules] = useState<LearningModule[]>(LEARNING_MODULES);
   const [userProgress, setUserProgress] = useState<UserLearningProgress>(INITIAL_PROGRESS);
@@ -1035,6 +1037,41 @@ export const LearningProgressTracker: React.FC = () => {
 
     // Save to localStorage
     saveProgress(newProgress, updatedModules);
+
+    // ============================================
+    // 🧠 Knowledge Graph Integration
+    // Add module concepts to the user's knowledge graph
+    // ============================================
+    try {
+      // Add each topic as a concept node
+      activeModule.topics.forEach(topic => {
+        addNode({
+          label: topic,
+          type: 'concept',
+          domain: 'learning',
+        }, `learning-${activeModule.id}`);
+      });
+
+      // Add edges between topics (they're related through this module)
+      for (let i = 0; i < activeModule.topics.length; i++) {
+        for (let j = i + 1; j < activeModule.topics.length; j++) {
+          const sourceId = activeModule.topics[i].toLowerCase().replace(/[^a-z0-9]+/g, '-');
+          const targetId = activeModule.topics[j].toLowerCase().replace(/[^a-z0-9]+/g, '-');
+          addEdge(sourceId, targetId, 'co-occurs', `learning-${activeModule.id}`);
+        }
+      }
+
+      // Also extract concepts from the module description
+      extractAndAddConcepts(
+        `${activeModule.title} ${activeModule.description}`,
+        'learning',
+        `learning-${activeModule.id}`
+      );
+
+      console.log('📊 Knowledge Graph updated with learning module concepts');
+    } catch (graphError) {
+      console.warn('⚠️ Failed to update knowledge graph:', graphError);
+    }
 
     // ============================================
     // 🔥 CRITICAL: Earn MIC and sync to wallet
