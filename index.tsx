@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom/client';
 import App from './App';
 import { AuthProvider } from './contexts/AuthContext';
 import { WalletProvider } from './contexts/WalletContext';
+import { KnowledgeGraphProvider } from './contexts/KnowledgeGraphContext';
 
 const rootElement = document.getElementById('root');
 if (!rootElement) {
@@ -14,7 +15,9 @@ root.render(
   <React.StrictMode>
     <AuthProvider>
       <WalletProvider>
-        <App />
+        <KnowledgeGraphProvider>
+          <App />
+        </KnowledgeGraphProvider>
       </WalletProvider>
     </AuthProvider>
   </React.StrictMode>

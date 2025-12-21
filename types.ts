@@ -4,7 +4,8 @@ export enum TabId {
   REFLECTIONS = 'REFLECTIONS',
   SHIELD = 'CITIZEN_SHIELD',
   JADE = 'JADE_CHAMBER',
-  WALLET = 'WALLET'
+  WALLET = 'WALLET',
+  KNOWLEDGE_GRAPH = 'KNOWLEDGE_GRAPH'
 }
 
 /**
@@ -165,4 +166,99 @@ export interface ModuleCompletionResult {
   newLevel?: number;
   streakBonus?: number;
   perfectScoreBonus?: boolean;
+}
+
+// ============================================
+// Knowledge Graph Types
+// Temporal Epistemic Graph for tracking learning journey
+// ============================================
+
+export type KnowledgeNodeType = 'concept' | 'artifact' | 'intent';
+export type KnowledgeDomain = 'reflection' | 'learning' | 'civic' | 'system' | 'personal';
+export type KnowledgeEdgeType = 'co-occurs' | 'builds-on' | 'motivates' | 'contrasts';
+
+export interface KnowledgeNode {
+  id: string;
+  label: string;
+  type: KnowledgeNodeType;
+  domain: KnowledgeDomain;
+  weight: number;           // Frequency / importance (higher = more central)
+  firstSeen: string;        // ISO timestamp
+  lastSeen: string;         // ISO timestamp
+  sources: string[];        // IDs of reflections/modules that reference this node
+  metadata?: {
+    description?: string;
+    intentHorizon?: string; // For intent nodes: "30d", "90d", etc.
+    goalText?: string;      // For intent nodes: the user's stated goal
+    completed?: boolean;    // For intent nodes: was the intent achieved
+  };
+}
+
+export interface KnowledgeEdge {
+  id: string;
+  source: string;           // Node ID
+  target: string;           // Node ID
+  type: KnowledgeEdgeType;
+  strength: number;         // 0-1, how strong the connection
+  evidence: string[];       // Source IDs that support this edge
+  firstSeen: string;
+  lastSeen: string;
+}
+
+export interface KnowledgeGraph {
+  nodes: KnowledgeNode[];
+  edges: KnowledgeEdge[];
+  metadata: {
+    lastUpdated: string;
+    totalConcepts: number;
+    totalConnections: number;
+    dominantDomains: KnowledgeDomain[];
+  };
+}
+
+// For the force-graph visualization
+export interface GraphData {
+  nodes: GraphNode[];
+  links: GraphLink[];
+}
+
+export interface GraphNode {
+  id: string;
+  label: string;
+  type: KnowledgeNodeType;
+  domain: KnowledgeDomain;
+  weight: number;
+  val?: number;             // Node size for force-graph
+  color?: string;
+}
+
+export interface GraphLink {
+  source: string;
+  target: string;
+  type: KnowledgeEdgeType;
+  strength: number;
+  color?: string;
+}
+
+// Intent Horizon for goal setting
+export interface IntentHorizon {
+  id: string;
+  goal: string;
+  horizon: '7d' | '30d' | '90d' | '1y' | 'open';
+  createdAt: string;
+  targetDate?: string;
+  relatedConcepts: string[];  // Node IDs
+  status: 'active' | 'completed' | 'abandoned';
+  progress: number;           // 0-100
+  reflections: string[];      // Reflection IDs that mention this intent
+}
+
+// JADE Knowledge Graph Analysis
+export interface JADEGraphInsight {
+  type: 'dominant_theme' | 'neglected_area' | 'emerging_cluster' | 'suggested_connection' | 'knowledge_gap';
+  title: string;
+  description: string;
+  relatedNodes: string[];
+  confidence: number;
+  actionable?: string;
 }
