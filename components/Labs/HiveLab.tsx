@@ -11,11 +11,15 @@ import {
   type ShardId,
   type HiveOrder,
   type DiceOutcome,
-  calculateMicDelta
+  calculateMicDelta,
+  buildCharacterSnapshot,
+  parseCharacterSnapshot,
+  type HiveCharacterSnapshot
 } from '../Hive';
 import { 
   Users, Coins, AlertTriangle, Map, ChevronRight, 
-  Dices, User, BookOpen, RotateCcw, Download, Upload
+  Dices, User, BookOpen, RotateCcw, Download, Upload,
+  Clipboard, Check
 } from 'lucide-react';
 
 // ============================================
@@ -198,6 +202,12 @@ export const HiveLab: React.FC = () => {
   const [viewMode, setViewMode] = useState<HiveViewMode>('city');
   const [gameLog, setGameLog] = useState<DiceOutcome[]>([]);
 
+  // JSON export/import state
+  const [exportJson, setExportJson] = useState<string>('');
+  const [importJson, setImportJson] = useState<string>('');
+  const [importError, setImportError] = useState<string | null>(null);
+  const [copiedToClipboard, setCopiedToClipboard] = useState<boolean>(false);
+
   // Load character from localStorage on mount
   useEffect(() => {
     const savedCharacter = localStorage.getItem(STORAGE_KEY_CHARACTER);
@@ -354,6 +364,51 @@ export const HiveLab: React.FC = () => {
     input.click();
   };
 
+  // Export character as JSON snapshot to textarea
+  const handleExportJsonSnapshot = () => {
+    if (!character) return;
+
+    const snapshot = buildCharacterSnapshot(character);
+    const json = JSON.stringify(snapshot, null, 2);
+    setExportJson(json);
+    setCopiedToClipboard(false);
+
+    // Try copying to clipboard
+    if (navigator?.clipboard?.writeText) {
+      navigator.clipboard.writeText(json).then(() => {
+        setCopiedToClipboard(true);
+        // Reset after 2 seconds
+        setTimeout(() => setCopiedToClipboard(false), 2000);
+      }).catch(() => {
+        // ignore; textarea still has the data
+      });
+    }
+  };
+
+  // Import character from pasted JSON snapshot
+  const handleImportJsonSnapshot = () => {
+    try {
+      setImportError(null);
+      const parsed = JSON.parse(importJson) as HiveCharacterSnapshot;
+
+      if (parsed.version !== 'hive-character.v1') {
+        throw new Error('Unsupported character version. Expected "hive-character.v1"');
+      }
+
+      const importedCharacter = parseCharacterSnapshot(parsed);
+      if (!importedCharacter) {
+        throw new Error('Failed to parse character snapshot');
+      }
+
+      setCharacter(importedCharacter);
+      setImportJson('');
+      setViewMode('play');
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Failed to import character JSON';
+      setImportError(message);
+    }
+  };
+
   // Render character creator if no character and trying to access character/play modes
   if (!character && (viewMode === 'character' || viewMode === 'play')) {
     return <HiveCharacterCreator onCharacterCreated={handleCharacterCreated} />;
@@ -507,6 +562,87 @@ export const HiveLab: React.FC = () => {
                       <p className="text-xs text-stone-400">🏛️ The Dome in Heat (coming)</p>
                       <p className="text-xs text-stone-400">⚖️ The Trial of Echoes (coming)</p>
                       <p className="text-xs text-stone-400">🌊 The Great Flood Choice (coming)</p>
+                    </div>
+                  </div>
+
+                  {/* Export / Import JSON Block */}
+                  <div className="bg-white border border-stone-200 rounded-lg p-4 space-y-3">
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="flex items-center space-x-2">
+                        <Clipboard className="w-4 h-4 text-stone-500" />
+                        <h3 className="text-sm font-semibold text-stone-700">Export / Import Character JSON</h3>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={handleExportJsonSnapshot}
+                        className="flex items-center space-x-1.5 px-2.5 py-1.5 text-xs font-medium border border-stone-200 rounded bg-stone-800 text-white hover:bg-stone-700 transition-colors"
+                      >
+                        <Download className="w-3.5 h-3.5" />
+                        <span>Export current sheet</span>
+                      </button>
+                    </div>
+
+                    <p className="text-xs text-stone-500">
+                      Use this to move characters between sessions, or to attach them to future MIC wallets.
+                    </p>
+
+                    {exportJson && (
+                      <div className="flex flex-col gap-1.5">
+                        <div className="flex items-center justify-between">
+                          <label className="text-[11px] font-medium text-stone-600">
+                            Exported JSON
+                          </label>
+                          {copiedToClipboard && (
+                            <span className="flex items-center space-x-1 text-[10px] text-emerald-600">
+                              <Check className="w-3 h-3" />
+                              <span>Copied to clipboard</span>
+                            </span>
+                          )}
+                        </div>
+                        <textarea
+                          className="w-full border border-stone-200 rounded px-2 py-1.5 font-mono text-[11px] min-h-[100px] bg-stone-50 text-stone-700 focus:outline-none focus:ring-2 focus:ring-stone-300"
+                          value={exportJson}
+                          readOnly
+                        />
+                      </div>
+                    )}
+
+                    <div className="pt-2 border-t border-stone-100">
+                      <div className="flex flex-col gap-1.5">
+                        <label className="text-[11px] font-medium text-stone-600">
+                          Import JSON (paste a previous character here)
+                        </label>
+                        <textarea
+                          className="w-full border border-stone-200 rounded px-2 py-1.5 font-mono text-[11px] min-h-[80px] focus:outline-none focus:ring-2 focus:ring-stone-300"
+                          placeholder='{"version":"hive-character.v1", "name": "...", "order": "SCOUT", ...}'
+                          value={importJson}
+                          onChange={(e) => {
+                            setImportJson(e.target.value);
+                            setImportError(null);
+                          }}
+                        />
+                        <div className="flex items-center justify-between mt-1">
+                          {importError && (
+                            <p className="text-[11px] text-red-600">{importError}</p>
+                          )}
+                          <div className="flex-1" />
+                          <button
+                            type="button"
+                            onClick={handleImportJsonSnapshot}
+                            disabled={!importJson.trim()}
+                            className="flex items-center space-x-1.5 px-2.5 py-1.5 text-xs font-medium border border-stone-200 rounded hover:bg-stone-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                          >
+                            <Upload className="w-3.5 h-3.5" />
+                            <span>Import character</span>
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="pt-2 border-t border-stone-100">
+                      <p className="text-[10px] text-stone-400">
+                        🔮 In a future version, character snapshots can be bound to MIC wallets and stored in the Mobius substrate.
+                      </p>
                     </div>
                   </div>
                 </div>

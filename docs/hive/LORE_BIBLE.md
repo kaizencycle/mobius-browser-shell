@@ -388,7 +388,9 @@ The current `mobius-browser-shell` implementation includes:
 - ✅ Dice-Ethics roller (d12 + shard value → narrative outcome)
 - ✅ Character creation wizard with order selection
 - ✅ Local storage persistence
-- ✅ Export/import character as JSON
+- ✅ Export/import character as JSON (file-based and in-app textarea)
+- ✅ Portable character snapshot format (`hive-character.v1`)
+- ✅ EPICON-style roll event structure ready for Mobius integration
 - ⏳ No MIC wallet binding yet (coming)
 - ⏳ No EPICON event logging yet (coming)
 
@@ -402,7 +404,149 @@ The current `mobius-browser-shell` implementation includes:
 
 ---
 
-## XIII. Canonical Quotes
+## XIII. JSON Schema & EPICON Payloads
+
+### A. Character Snapshot Format
+
+The `HiveCharacterSnapshot` type provides a portable format for character data:
+
+```typescript
+interface HiveCharacterSnapshot {
+  version: "hive-character.v1";
+  name: string;
+  order: HiveOrder; // "SCOUT" | "CITIZEN" | "AGENT" | "ELDER"
+  shardValues: Record<ShardId, number>;
+  civicMemory: string;
+  unresolvedTrial: string;
+  micXp: number;
+  createdAt: string; // ISO timestamp
+}
+```
+
+**Example:**
+
+```json
+{
+  "version": "hive-character.v1",
+  "name": "Liora of the Frostworks",
+  "order": "SCOUT",
+  "shardValues": {
+    "ASH": 1,
+    "VEILS": 2,
+    "FROST": 3,
+    "SONG": 1,
+    "STONE": 2,
+    "ECHOES": 2,
+    "DAWN": 3
+  },
+  "civicMemory": "[integrity] Saved the reactor coolant system during the heat crisis",
+  "unresolvedTrial": "Left behind a colleague when the Frost tunnels collapsed",
+  "micXp": 45,
+  "createdAt": "2026-01-02T10:30:00.000Z"
+}
+```
+
+### B. Roll Event Format (EPICON-Style)
+
+The `HiveRollEvent` type structures dice outcomes for future Mobius/EPICON integration:
+
+```typescript
+interface HiveRollEvent {
+  eventType: "hive.roll";
+  version: "hive-roll.v1";
+  timestamp: string; // ISO
+
+  character: {
+    name: string;
+    order: HiveOrder;
+  };
+
+  intent: string;
+
+  shard: ShardId;
+  shardValue: number;
+  rawRoll: number;
+  total: number;
+  band: OutcomeBand;
+
+  title: string;
+  narrative: string;
+
+  epiconMeta?: {
+    micWalletId?: string;
+    ledgerThreadId?: string;
+    sceneId?: string;
+    hiveRoom?: string;
+    client?: string;
+  };
+}
+```
+
+**Example EPICON API Payload (for future POST):**
+
+```json
+{
+  "type": "epicon.hive.roll",
+  "version": "1.0.0",
+  "mic_wallet_id": "mic_abc123",
+  "character": {
+    "name": "Liora of the Frostworks",
+    "order": "SCOUT"
+  },
+  "intent": "Shut down the unstable reactor before it melts the district.",
+  "shard": "FROST",
+  "shard_value": 3,
+  "dice": {
+    "raw_roll": 9,
+    "total": 12,
+    "band": "RECONCILE"
+  },
+  "narrative": "You succeed and heal something along the way. The FROST shard settles into a more stable form.",
+  "meta": {
+    "scene_id": "scene_citadel-001",
+    "client": "mobius-browser-shell",
+    "hive_room": "NYC-PILOT-A"
+  }
+}
+```
+
+### C. Usage
+
+**Export character (in-app):**
+1. Click "Export current sheet" in the DnD Mode view
+2. JSON appears in textarea and is copied to clipboard
+3. Save or share the JSON
+
+**Import character (in-app):**
+1. Paste JSON into the import textarea
+2. Click "Import character"
+3. Character is loaded into the game
+
+**Programmatic usage:**
+
+```typescript
+import { 
+  buildCharacterSnapshot, 
+  parseCharacterSnapshot,
+  buildRollEvent 
+} from '../Hive';
+
+// Export
+const snapshot = buildCharacterSnapshot(character);
+const json = JSON.stringify(snapshot, null, 2);
+
+// Import
+const parsed = JSON.parse(json) as HiveCharacterSnapshot;
+const character = parseCharacterSnapshot(parsed);
+
+// Log a roll as EPICON event
+const rollEvent = buildRollEvent(diceOutcome, { name: character.name, order: character.order });
+// Future: POST rollEvent to /api/hive/roll
+```
+
+---
+
+## XIV. Canonical Quotes
 
 > "We heal as we walk."  
 > — Mobius Systems
