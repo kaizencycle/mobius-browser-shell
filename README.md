@@ -1,10 +1,25 @@
 <div align="center">
 <img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
+
+[![Version](https://img.shields.io/badge/version-1.0.0--beta.1-emerald)](https://github.com/kaizencycle/mobius-browser-shell/releases)
+[![Release Stage](https://img.shields.io/badge/stage-Beta-blue)](./CHANGELOG.md)
+[![License](https://img.shields.io/badge/license-MIT-green)](./LICENSE)
+[![Sentinels](https://img.shields.io/badge/sentinels-ATLAS%20%7C%20AUREA%20%7C%20EVE%20%7C%20JADE-purple)](./.github/sentinels/)
+[![MII](https://img.shields.io/badge/MII-0.95-brightgreen)](./docs/SENTINEL_GUIDE.md)
+
 </div>
 
 # 🌀 Mobius Browser Shell
 
 > *"The nervous system of civilization infrastructure."*
+
+## 🚀 Beta Release v1.0.0-beta.1
+
+**Release Date:** January 31, 2026  
+**Codename:** ATLAS  
+**Status:** Production Ready (Beta)
+
+This is the first official Beta release of the Mobius Browser Shell. All core features are complete and ready for early adopter testing.
 
 The Mobius Browser Shell is the human-facing interface for Mobius Systems. It serves as a unified control room that embeds all Mobius Labs (OAA, Reflections, Citizen Shield, HIVE) and displays system integrity metrics (MIC, MII).
 
@@ -186,3 +201,42 @@ This separation means:
 ## License
 
 MIT - but remember: you can fork the shell, not the integrity.
+
+---
+
+## 📋 Beta Release Checklist
+
+| Component | Status | Version |
+|-----------|--------|---------|
+| Browser Shell (UI) | ✅ Ready | 1.0.0-beta.1 |
+| OAA Learning Hub | ✅ Ready | 1.0.0-beta.1 |
+| Reflections Lab | ✅ Ready | 1.0.0-beta.1 |
+| Citizen Shield | ✅ Ready | 1.0.0-beta.1 |
+| HIVE Lab | ✅ Ready | 1.0.0-beta.1 |
+| Wallet Lab | ✅ Ready | 1.0.0-beta.1 |
+| JADE Lab | ✅ Ready | 1.0.0-beta.1 |
+| Knowledge Graph | ✅ Ready | 1.0.0-beta.1 |
+| Sentinel System | ✅ Active | 1.0.0 |
+| Anti-Nuke Protection | ✅ Active | 1.0.0 |
+| Authentication | ✅ Ready | 1.0.0-beta.1 |
+| MIC/MII Integration | ✅ Ready | 1.0.0-beta.1 |
+
+## 🛡️ Sentinel Status
+
+| Sentinel | Role | Status |
+|----------|------|--------|
+| ATLAS | Architectural Review | 🟢 Active |
+| AUREA | Integrity Check | 🟢 Active |
+| EVE | Deployment Verification | 🟢 Active |
+| JADE | UX Validation | 🟢 Active |
+
+---
+
+## 📚 Documentation
+
+- [CHANGELOG](./CHANGELOG.md) - Version history and release notes
+- [ARCHITECTURE](./ARCHITECTURE.md) - System design and topology
+- [SENTINEL GUIDE](./docs/SENTINEL_GUIDE.md) - Sentinel system documentation
+- [ANTI-NUKE ARCHITECTURE](./docs/ANTI_NUKE_ARCHITECTURE.md) - Protection systems
+- [RECOVERY](./docs/RECOVERY.md) - Disaster recovery procedures
+- [HIVE LORE BIBLE](./docs/hive/LORE_BIBLE.md) - HIVE game lore and mechanics

@@ -1,7 +1,7 @@
 {
   "name": "oaa-api-library",
-  "version": "1.0.0",
-  "description": "Mobius Systems - Complete Auth + Wallet System",
+  "version": "1.0.0-beta.1",
+  "description": "Mobius Systems - Complete Auth + Wallet System (Beta)",
   "type": "module",
   "main": "dist/index.js",
   "scripts": {

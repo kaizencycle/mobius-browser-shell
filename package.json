@@ -1,12 +1,39 @@
 {
-  "name": "mobius-systems",
+  "name": "mobius-browser-shell",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.0.0-beta.1",
+  "description": "The Mobius Browser Shell - A unified interface for Mobius Systems Labs (OAA, Reflections, Citizen Shield, HIVE, Wallet)",
+  "author": "Mobius Systems",
+  "license": "MIT",
   "type": "module",
+  "homepage": "https://github.com/kaizencycle/mobius-browser-shell",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/kaizencycle/mobius-browser-shell.git"
+  },
+  "bugs": {
+    "url": "https://github.com/kaizencycle/mobius-browser-shell/issues"
+  },
+  "keywords": [
+    "mobius",
+    "browser-shell",
+    "ai-education",
+    "integrity-systems",
+    "MIC",
+    "MII",
+    "sentinel",
+    "react",
+    "vite"
+  ],
+  "engines": {
+    "node": ">=18.0.0"
+  },
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "lint": "tsc --noEmit",
+    "check": "tsc --noEmit && npm run build"
   },
   "dependencies": {
     "lucide-react": "^0.556.0",

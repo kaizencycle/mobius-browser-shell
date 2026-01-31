@@ -1,5 +1,51 @@
 {
-  "name": "Mobius Systems",
+  "name": "Mobius Browser Shell",
+  "version": "1.0.0-beta.1",
   "description": "An AI Browser for Civilization. A local-first, integrity-aware shell for learning, building, and reflecting.",
-  "requestFramePermissions": []
+  "releaseStage": "beta",
+  "releaseDate": "2026-01-31",
+  "requestFramePermissions": [],
+  "labs": {
+    "oaa": {
+      "name": "OAA Learning Hub",
+      "version": "1.0.0-beta.1",
+      "status": "active"
+    },
+    "reflections": {
+      "name": "Reflections",
+      "version": "1.0.0-beta.1",
+      "status": "active"
+    },
+    "citizenShield": {
+      "name": "Citizen Shield",
+      "version": "1.0.0-beta.1",
+      "status": "active"
+    },
+    "hive": {
+      "name": "HIVE",
+      "version": "1.0.0-beta.1",
+      "status": "active"
+    },
+    "wallet": {
+      "name": "MIC Wallet",
+      "version": "1.0.0-beta.1",
+      "status": "active"
+    },
+    "jade": {
+      "name": "JADE Experience Lab",
+      "version": "1.0.0-beta.1",
+      "status": "active"
+    },
+    "knowledgeGraph": {
+      "name": "Knowledge Graph",
+      "version": "1.0.0-beta.1",
+      "status": "active"
+    }
+  },
+  "sentinels": {
+    "atlas": { "status": "active", "role": "Architectural Review" },
+    "aurea": { "status": "active", "role": "Integrity Check" },
+    "eve": { "status": "active", "role": "Deployment Verification" },
+    "jade": { "status": "active", "role": "UX Validation" }
+  }
 }

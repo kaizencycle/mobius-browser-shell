@@ -227,3 +227,9 @@ Mobius Systems is:
 ---
 
 *"We heal as we walk."* — Mobius Systems
+
+---
+
+**Version:** 1.0.0-beta.1
+**Last Updated:** January 2026
+**Release:** Beta (ATLAS)

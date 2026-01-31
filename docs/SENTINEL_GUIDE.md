@@ -381,8 +381,9 @@ yamllint .github/workflows/sentinel-validation.yml
 
 ---
 
-**Version:** 1.0
-**Last Updated:** December 2024
+**Version:** 1.0.0-beta.1
+**Last Updated:** January 2026
+**Release:** Beta (ATLAS)
 **Maintained By:** Mobius Systems
 
 *"The sentinels watch, so you can build." — Mobius Doctrine*

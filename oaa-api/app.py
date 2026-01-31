@@ -75,7 +75,8 @@ def index():
     """API root - returns basic info"""
     return jsonify({
         "name": "OAA API",
-        "version": "1.5.0",
+        "version": "1.0.0-beta.1",
+        "release_stage": "beta",
         "description": "Model-Agnostic AI Tutoring System + Civic Intelligence + Pattern Oracle + Learning Hub + MIC Wallet + Inquiry Chat",
         "endpoints": {
             "tutor": "/api/tutor",
@@ -139,8 +140,9 @@ if __name__ == '__main__':
     
     print(f"""
 ╔══════════════════════════════════════════════════════════════╗
-║                    OAA API Server v1.5.0                      ║
+║              OAA API Server v1.0.0-beta.1                     ║
 ║    Model-Agnostic AI + Civic Intelligence + Inquiry Chat      ║
+║                    [BETA RELEASE]                             ║
 ╠══════════════════════════════════════════════════════════════╣
 ║  Port: {port}                                                   ║
 ║  Debug: {debug}                                                 ║
