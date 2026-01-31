@@ -1,8 +1,11 @@
 # Mobius Sentinel System Configuration
 # This file defines the settings for all sentinel workflows
 
-version: "1.0"
+version: "1.0.0-beta.1"
 system: "mobius-browser-shell"
+release_stage: "beta"
+release_date: "2026-01-31"
+release_codename: "ATLAS"
 
 # Sentinel Definitions
 sentinels:

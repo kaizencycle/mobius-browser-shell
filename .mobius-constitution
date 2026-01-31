@@ -1,9 +1,11 @@
 # Mobius Constitution
 ## Browser Shell Component
 
-Version: 1.0
+Version: 1.0.0-beta.1
 Established: December 2024
+Updated: January 2026 (Beta Release)
 Repository: kaizencycle/mobius-browser-shell
+Release Stage: Beta
 
 ---
 
@@ -152,11 +154,39 @@ The following cannot be removed or weakened:
 
 ---
 
+## Article VIII: Release Status
+
+### Section 1: Current Release
+- **Version:** 1.0.0-beta.1
+- **Stage:** Beta
+- **Date:** January 31, 2026
+- **Codename:** ATLAS
+
+### Section 2: Beta Criteria Met
+- Core Shell functionality complete
+- All primary Labs integrated
+- Sentinel system operational
+- Anti-nuke protection active
+- Documentation current
+- CI/CD pipelines functioning
+
+### Section 3: Path to Stable
+Requirements for 1.0.0 stable release:
+1. Public beta testing period (minimum 30 days)
+2. All critical bugs resolved
+3. Security audit completed
+4. MII sustained above 0.90
+5. Community feedback incorporated
+
+---
+
 ## Signatures
 
 Repository: mobius-browser-shell
+Version: 1.0.0-beta.1
 Hash: [Generated on commit]
 Sentinel: AUREA-verified
+Release: ATLAS Beta
 
 ---
 

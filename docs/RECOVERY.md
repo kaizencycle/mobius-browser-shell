@@ -282,8 +282,9 @@ This simulates repository loss and walks through all recovery procedures.
 
 ---
 
-**Last Updated:** December 2024
-**Version:** 1.0
+**Last Updated:** January 2026
+**Version:** 1.0.0-beta.1
+**Release:** Beta (ATLAS)
 **Maintained By:** Mobius Sentinel System
 
 *"We heal as we walk." — Mobius Systems*

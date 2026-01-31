@@ -350,6 +350,7 @@ Quick health check of protections:
 
 ---
 
-**Version:** 1.0
-**Last Updated:** December 2024
+**Version:** 1.0.0-beta.1
+**Last Updated:** January 2026
+**Release:** Beta (ATLAS)
 **Maintained By:** Mobius Sentinel System
