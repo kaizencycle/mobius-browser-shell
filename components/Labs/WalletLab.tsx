@@ -48,6 +48,26 @@ const EARNING_SOURCE_LABELS: Record<string, { icon: string; label: string; color
     label: 'Reflection Complete',
     color: 'text-purple-600 bg-purple-50'
   },
+  'reflection_spark': {
+    icon: '✨',
+    label: 'Reflection Bonus',
+    color: 'text-fuchsia-600 bg-fuchsia-50'
+  },
+  'reflection_geist_mode': {
+    icon: '✨',
+    label: 'Reflection Bonus',
+    color: 'text-indigo-600 bg-indigo-50'
+  },
+  'reflection_epiphany': {
+    icon: '✨',
+    label: 'Reflection Bonus',
+    color: 'text-violet-600 bg-violet-50'
+  },
+  'agent_creation_burn': {
+    icon: '🔥',
+    label: 'Agent Forge Burn',
+    color: 'text-red-600 bg-red-50'
+  },
   'shield_module_complete': {
     icon: '🛡️',
     label: 'Shield Module Complete',
@@ -321,6 +341,7 @@ export const WalletLab: React.FC = () => {
                   label: event.source,
                   color: 'text-gray-600 bg-gray-50'
                 };
+                const isDebit = event.amount < 0;
 
                 return (
                   <div key={event.id} className="px-3 sm:px-6 py-3 sm:py-4 flex items-center justify-between hover:bg-stone-50 transition-colors group gap-2">
@@ -337,8 +358,8 @@ export const WalletLab: React.FC = () => {
                     </div>
 
                     <div className="text-right ml-4">
-                      <div className="text-sm font-semibold text-green-600">
-                        +{event.amount.toLocaleString()} MIC
+                      <div className={`text-sm font-semibold ${isDebit ? 'text-red-600' : 'text-green-600'}`}>
+                        {event.amount > 0 ? '+' : ''}{event.amount.toLocaleString()} MIC
                       </div>
                       <div className="text-xs text-gray-500 mt-0.5">
                         {new Date(event.created_at).toLocaleString('en-US', {

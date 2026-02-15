@@ -4,14 +4,22 @@ import {
   Plus,
   BookOpen,
   Sparkles,
+  ChevronLeft,
   ChevronRight,
   PenLine,
   Trash2,
   Network,
+  Bot,
+  Flame,
+  Download,
 } from 'lucide-react';
 import { useKnowledgeGraph } from '../../contexts/KnowledgeGraphContext';
+import { useWallet } from '../../contexts/WalletContext';
+import { useAuth } from '../../contexts/AuthContext';
 
 type PhaseId = 'raw' | 'mirror' | 'reframe' | 'recode';
+type ReflectionRewardId = 'spark' | 'geist_mode' | 'epiphany';
+type ReflectionAnalysis = ReturnType<typeof analyzeReflection>;
 
 interface Phase {
   id: PhaseId;
@@ -26,9 +34,62 @@ interface ReflectionEntry {
   createdAt: string;
   title: string;
   phases: Phase[];
+  rewardClaims: ReflectionRewardId[];
+  rewardRollMilestone: number;
+}
+
+interface CustomAgent {
+  id: string;
+  name: string;
+  createdAt: string;
+  burnCost: number;
+  skillMd: string;
+  biodna: Record<string, unknown>;
 }
 
 const STORAGE_KEY = 'mobius_reflections_v1';
+const AGENT_STORAGE_KEY = 'mobius_custom_agents_v1';
+const AGENT_BURN_COST = 200;
+const SUBSTANTIVE_PHASE_WORDS = 12;
+const HIDDEN_REWARD_WORD_STEP = 48;
+
+const REFLECTION_REWARDS: Array<{
+  id: ReflectionRewardId;
+  source: string;
+  mic: number;
+  minWords: number;
+  minCompletedPhases: number;
+  baseChance: number;
+  signalBoostChance: number;
+}> = [
+  {
+    id: 'spark',
+    source: 'reflection_spark',
+    mic: 4,
+    minWords: 24,
+    minCompletedPhases: 1,
+    baseChance: 0.16,
+    signalBoostChance: 0.08,
+  },
+  {
+    id: 'geist_mode',
+    source: 'reflection_geist_mode',
+    mic: 7,
+    minWords: 90,
+    minCompletedPhases: 3,
+    baseChance: 0.11,
+    signalBoostChance: 0.07,
+  },
+  {
+    id: 'epiphany',
+    source: 'reflection_epiphany',
+    mic: 12,
+    minWords: 160,
+    minCompletedPhases: 4,
+    baseChance: 0.07,
+    signalBoostChance: 0.06,
+  },
+];
 
 const PHASE_TEMPLATE: Omit<Phase, 'content'>[] = [
   {
@@ -61,6 +122,116 @@ const PHASE_TEMPLATE: Omit<Phase, 'content'>[] = [
   },
 ];
 
+function countWords(input: string): number {
+  const text = input.trim();
+  if (!text) return 0;
+  return text.split(/\s+/).filter(Boolean).length;
+}
+
+function analyzeReflection(entry: ReflectionEntry) {
+  const totalWords = entry.phases.reduce((sum, phase) => sum + countWords(phase.content), 0);
+  const completedPhaseCount = entry.phases.filter(
+    (phase) => countWords(phase.content) >= SUBSTANTIVE_PHASE_WORDS
+  ).length;
+  const normalizedText = entry.phases.map((phase) => phase.content).join(' ').toLowerCase();
+
+  const hasSparkSignal = /\b(spark|ignite|ignition|kindle)\b/.test(normalizedText);
+  const hasGeistSignal = /\b(geist|giest|geist mode|spirit mode)\b/.test(normalizedText);
+  const hasEpiphanySignal = /\b(epiphany|aha|breakthrough|clarity|reali[sz]ation)\b/.test(normalizedText);
+
+  return {
+    totalWords,
+    completedPhaseCount,
+    hasSparkSignal,
+    hasGeistSignal,
+    hasEpiphanySignal,
+  };
+}
+
+function secureRandom01(): number {
+  if (typeof crypto !== 'undefined' && typeof crypto.getRandomValues === 'function') {
+    const randomArray = new Uint32Array(1);
+    crypto.getRandomValues(randomArray);
+    return randomArray[0] / 0xffffffff;
+  }
+  return Math.random();
+}
+
+function signalBoostForReward(rewardId: ReflectionRewardId, analysis: ReflectionAnalysis): boolean {
+  if (rewardId === 'spark') return analysis.hasSparkSignal;
+  if (rewardId === 'geist_mode') return analysis.hasGeistSignal;
+  return analysis.hasEpiphanySignal;
+}
+
+function rollHiddenReward(entry: ReflectionEntry, analysis: ReflectionAnalysis) {
+  const claimed = new Set(entry.rewardClaims);
+  const sortedRewards = [...REFLECTION_REWARDS].sort((a, b) => b.mic - a.mic);
+
+  for (const reward of sortedRewards) {
+    if (claimed.has(reward.id)) continue;
+    if (analysis.totalWords < reward.minWords) continue;
+    if (analysis.completedPhaseCount < reward.minCompletedPhases) continue;
+
+    const hasSignalBoost = signalBoostForReward(reward.id, analysis);
+    const chance = Math.min(
+      0.9,
+      reward.baseChance + (hasSignalBoost ? reward.signalBoostChance : 0)
+    );
+    if (secureRandom01() < chance) {
+      return reward;
+    }
+  }
+
+  return null;
+}
+
+function createDefaultSkillMarkdown(name: string): string {
+  const safeName = name.trim() || 'Unnamed Agent';
+  return `# ${safeName} — Skill Profile
+
+## Core Mission
+Support human reflection, learning, and ethical action with calm, precise guidance.
+
+## Operational Strengths
+- Active listening and synthesis
+- Clarifying ambiguous goals
+- Translating intent into concrete next actions
+
+## Constraints
+- Never manipulate, coerce, or exploit attention.
+- Preserve user agency and dignity.
+- Prioritize integrity over speed.
+`;
+}
+
+function createDefaultBiodnaJson(name: string): string {
+  const safeName = name.trim() || 'Unnamed Agent';
+  return JSON.stringify(
+    {
+      name: safeName,
+      lineage: 'mobius-reflection-forge',
+      alignment: ['integrity', 'ecology', 'accountability'],
+      temperament: 'calm-analytical',
+      loops: ['reflection', 'learning'],
+      version: 1,
+    },
+    null,
+    2
+  );
+}
+
+function triggerDownload(filename: string, contents: string, mimeType: string) {
+  const blob = new Blob([contents], { type: mimeType });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+}
+
 function createNewEntry(): ReflectionEntry {
   const id =
     typeof crypto !== 'undefined' && 'randomUUID' in crypto
@@ -75,6 +246,8 @@ function createNewEntry(): ReflectionEntry {
       ...p,
       content: '',
     })),
+    rewardClaims: [],
+    rewardRollMilestone: 0,
   };
 }
 
@@ -83,9 +256,19 @@ export const ReflectionsLab: React.FC = () => {
   const [activeEntryId, setActiveEntryId] = useState<string | null>(null);
   const [activePhaseId, setActivePhaseId] = useState<PhaseId>('raw');
   const [conceptsExtracted, setConceptsExtracted] = useState(false);
+  const [rewardNotice, setRewardNotice] = useState<string | null>(null);
+  const [agents, setAgents] = useState<CustomAgent[]>([]);
+  const [agentName, setAgentName] = useState('');
+  const [agentSkillMd, setAgentSkillMd] = useState(createDefaultSkillMarkdown(''));
+  const [agentBiodnaJson, setAgentBiodnaJson] = useState(createDefaultBiodnaJson(''));
+  const [agentError, setAgentError] = useState<string | null>(null);
+  const [agentNotice, setAgentNotice] = useState<string | null>(null);
+  const [creatingAgent, setCreatingAgent] = useState(false);
   
   // Knowledge Graph integration
   const { extractAndAddConcepts, stats } = useKnowledgeGraph();
+  const { user } = useAuth();
+  const { wallet, earnMIC, burnMIC, getChainBalance, getChainTransactions } = useWallet();
 
   // Load from localStorage on mount
   useEffect(() => {
@@ -94,8 +277,20 @@ export const ReflectionsLab: React.FC = () => {
       if (!raw) return;
       const parsed = JSON.parse(raw) as ReflectionEntry[];
       if (Array.isArray(parsed) && parsed.length) {
-        setEntries(parsed);
-        setActiveEntryId(parsed[0].id);
+        const normalized = parsed.map((entry) => ({
+          ...entry,
+          rewardClaims: Array.isArray(entry.rewardClaims)
+            ? entry.rewardClaims.filter((claim): claim is ReflectionRewardId =>
+                REFLECTION_REWARDS.some((reward) => reward.id === claim)
+              )
+            : [],
+          rewardRollMilestone:
+            typeof entry.rewardRollMilestone === 'number' && entry.rewardRollMilestone >= 0
+              ? Math.floor(entry.rewardRollMilestone)
+              : 0,
+        }));
+        setEntries(normalized);
+        setActiveEntryId(normalized[0].id);
       }
     } catch (e) {
       console.error('Failed to load reflections from storage', e);
@@ -111,16 +306,50 @@ export const ReflectionsLab: React.FC = () => {
     }
   }, [entries]);
 
+  // Load previously forged custom agents
+  useEffect(() => {
+    try {
+      const raw = window.localStorage.getItem(AGENT_STORAGE_KEY);
+      if (!raw) return;
+      const parsed = JSON.parse(raw) as CustomAgent[];
+      if (!Array.isArray(parsed)) return;
+      const validAgents = parsed.filter(
+        (agent) =>
+          agent &&
+          typeof agent.id === 'string' &&
+          typeof agent.name === 'string' &&
+          typeof agent.createdAt === 'string' &&
+          typeof agent.skillMd === 'string' &&
+          typeof agent.biodna === 'object' &&
+          agent.biodna !== null
+      );
+      setAgents(validAgents);
+    } catch (e) {
+      console.error('Failed to load custom agents from storage', e);
+    }
+  }, []);
+
+  // Persist forged custom agents
+  useEffect(() => {
+    try {
+      window.localStorage.setItem(AGENT_STORAGE_KEY, JSON.stringify(agents));
+    } catch (e) {
+      console.error('Failed to save custom agents to storage', e);
+    }
+  }, [agents]);
+
   const handleNewEntry = () => {
     const entry = createNewEntry();
     setEntries((prev) => [entry, ...prev]);
     setActiveEntryId(entry.id);
     setActivePhaseId('raw');
+    setRewardNotice(null);
   };
 
   const handleSelectEntry = (id: string) => {
     setActiveEntryId(id);
     setActivePhaseId('raw');
+    setRewardNotice(null);
   };
 
   const handleDeleteEntry = (id: string) => {
@@ -140,24 +369,94 @@ export const ReflectionsLab: React.FC = () => {
     );
   };
 
+  const grantHiddenReward = useCallback(
+    async ({
+      reward,
+      entry,
+      analysis,
+    }: {
+      reward: (typeof REFLECTION_REWARDS)[number];
+      entry: ReflectionEntry;
+      analysis: ReflectionAnalysis;
+    }) => {
+      const success = await earnMIC(reward.source, {
+        mic_earned: reward.mic,
+        xp_earned: reward.mic,
+        hidden_reward: true,
+        reward_tier: reward.id,
+        entry_id: entry.id,
+        entry_title: entry.title,
+        total_words: analysis.totalWords,
+        completed_phases: analysis.completedPhaseCount,
+        has_spark_signal: analysis.hasSparkSignal,
+        has_geist_signal: analysis.hasGeistSignal,
+        has_epiphany_signal: analysis.hasEpiphanySignal,
+      });
+
+      if (success) {
+        setRewardNotice(`A hidden reflection bonus crystallized: +${reward.mic} MIC XP`);
+      } else {
+        setRewardNotice('A hidden reflection bonus was detected, but minting failed. Try again soon.');
+      }
+    },
+    [earnMIC]
+  );
+
   const handlePhaseChange = (phaseId: PhaseId, content: string) => {
     if (!activeEntryId) return;
 
-    setEntries((prev) =>
-      prev.map((entry) =>
-        entry.id === activeEntryId
-          ? {
-              ...entry,
-              phases: entry.phases.map((phase) =>
-                phase.id === phaseId ? { ...phase, content } : phase
-              ),
-            }
-          : entry
-      )
-    );
+    let hiddenRewardGrant:
+      | {
+          reward: (typeof REFLECTION_REWARDS)[number];
+          entry: ReflectionEntry;
+          analysis: ReflectionAnalysis;
+        }
+      | null = null;
+
+    const updatedEntries = entries.map((entry) => {
+      if (entry.id !== activeEntryId) return entry;
+
+      let updatedEntry: ReflectionEntry = {
+        ...entry,
+        phases: entry.phases.map((phase) =>
+          phase.id === phaseId ? { ...phase, content } : phase
+        ),
+      };
+
+      const analysis = analyzeReflection(updatedEntry);
+      const reachedMilestone = Math.floor(analysis.totalWords / HIDDEN_REWARD_WORD_STEP);
+
+      if (reachedMilestone > updatedEntry.rewardRollMilestone) {
+        for (
+          let milestone = updatedEntry.rewardRollMilestone + 1;
+          milestone <= reachedMilestone;
+          milestone += 1
+        ) {
+          updatedEntry = { ...updatedEntry, rewardRollMilestone: milestone };
+          if (hiddenRewardGrant) continue;
+
+          const reward = rollHiddenReward(updatedEntry, analysis);
+          if (!reward) continue;
+
+          updatedEntry = {
+            ...updatedEntry,
+            rewardClaims: [...updatedEntry.rewardClaims, reward.id],
+          };
+          hiddenRewardGrant = { reward, entry: updatedEntry, analysis };
+          break;
+        }
+      }
+
+      return updatedEntry;
+    });
+
+    setEntries(updatedEntries);
     
     // Reset concepts extracted flag when content changes
     setConceptsExtracted(false);
+    if (hiddenRewardGrant) {
+      void grantHiddenReward(hiddenRewardGrant);
+    }
   };
 
   // Extract concepts from reflection and add to knowledge graph
@@ -187,11 +486,141 @@ export const ReflectionsLab: React.FC = () => {
 
   const activePhase =
     activeEntry?.phases.find((p) => p.id === activePhaseId) ?? null;
+  const activePhaseIndex = PHASE_TEMPLATE.findIndex((phase) => phase.id === activePhaseId);
+  const activeProgressPct = activeEntry
+    ? Math.round(
+        (activeEntry.phases.filter((phase) => phase.content.trim().length > 0).length /
+          activeEntry.phases.length) *
+          100
+      )
+    : 0;
+
+  useEffect(() => {
+    if (!rewardNotice) return;
+    const timeoutId = window.setTimeout(() => setRewardNotice(null), 5000);
+    return () => window.clearTimeout(timeoutId);
+  }, [rewardNotice]);
+
+  useEffect(() => {
+    if (!agentNotice) return;
+    const timeoutId = window.setTimeout(() => setAgentNotice(null), 5000);
+    return () => window.clearTimeout(timeoutId);
+  }, [agentNotice]);
+
+  const recipient = user?.id || user?.email || 'local-user';
+  const chainTransactions = getChainTransactions(recipient);
+  const loopMicEarnedFromChain = Math.round(
+    chainTransactions
+      .filter(
+        (tx) =>
+          tx.amount > 0 &&
+          (tx.source.startsWith('reflection') ||
+            tx.source.startsWith('learning') ||
+            tx.source.startsWith('oaa_tutor'))
+      )
+      .reduce((sum, tx) => sum + tx.amount, 0) * 100
+  ) / 100;
+  const loopMicEarned = Math.max(loopMicEarnedFromChain, wallet?.total_earned ?? 0);
+  const availableMic = wallet?.balance ?? getChainBalance(recipient);
+  const reachedLoopThreshold = loopMicEarned >= AGENT_BURN_COST;
+  const canBurnForAgent = availableMic >= AGENT_BURN_COST;
+  const canForgeAgent = reachedLoopThreshold && canBurnForAgent;
+
+  const handleApplyAgentTemplates = () => {
+    setAgentSkillMd(createDefaultSkillMarkdown(agentName));
+    setAgentBiodnaJson(createDefaultBiodnaJson(agentName));
+  };
+
+  const handleCreateAgent = async () => {
+    const trimmedName = agentName.trim();
+    if (trimmedName.length < 2) {
+      setAgentError('Agent name must be at least 2 characters.');
+      return;
+    }
+    if (!reachedLoopThreshold) {
+      setAgentError(
+        `You need at least ${AGENT_BURN_COST} MIC earned via Reflection/Learn loops before forging an agent.`
+      );
+      return;
+    }
+    if (!canBurnForAgent) {
+      setAgentError(`Insufficient balance. You need ${AGENT_BURN_COST} MIC available to burn.`);
+      return;
+    }
+
+    let parsedBiodna: Record<string, unknown>;
+    try {
+      const parsed = JSON.parse(agentBiodnaJson);
+      if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+        throw new Error('biodna must be a JSON object');
+      }
+      parsedBiodna = parsed as Record<string, unknown>;
+    } catch {
+      setAgentError('biodna.json must be valid JSON object syntax.');
+      return;
+    }
+
+    setCreatingAgent(true);
+    setAgentError(null);
+    setAgentNotice(null);
+
+    const burnSuccess = await burnMIC(AGENT_BURN_COST, 'agent_creation_burn', {
+      agent_name: trimmedName,
+      artifact_files: ['skill.md', 'biodna.json'],
+      origin: 'reflections_agent_foundry',
+    });
+
+    if (!burnSuccess) {
+      setCreatingAgent(false);
+      setAgentError('Could not burn MIC for agent creation. Please retry.');
+      return;
+    }
+
+    const agent: CustomAgent = {
+      id:
+        typeof crypto !== 'undefined' && 'randomUUID' in crypto
+          ? crypto.randomUUID()
+          : `${Date.now()}-${Math.random().toString(16).slice(2)}`,
+      name: trimmedName,
+      createdAt: new Date().toISOString(),
+      burnCost: AGENT_BURN_COST,
+      skillMd: agentSkillMd.trim() || createDefaultSkillMarkdown(trimmedName),
+      biodna: parsedBiodna,
+    };
+
+    setAgents((prev) => [agent, ...prev]);
+    setAgentNotice(`Agent "${trimmedName}" forged. ${AGENT_BURN_COST} MIC burned.`);
+    setAgentName('');
+    setAgentSkillMd(createDefaultSkillMarkdown(''));
+    setAgentBiodnaJson(createDefaultBiodnaJson(''));
+    setCreatingAgent(false);
+  };
+
+  const downloadAgentFile = (
+    agent: CustomAgent,
+    fileType: 'skill' | 'biodna' | 'bundle'
+  ) => {
+    const slug = agent.name
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '') || 'agent';
+
+    if (fileType === 'skill' || fileType === 'bundle') {
+      triggerDownload(`${slug}-skill.md`, agent.skillMd, 'text/markdown;charset=utf-8');
+    }
+    if (fileType === 'biodna' || fileType === 'bundle') {
+      triggerDownload(
+        `${slug}-biodna.json`,
+        JSON.stringify(agent.biodna, null, 2),
+        'application/json;charset=utf-8'
+      );
+    }
+  };
 
   return (
-    <div className="h-full flex flex-col bg-stone-50">
+    <div className="h-full flex flex-col bg-stone-50 overflow-hidden">
       {/* Header */}
-      <div className="flex items-center justify-between px-4 sm:px-6 py-3 border-b border-stone-200 bg-white">
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between px-4 sm:px-6 py-3 border-b border-stone-200 bg-white">
         <div className="flex items-center space-x-2">
           <div className="p-1.5 rounded-md bg-stone-900 text-stone-50">
             <BookOpen className="w-4 h-4" />
@@ -208,7 +637,7 @@ export const ReflectionsLab: React.FC = () => {
 
         <button
           onClick={handleNewEntry}
-          className="inline-flex items-center space-x-2 px-3 py-1.5 rounded-md text-xs font-medium bg-stone-900 text-stone-50 hover:bg-stone-800 transition"
+          className="inline-flex items-center justify-center space-x-2 px-3 py-2 sm:py-1.5 rounded-md text-xs font-medium bg-stone-900 text-stone-50 hover:bg-stone-800 transition w-full sm:w-auto"
         >
           <Plus className="w-3 h-3" />
           <span>New entry</span>
@@ -216,7 +645,7 @@ export const ReflectionsLab: React.FC = () => {
       </div>
 
       {/* Body: sidebar + editor */}
-      <div className="flex-1 flex min-h-0">
+      <div className="flex-1 flex min-h-0 flex-col md:flex-row">
         {/* Left: entries list */}
         <aside className="w-64 border-r border-stone-200 bg-stone-100/60 flex-col hidden md:flex">
           <div className="px-4 py-2 flex items-center justify-between">
@@ -291,11 +720,11 @@ export const ReflectionsLab: React.FC = () => {
 
         {/* Mobile entry selector dropdown */}
         {entries.length > 0 && (
-          <div className="md:hidden border-b border-stone-200 bg-white px-4 py-2">
+          <div className="md:hidden border-b border-stone-200 bg-white px-4 py-2 space-y-2">
             <select
               value={activeEntryId || ''}
               onChange={(e) => handleSelectEntry(e.target.value)}
-              className="w-full px-3 py-2 text-sm border border-stone-200 rounded-md bg-white"
+              className="w-full px-3 py-2.5 text-sm border border-stone-200 rounded-md bg-white"
             >
               {entries.map((entry) => (
                 <option key={entry.id} value={entry.id}>
@@ -307,11 +736,17 @@ export const ReflectionsLab: React.FC = () => {
                 </option>
               ))}
             </select>
+            {activeEntry && (
+              <div className="flex items-center justify-between text-[11px] text-stone-500">
+                <span>{activeProgressPct}% complete</span>
+                <span>Private reflection ledger active</span>
+              </div>
+            )}
           </div>
         )}
 
         {/* Right: editor */}
-        <section className="flex-1 flex flex-col min-w-0">
+        <section className="flex-1 flex flex-col min-w-0 min-h-0">
           {!activeEntry && (
             <div className="h-full flex flex-col items-center justify-center text-center px-6">
               <Sparkles className="w-8 h-8 text-stone-300 mb-3" />
@@ -346,14 +781,14 @@ export const ReflectionsLab: React.FC = () => {
                   />
                   <button
                     onClick={() => handleDeleteEntry(activeEntry.id)}
-                    className="p-1.5 text-stone-400 hover:text-red-500 hover:bg-red-50 rounded transition-colors"
+                    className="p-2 text-stone-400 hover:text-red-500 hover:bg-red-50 rounded transition-colors"
                     title="Delete entry"
                   >
                     <Trash2 className="w-4 h-4" />
                   </button>
                 </div>
 
-                <div className="flex items-center space-x-2 mt-2 md:mt-0 overflow-x-auto pb-1 md:pb-0">
+                <div className="flex items-center space-x-2 mt-2 md:mt-0 overflow-x-auto pb-1 md:pb-0 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                   {PHASE_TEMPLATE.map((phaseDef) => {
                     const done = !!activeEntry.phases.find(
                       (p) =>
@@ -365,7 +800,7 @@ export const ReflectionsLab: React.FC = () => {
                       <button
                         key={phaseDef.id}
                         onClick={() => setActivePhaseId(phaseDef.id)}
-                        className={`px-2 py-1 rounded-full text-[10px] font-medium border flex items-center space-x-1 whitespace-nowrap ${
+                        className={`px-3 py-1.5 rounded-full text-[11px] font-medium border flex items-center space-x-1 whitespace-nowrap ${
                           isActive
                             ? 'bg-stone-900 text-stone-50 border-stone-900'
                             : 'bg-stone-50 text-stone-600 border-stone-200 hover:border-stone-400'
@@ -378,6 +813,34 @@ export const ReflectionsLab: React.FC = () => {
                       </button>
                     );
                   })}
+                </div>
+
+                <div className="md:hidden flex items-center justify-between gap-2">
+                  <button
+                    onClick={() =>
+                      activePhaseIndex > 0 &&
+                      setActivePhaseId(PHASE_TEMPLATE[activePhaseIndex - 1].id)
+                    }
+                    disabled={activePhaseIndex <= 0}
+                    className="inline-flex items-center justify-center gap-1 px-3 py-2 text-xs font-medium rounded-md border border-stone-200 bg-stone-50 text-stone-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <ChevronLeft className="w-3 h-3" />
+                    Prev
+                  </button>
+                  <span className="text-[11px] text-stone-500">
+                    Phase {activePhaseIndex + 1} / {PHASE_TEMPLATE.length}
+                  </span>
+                  <button
+                    onClick={() =>
+                      activePhaseIndex < PHASE_TEMPLATE.length - 1 &&
+                      setActivePhaseId(PHASE_TEMPLATE[activePhaseIndex + 1].id)
+                    }
+                    disabled={activePhaseIndex >= PHASE_TEMPLATE.length - 1}
+                    className="inline-flex items-center justify-center gap-1 px-3 py-2 text-xs font-medium rounded-md border border-stone-200 bg-stone-50 text-stone-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Next
+                    <ChevronRight className="w-3 h-3" />
+                  </button>
                 </div>
               </div>
 
@@ -393,7 +856,7 @@ export const ReflectionsLab: React.FC = () => {
                 </div>
 
                 <textarea
-                  className="flex-1 w-full min-h-[200px] resize-none rounded-md border border-stone-200 bg-white px-3 py-2 text-sm text-stone-900 placeholder:text-stone-400 focus:outline-none focus:ring-1 focus:ring-stone-900/60 focus:border-stone-900/60"
+                  className="flex-1 w-full min-h-[42vh] md:min-h-[200px] resize-none rounded-md border border-stone-200 bg-white px-3 py-3 text-sm text-stone-900 placeholder:text-stone-400 focus:outline-none focus:ring-1 focus:ring-stone-900/60 focus:border-stone-900/60"
                   value={activePhase.content}
                   onChange={(e) =>
                     handlePhaseChange(activePhase.id, e.target.value)
@@ -406,7 +869,7 @@ export const ReflectionsLab: React.FC = () => {
                     💾 Your words are stored locally in this browser only. Future
                     Mobius versions can sync this to your HIVE node.
                   </span>
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-3 w-full sm:w-auto">
                     <span className="hidden sm:inline text-stone-400">
                       Tip: You can always return later to complete the remaining
                       phases.
@@ -414,7 +877,7 @@ export const ReflectionsLab: React.FC = () => {
                     {/* Knowledge Graph Integration */}
                     <button
                       onClick={handleExtractConcepts}
-                      className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-medium transition-all ${
+                      className={`inline-flex items-center justify-center gap-1.5 px-2.5 py-2 sm:py-1 rounded-md text-[11px] font-medium transition-all w-full sm:w-auto ${
                         conceptsExtracted
                           ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
                           : 'bg-stone-100 text-stone-600 border border-stone-200 hover:bg-stone-200 hover:border-stone-300'
@@ -429,6 +892,165 @@ export const ReflectionsLab: React.FC = () => {
                       )}
                     </button>
                   </div>
+                </div>
+
+                <div className="rounded-lg border border-amber-200 bg-amber-50/60 p-3 space-y-2">
+                  <div className="text-[11px] font-semibold text-amber-700">
+                    Reflection XP Loop (hidden RNG)
+                  </div>
+                  <div className="text-[10px] text-amber-700/80">
+                    Bonus rewards trigger stochastically as your reflection deepens. The reward
+                    path is intentionally private to prevent gamification.
+                  </div>
+                  {rewardNotice && (
+                    <div className="text-[10px] text-emerald-700 bg-emerald-50 border border-emerald-200 rounded px-2 py-1">
+                      {rewardNotice}
+                    </div>
+                  )}
+                </div>
+
+                <div className="rounded-lg border border-indigo-200 bg-indigo-50/50 p-3 space-y-3">
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-2">
+                      <Bot className="w-4 h-4 text-indigo-600" />
+                      <span className="text-[11px] font-semibold text-indigo-700">
+                        Agent Foundry
+                      </span>
+                    </div>
+                    <span className="text-[10px] text-indigo-600">
+                      Burn {AGENT_BURN_COST} MIC
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    <div className="rounded-md border border-indigo-100 bg-white px-2 py-2">
+                      <div className="text-[10px] text-indigo-500">Loop MIC earned</div>
+                      <div className="text-sm font-semibold text-indigo-700">
+                        {loopMicEarned.toLocaleString()} / {AGENT_BURN_COST}
+                      </div>
+                    </div>
+                    <div className="rounded-md border border-indigo-100 bg-white px-2 py-2">
+                      <div className="text-[10px] text-indigo-500">Available MIC</div>
+                      <div className="text-sm font-semibold text-indigo-700">
+                        {availableMic.toLocaleString()} / {AGENT_BURN_COST}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="text-[10px] text-indigo-700/80 flex flex-col gap-1">
+                    <span>{reachedLoopThreshold ? '✓' : '•'} Reached 200 MIC in Reflection/Learn loops</span>
+                    <span>{canBurnForAgent ? '✓' : '•'} Holds 200 MIC available to burn now</span>
+                  </div>
+
+                  <div className="space-y-2">
+                    <div>
+                      <label className="text-[10px] font-medium text-indigo-700">Agent name</label>
+                      <input
+                        value={agentName}
+                        onChange={(e) => setAgentName(e.target.value)}
+                        placeholder="e.g. Sentinel Aurora"
+                        className="mt-1 w-full rounded-md border border-indigo-200 bg-white px-2.5 py-2 text-xs text-stone-900 placeholder:text-stone-400 focus:outline-none focus:ring-1 focus:ring-indigo-500/50"
+                      />
+                    </div>
+
+                    <div className="flex justify-end">
+                      <button
+                        onClick={handleApplyAgentTemplates}
+                        className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-[10px] border border-indigo-200 bg-white text-indigo-700 hover:bg-indigo-50"
+                      >
+                        <Flame className="w-3 h-3" />
+                        Apply templates from name
+                      </button>
+                    </div>
+
+                    <div>
+                      <label className="text-[10px] font-medium text-indigo-700">skill.md</label>
+                      <textarea
+                        value={agentSkillMd}
+                        onChange={(e) => setAgentSkillMd(e.target.value)}
+                        className="mt-1 w-full min-h-[120px] rounded-md border border-indigo-200 bg-white px-2.5 py-2 text-xs text-stone-900 placeholder:text-stone-400 focus:outline-none focus:ring-1 focus:ring-indigo-500/50 font-mono"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="text-[10px] font-medium text-indigo-700">biodna.json</label>
+                      <textarea
+                        value={agentBiodnaJson}
+                        onChange={(e) => setAgentBiodnaJson(e.target.value)}
+                        className="mt-1 w-full min-h-[120px] rounded-md border border-indigo-200 bg-white px-2.5 py-2 text-xs text-stone-900 placeholder:text-stone-400 focus:outline-none focus:ring-1 focus:ring-indigo-500/50 font-mono"
+                      />
+                    </div>
+                  </div>
+
+                  <button
+                    onClick={() => void handleCreateAgent()}
+                    disabled={!canForgeAgent || creatingAgent}
+                    className={`w-full rounded-md px-3 py-2 text-xs font-semibold transition ${
+                      canForgeAgent && !creatingAgent
+                        ? 'bg-indigo-600 text-white hover:bg-indigo-700'
+                        : 'bg-indigo-100 text-indigo-300 cursor-not-allowed'
+                    }`}
+                  >
+                    {creatingAgent
+                      ? 'Forging agent...'
+                      : `Burn ${AGENT_BURN_COST} MIC to forge agent`}
+                  </button>
+
+                  {agentError && (
+                    <div className="text-[10px] text-red-700 bg-red-50 border border-red-200 rounded px-2 py-1">
+                      {agentError}
+                    </div>
+                  )}
+                  {agentNotice && (
+                    <div className="text-[10px] text-emerald-700 bg-emerald-50 border border-emerald-200 rounded px-2 py-1">
+                      {agentNotice}
+                    </div>
+                  )}
+
+                  {agents.length > 0 && (
+                    <div className="space-y-2 pt-1">
+                      <div className="text-[10px] font-semibold text-indigo-700">Forged Agents</div>
+                      {agents.slice(0, 4).map((agent) => (
+                        <div
+                          key={agent.id}
+                          className="rounded-md border border-indigo-100 bg-white px-2.5 py-2"
+                        >
+                          <div className="flex items-center justify-between gap-2">
+                            <div>
+                              <div className="text-xs font-semibold text-stone-800">{agent.name}</div>
+                              <div className="text-[10px] text-stone-500">
+                                {new Date(agent.createdAt).toLocaleString()}
+                              </div>
+                            </div>
+                            <div className="text-[10px] text-indigo-600">burned {agent.burnCost} MIC</div>
+                          </div>
+                          <div className="mt-2 flex flex-wrap gap-1.5">
+                            <button
+                              onClick={() => downloadAgentFile(agent, 'skill')}
+                              className="inline-flex items-center gap-1 px-2 py-1 rounded border border-indigo-200 text-[10px] text-indigo-700 hover:bg-indigo-50"
+                            >
+                              <Download className="w-3 h-3" />
+                              skill.md
+                            </button>
+                            <button
+                              onClick={() => downloadAgentFile(agent, 'biodna')}
+                              className="inline-flex items-center gap-1 px-2 py-1 rounded border border-indigo-200 text-[10px] text-indigo-700 hover:bg-indigo-50"
+                            >
+                              <Download className="w-3 h-3" />
+                              biodna.json
+                            </button>
+                            <button
+                              onClick={() => downloadAgentFile(agent, 'bundle')}
+                              className="inline-flex items-center gap-1 px-2 py-1 rounded border border-indigo-200 text-[10px] text-indigo-700 hover:bg-indigo-50"
+                            >
+                              <Download className="w-3 h-3" />
+                              both files
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </div>
             </>

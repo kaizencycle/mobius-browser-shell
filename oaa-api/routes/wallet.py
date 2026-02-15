@@ -36,6 +36,7 @@ class MICReason:
     BONUS = "BONUS"           # Bonus rewards (streaks, perfect scores, etc.)
     REFLECTION = "REFLECTION"  # Reflection completion
     CIVIC = "CIVIC"           # Civic engagement rewards
+    BURN = "BURN"             # Spending/burning MIC from wallet
 
 # MIC minting configuration
 MIC_CONFIG = {
@@ -51,6 +52,9 @@ MIC_CONFIG = {
         "reflection_entry_created": 3,
         "reflection_phase_complete": 5,
         "reflection_entry_complete": 10,
+        "reflection_spark": 4,
+        "reflection_geist_mode": 7,
+        "reflection_epiphany": 12,
         "shield_module_complete": 15,
         "shield_checklist_item": 2,
         "civic_radar_action_taken": 5,
@@ -380,6 +384,73 @@ def earn_mic():
     except ValueError as e:
         return jsonify({
             "error": "Minting failed",
+            "message": str(e)
+        }), 503
+
+
+@wallet_bp.route('/mic/burn', methods=['POST'])
+@require_auth
+def burn_mic():
+    """
+    Burn MIC from the user's wallet.
+
+    This appends a negative ledger entry so balances remain fully auditable.
+
+    Request body:
+        {
+            "amount": 200,
+            "source": "agent_creation_burn",
+            "meta": { ...optional context... }
+        }
+    """
+    user_id = request.user_id
+    data = request.json or {}
+
+    amount = data.get('amount')
+    source = data.get('source', 'agent_creation_burn')
+    meta = data.get('meta', {})
+
+    if amount is None:
+        return jsonify({"error": "amount is required"}), 400
+
+    try:
+        amount = float(amount)
+    except (TypeError, ValueError):
+        return jsonify({"error": "amount must be a number"}), 400
+
+    if amount <= 0:
+        return jsonify({"error": "amount must be greater than 0"}), 400
+
+    current_balance = get_user_balance(user_id)
+    if current_balance < amount:
+        return jsonify({
+            "error": "Insufficient balance",
+            "balance": round(current_balance, 2),
+            "required": round(amount, 2)
+        }), 400
+
+    integrity_score = meta.get('integrity_score', 1.0)
+
+    try:
+        entry = write_to_ledger(
+            user_id=user_id,
+            amount=-amount,
+            reason=MICReason.BURN,
+            source=source,
+            meta=meta,
+            integrity_score=integrity_score
+        )
+
+        entry_response = {
+            **entry,
+            "ledger_proof": f"ledger:{entry['id']}",
+            "new_balance": round(get_user_balance(user_id), 2)
+        }
+        return jsonify(entry_response), 201
+
+    except ValueError as e:
+        return jsonify({
+            "error": "Burn failed",
             "message": str(e)
         }), 503
 
