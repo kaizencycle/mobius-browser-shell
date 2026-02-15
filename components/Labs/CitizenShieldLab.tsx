@@ -1,13 +1,14 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { getLabById } from '../../constants';
-import { TabId } from '../../types';
+import { TabId, ThreatIntelligenceFeed } from '../../types';
 import { shouldUseLiveMode } from '../../config/env';
 import { LabFrame } from '../LabFrame';
-import { Shield, CheckCircle, Wifi, Lock, Eye, AlertOctagon } from 'lucide-react';
-import { CivicRadar } from '../CitizenShield';
+import { Shield, CheckCircle, Wifi, Lock, Eye, AlertOctagon, Radio } from 'lucide-react';
+import { CivicRadar, EchoThreatAgent, ThreatFeed } from '../CitizenShield';
 
 export const CitizenShieldLab: React.FC = () => {
   const lab = getLabById(TabId.SHIELD);
+  const [threatFeed, setThreatFeed] = useState<ThreatIntelligenceFeed | null>(null);
   
   // If live mode is enabled and URL exists, show iframe
   if (lab && shouldUseLiveMode(lab.url)) {
@@ -33,7 +34,13 @@ export const CitizenShieldLab: React.FC = () => {
                     </div>
                     <div>
                         <h1 className="text-xl sm:text-2xl font-bold text-slate-900">Citizen Shield</h1>
-                        <p className="text-slate-500 text-xs sm:text-sm">Civic Layer Active • Secure</p>
+                        <p className="text-slate-500 text-xs sm:text-sm">
+                            Civic Layer Active • ECHO Sentinel Online
+                            <span className="inline-flex items-center gap-1 ml-2">
+                                <Radio className="w-3 h-3 text-cyan-500" />
+                                <span className="text-cyan-600 font-medium">RAG Monitoring</span>
+                            </span>
+                        </p>
                     </div>
                 </div>
                 <div className="text-left sm:text-right flex sm:block items-center gap-2">
@@ -42,7 +49,12 @@ export const CitizenShieldLab: React.FC = () => {
                 </div>
             </div>
 
-            {/* Grid */}
+            {/* ECHO Threat Intelligence Agent — Primary Feature */}
+            <div className="mb-6 sm:mb-8">
+                <EchoThreatAgent onFeedUpdate={setThreatFeed} />
+            </div>
+
+            {/* Shield Module Grid */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-6 sm:mb-8">
                 
                 {/* Modules */}
@@ -86,14 +98,23 @@ export const CitizenShieldLab: React.FC = () => {
                 </div>
             </div>
 
-            {/* Civic Radar Section - Real-time Security Intelligence */}
+            {/* ECHO Threat Intelligence Feed — RAG Results */}
+            <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden mb-6 sm:mb-8">
+                <div className="p-4 sm:p-6">
+                    <ThreatFeed 
+                        feed={threatFeed}
+                        maxEntries={6}
+                    />
+                </div>
+            </div>
+
+            {/* Civic Radar Section — Complementary Intelligence */}
             <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
                 <div className="p-4 sm:p-6">
                     <CivicRadar 
                         maxAlerts={4}
                         onModuleNavigate={(moduleId) => {
                             console.log('Navigate to Shield module:', moduleId);
-                            // TODO: Wire up to module navigation when modules are interactive
                         }}
                     />
                 </div>

@@ -4,7 +4,7 @@ import { env } from './config/env';
 export const SENTINELS: Sentinel[] = [
   { id: 'atlas', name: 'ATLAS', role: 'Context & Memory', status: 'active', integrity: 0.99 },
   { id: 'aurea', name: 'AUREA', role: 'Integrity Custodian', status: 'idle', integrity: 1.0 },
-  { id: 'echo', name: 'ECHO', role: 'Temporal Sync', status: 'idle', integrity: 0.98 },
+  { id: 'echo', name: 'ECHO', role: 'Threat Intelligence', status: 'active', integrity: 0.98 },
   { id: 'jade', name: 'JADE', role: 'Pattern & Narrative', status: 'thinking', integrity: 0.99 },
   { id: 'eve', name: 'EVE', role: 'Ethics & Values', status: 'active', integrity: 0.99 },
 ];

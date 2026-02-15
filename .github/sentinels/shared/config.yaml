@@ -35,10 +35,30 @@ sentinels:
       - push
       - schedule
 
+  echo:
+    name: "ECHO"
+    role: "Threat Intelligence Sentinel"
+    weight: 0.15
+    responsibilities:
+      - threat_intelligence_rag
+      - cyber_threat_monitoring
+      - cyber_security_scanning
+      - digital_health_surveillance
+      - citizen_shield_feed
+    triggers:
+      - schedule
+      - push
+      - pull_request
+    cron: "*/30 * * * *"  # Every 30 minutes
+    domains:
+      - cyber_threats
+      - cyber_security
+      - digital_health
+
   eve:
     name: "EVE"
     role: "Deployment Sentinel"
-    weight: 0.20
+    weight: 0.15
     responsibilities:
       - deployment_test
       - integration_verify
