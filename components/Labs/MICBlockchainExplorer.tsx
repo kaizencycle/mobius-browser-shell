@@ -26,6 +26,7 @@ const SOURCE_LABELS: Record<string, { icon: string; label: string }> = {
   reflection_spark:              { icon: '✨', label: 'Reflection Bonus' },
   reflection_geist_mode:         { icon: '✨', label: 'Reflection Bonus' },
   reflection_epiphany:           { icon: '✨', label: 'Reflection Bonus' },
+  agent_creation_burn:           { icon: '🔥', label: 'Agent Forge Burn' },
   shield_module_complete:        { icon: '🛡️', label: 'Shield Module' },
   civic_radar_action_taken:      { icon: '📡', label: 'Civic Radar' },
 };
@@ -159,7 +160,7 @@ const BlockCard: React.FC<{
                         {tx.recipient.length > 16 ? shortHash(tx.recipient, 6) : tx.recipient}
                       </span>
                     </div>
-                    <span className={`font-bold ${tx.amount > 0 ? 'text-amber-500' : 'text-stone-400'}`}>
+                    <span className={`font-bold ${tx.amount > 0 ? 'text-amber-500' : tx.amount < 0 ? 'text-red-500' : 'text-stone-400'}`}>
                       {tx.amount > 0 ? '+' : ''}{tx.amount} MIC
                     </span>
                   </div>

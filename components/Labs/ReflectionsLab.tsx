@@ -9,9 +9,13 @@ import {
   PenLine,
   Trash2,
   Network,
+  Bot,
+  Flame,
+  Download,
 } from 'lucide-react';
 import { useKnowledgeGraph } from '../../contexts/KnowledgeGraphContext';
 import { useWallet } from '../../contexts/WalletContext';
+import { useAuth } from '../../contexts/AuthContext';
 
 type PhaseId = 'raw' | 'mirror' | 'reframe' | 'recode';
 type ReflectionRewardId = 'spark' | 'geist_mode' | 'epiphany';
@@ -34,7 +38,18 @@ interface ReflectionEntry {
   rewardRollMilestone: number;
 }
 
+interface CustomAgent {
+  id: string;
+  name: string;
+  createdAt: string;
+  burnCost: number;
+  skillMd: string;
+  biodna: Record<string, unknown>;
+}
+
 const STORAGE_KEY = 'mobius_reflections_v1';
+const AGENT_STORAGE_KEY = 'mobius_custom_agents_v1';
+const AGENT_BURN_COST = 200;
 const SUBSTANTIVE_PHASE_WORDS = 12;
 const HIDDEN_REWARD_WORD_STEP = 48;
 
@@ -170,6 +185,53 @@ function rollHiddenReward(entry: ReflectionEntry, analysis: ReflectionAnalysis) 
   return null;
 }
 
+function createDefaultSkillMarkdown(name: string): string {
+  const safeName = name.trim() || 'Unnamed Agent';
+  return `# ${safeName} — Skill Profile
+
+## Core Mission
+Support human reflection, learning, and ethical action with calm, precise guidance.
+
+## Operational Strengths
+- Active listening and synthesis
+- Clarifying ambiguous goals
+- Translating intent into concrete next actions
+
+## Constraints
+- Never manipulate, coerce, or exploit attention.
+- Preserve user agency and dignity.
+- Prioritize integrity over speed.
+`;
+}
+
+function createDefaultBiodnaJson(name: string): string {
+  const safeName = name.trim() || 'Unnamed Agent';
+  return JSON.stringify(
+    {
+      name: safeName,
+      lineage: 'mobius-reflection-forge',
+      alignment: ['integrity', 'ecology', 'accountability'],
+      temperament: 'calm-analytical',
+      loops: ['reflection', 'learning'],
+      version: 1,
+    },
+    null,
+    2
+  );
+}
+
+function triggerDownload(filename: string, contents: string, mimeType: string) {
+  const blob = new Blob([contents], { type: mimeType });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+}
+
 function createNewEntry(): ReflectionEntry {
   const id =
     typeof crypto !== 'undefined' && 'randomUUID' in crypto
@@ -195,10 +257,18 @@ export const ReflectionsLab: React.FC = () => {
   const [activePhaseId, setActivePhaseId] = useState<PhaseId>('raw');
   const [conceptsExtracted, setConceptsExtracted] = useState(false);
   const [rewardNotice, setRewardNotice] = useState<string | null>(null);
+  const [agents, setAgents] = useState<CustomAgent[]>([]);
+  const [agentName, setAgentName] = useState('');
+  const [agentSkillMd, setAgentSkillMd] = useState(createDefaultSkillMarkdown(''));
+  const [agentBiodnaJson, setAgentBiodnaJson] = useState(createDefaultBiodnaJson(''));
+  const [agentError, setAgentError] = useState<string | null>(null);
+  const [agentNotice, setAgentNotice] = useState<string | null>(null);
+  const [creatingAgent, setCreatingAgent] = useState(false);
   
   // Knowledge Graph integration
   const { extractAndAddConcepts, stats } = useKnowledgeGraph();
-  const { earnMIC } = useWallet();
+  const { user } = useAuth();
+  const { wallet, earnMIC, burnMIC, getChainBalance, getChainTransactions } = useWallet();
 
   // Load from localStorage on mount
   useEffect(() => {
@@ -235,6 +305,38 @@ export const ReflectionsLab: React.FC = () => {
       console.error('Failed to save reflections to storage', e);
     }
   }, [entries]);
+
+  // Load previously forged custom agents
+  useEffect(() => {
+    try {
+      const raw = window.localStorage.getItem(AGENT_STORAGE_KEY);
+      if (!raw) return;
+      const parsed = JSON.parse(raw) as CustomAgent[];
+      if (!Array.isArray(parsed)) return;
+      const validAgents = parsed.filter(
+        (agent) =>
+          agent &&
+          typeof agent.id === 'string' &&
+          typeof agent.name === 'string' &&
+          typeof agent.createdAt === 'string' &&
+          typeof agent.skillMd === 'string' &&
+          typeof agent.biodna === 'object' &&
+          agent.biodna !== null
+      );
+      setAgents(validAgents);
+    } catch (e) {
+      console.error('Failed to load custom agents from storage', e);
+    }
+  }, []);
+
+  // Persist forged custom agents
+  useEffect(() => {
+    try {
+      window.localStorage.setItem(AGENT_STORAGE_KEY, JSON.stringify(agents));
+    } catch (e) {
+      console.error('Failed to save custom agents to storage', e);
+    }
+  }, [agents]);
 
   const handleNewEntry = () => {
     const entry = createNewEntry();
@@ -398,6 +500,121 @@ export const ReflectionsLab: React.FC = () => {
     const timeoutId = window.setTimeout(() => setRewardNotice(null), 5000);
     return () => window.clearTimeout(timeoutId);
   }, [rewardNotice]);
+
+  useEffect(() => {
+    if (!agentNotice) return;
+    const timeoutId = window.setTimeout(() => setAgentNotice(null), 5000);
+    return () => window.clearTimeout(timeoutId);
+  }, [agentNotice]);
+
+  const recipient = user?.id || user?.email || 'local-user';
+  const chainTransactions = getChainTransactions(recipient);
+  const loopMicEarned = Math.round(
+    chainTransactions
+      .filter(
+        (tx) =>
+          tx.amount > 0 &&
+          (tx.source.startsWith('reflection') ||
+            tx.source.startsWith('learning') ||
+            tx.source.startsWith('oaa_tutor'))
+      )
+      .reduce((sum, tx) => sum + tx.amount, 0) * 100
+  ) / 100;
+  const availableMic = wallet?.balance ?? getChainBalance(recipient);
+  const reachedLoopThreshold = loopMicEarned >= AGENT_BURN_COST;
+  const canBurnForAgent = availableMic >= AGENT_BURN_COST;
+  const canForgeAgent = reachedLoopThreshold && canBurnForAgent;
+
+  const handleApplyAgentTemplates = () => {
+    setAgentSkillMd(createDefaultSkillMarkdown(agentName));
+    setAgentBiodnaJson(createDefaultBiodnaJson(agentName));
+  };
+
+  const handleCreateAgent = async () => {
+    const trimmedName = agentName.trim();
+    if (trimmedName.length < 2) {
+      setAgentError('Agent name must be at least 2 characters.');
+      return;
+    }
+    if (!reachedLoopThreshold) {
+      setAgentError(
+        `You need at least ${AGENT_BURN_COST} MIC earned via Reflection/Learn loops before forging an agent.`
+      );
+      return;
+    }
+    if (!canBurnForAgent) {
+      setAgentError(`Insufficient balance. You need ${AGENT_BURN_COST} MIC available to burn.`);
+      return;
+    }
+
+    let parsedBiodna: Record<string, unknown>;
+    try {
+      const parsed = JSON.parse(agentBiodnaJson);
+      if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+        throw new Error('biodna must be a JSON object');
+      }
+      parsedBiodna = parsed as Record<string, unknown>;
+    } catch {
+      setAgentError('biodna.json must be valid JSON object syntax.');
+      return;
+    }
+
+    setCreatingAgent(true);
+    setAgentError(null);
+    setAgentNotice(null);
+
+    const burnSuccess = await burnMIC(AGENT_BURN_COST, 'agent_creation_burn', {
+      agent_name: trimmedName,
+      artifact_files: ['skill.md', 'biodna.json'],
+      origin: 'reflections_agent_foundry',
+    });
+
+    if (!burnSuccess) {
+      setCreatingAgent(false);
+      setAgentError('Could not burn MIC for agent creation. Please retry.');
+      return;
+    }
+
+    const agent: CustomAgent = {
+      id:
+        typeof crypto !== 'undefined' && 'randomUUID' in crypto
+          ? crypto.randomUUID()
+          : `${Date.now()}-${Math.random().toString(16).slice(2)}`,
+      name: trimmedName,
+      createdAt: new Date().toISOString(),
+      burnCost: AGENT_BURN_COST,
+      skillMd: agentSkillMd.trim() || createDefaultSkillMarkdown(trimmedName),
+      biodna: parsedBiodna,
+    };
+
+    setAgents((prev) => [agent, ...prev]);
+    setAgentNotice(`Agent "${trimmedName}" forged. ${AGENT_BURN_COST} MIC burned.`);
+    setAgentName('');
+    setAgentSkillMd(createDefaultSkillMarkdown(''));
+    setAgentBiodnaJson(createDefaultBiodnaJson(''));
+    setCreatingAgent(false);
+  };
+
+  const downloadAgentFile = (
+    agent: CustomAgent,
+    fileType: 'skill' | 'biodna' | 'bundle'
+  ) => {
+    const slug = agent.name
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '') || 'agent';
+
+    if (fileType === 'skill' || fileType === 'bundle') {
+      triggerDownload(`${slug}-skill.md`, agent.skillMd, 'text/markdown;charset=utf-8');
+    }
+    if (fileType === 'biodna' || fileType === 'bundle') {
+      triggerDownload(
+        `${slug}-biodna.json`,
+        JSON.stringify(agent.biodna, null, 2),
+        'application/json;charset=utf-8'
+      );
+    }
+  };
 
   return (
     <div className="h-full flex flex-col bg-stone-50 overflow-hidden">
@@ -687,6 +904,150 @@ export const ReflectionsLab: React.FC = () => {
                   {rewardNotice && (
                     <div className="text-[10px] text-emerald-700 bg-emerald-50 border border-emerald-200 rounded px-2 py-1">
                       {rewardNotice}
+                    </div>
+                  )}
+                </div>
+
+                <div className="rounded-lg border border-indigo-200 bg-indigo-50/50 p-3 space-y-3">
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-2">
+                      <Bot className="w-4 h-4 text-indigo-600" />
+                      <span className="text-[11px] font-semibold text-indigo-700">
+                        Agent Foundry
+                      </span>
+                    </div>
+                    <span className="text-[10px] text-indigo-600">
+                      Burn {AGENT_BURN_COST} MIC
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    <div className="rounded-md border border-indigo-100 bg-white px-2 py-2">
+                      <div className="text-[10px] text-indigo-500">Loop MIC earned</div>
+                      <div className="text-sm font-semibold text-indigo-700">
+                        {loopMicEarned.toLocaleString()} / {AGENT_BURN_COST}
+                      </div>
+                    </div>
+                    <div className="rounded-md border border-indigo-100 bg-white px-2 py-2">
+                      <div className="text-[10px] text-indigo-500">Available MIC</div>
+                      <div className="text-sm font-semibold text-indigo-700">
+                        {availableMic.toLocaleString()} / {AGENT_BURN_COST}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="text-[10px] text-indigo-700/80 flex flex-col gap-1">
+                    <span>{reachedLoopThreshold ? '✓' : '•'} Reached 200 MIC in Reflection/Learn loops</span>
+                    <span>{canBurnForAgent ? '✓' : '•'} Holds 200 MIC available to burn now</span>
+                  </div>
+
+                  <div className="space-y-2">
+                    <div>
+                      <label className="text-[10px] font-medium text-indigo-700">Agent name</label>
+                      <input
+                        value={agentName}
+                        onChange={(e) => setAgentName(e.target.value)}
+                        placeholder="e.g. Sentinel Aurora"
+                        className="mt-1 w-full rounded-md border border-indigo-200 bg-white px-2.5 py-2 text-xs text-stone-900 placeholder:text-stone-400 focus:outline-none focus:ring-1 focus:ring-indigo-500/50"
+                      />
+                    </div>
+
+                    <div className="flex justify-end">
+                      <button
+                        onClick={handleApplyAgentTemplates}
+                        className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-[10px] border border-indigo-200 bg-white text-indigo-700 hover:bg-indigo-50"
+                      >
+                        <Flame className="w-3 h-3" />
+                        Apply templates from name
+                      </button>
+                    </div>
+
+                    <div>
+                      <label className="text-[10px] font-medium text-indigo-700">skill.md</label>
+                      <textarea
+                        value={agentSkillMd}
+                        onChange={(e) => setAgentSkillMd(e.target.value)}
+                        className="mt-1 w-full min-h-[120px] rounded-md border border-indigo-200 bg-white px-2.5 py-2 text-xs text-stone-900 placeholder:text-stone-400 focus:outline-none focus:ring-1 focus:ring-indigo-500/50 font-mono"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="text-[10px] font-medium text-indigo-700">biodna.json</label>
+                      <textarea
+                        value={agentBiodnaJson}
+                        onChange={(e) => setAgentBiodnaJson(e.target.value)}
+                        className="mt-1 w-full min-h-[120px] rounded-md border border-indigo-200 bg-white px-2.5 py-2 text-xs text-stone-900 placeholder:text-stone-400 focus:outline-none focus:ring-1 focus:ring-indigo-500/50 font-mono"
+                      />
+                    </div>
+                  </div>
+
+                  <button
+                    onClick={() => void handleCreateAgent()}
+                    disabled={!canForgeAgent || creatingAgent}
+                    className={`w-full rounded-md px-3 py-2 text-xs font-semibold transition ${
+                      canForgeAgent && !creatingAgent
+                        ? 'bg-indigo-600 text-white hover:bg-indigo-700'
+                        : 'bg-indigo-100 text-indigo-300 cursor-not-allowed'
+                    }`}
+                  >
+                    {creatingAgent
+                      ? 'Forging agent...'
+                      : `Burn ${AGENT_BURN_COST} MIC to forge agent`}
+                  </button>
+
+                  {agentError && (
+                    <div className="text-[10px] text-red-700 bg-red-50 border border-red-200 rounded px-2 py-1">
+                      {agentError}
+                    </div>
+                  )}
+                  {agentNotice && (
+                    <div className="text-[10px] text-emerald-700 bg-emerald-50 border border-emerald-200 rounded px-2 py-1">
+                      {agentNotice}
+                    </div>
+                  )}
+
+                  {agents.length > 0 && (
+                    <div className="space-y-2 pt-1">
+                      <div className="text-[10px] font-semibold text-indigo-700">Forged Agents</div>
+                      {agents.slice(0, 4).map((agent) => (
+                        <div
+                          key={agent.id}
+                          className="rounded-md border border-indigo-100 bg-white px-2.5 py-2"
+                        >
+                          <div className="flex items-center justify-between gap-2">
+                            <div>
+                              <div className="text-xs font-semibold text-stone-800">{agent.name}</div>
+                              <div className="text-[10px] text-stone-500">
+                                {new Date(agent.createdAt).toLocaleString()}
+                              </div>
+                            </div>
+                            <div className="text-[10px] text-indigo-600">burned {agent.burnCost} MIC</div>
+                          </div>
+                          <div className="mt-2 flex flex-wrap gap-1.5">
+                            <button
+                              onClick={() => downloadAgentFile(agent, 'skill')}
+                              className="inline-flex items-center gap-1 px-2 py-1 rounded border border-indigo-200 text-[10px] text-indigo-700 hover:bg-indigo-50"
+                            >
+                              <Download className="w-3 h-3" />
+                              skill.md
+                            </button>
+                            <button
+                              onClick={() => downloadAgentFile(agent, 'biodna')}
+                              className="inline-flex items-center gap-1 px-2 py-1 rounded border border-indigo-200 text-[10px] text-indigo-700 hover:bg-indigo-50"
+                            >
+                              <Download className="w-3 h-3" />
+                              biodna.json
+                            </button>
+                            <button
+                              onClick={() => downloadAgentFile(agent, 'bundle')}
+                              className="inline-flex items-center gap-1 px-2 py-1 rounded border border-indigo-200 text-[10px] text-indigo-700 hover:bg-indigo-50"
+                            >
+                              <Download className="w-3 h-3" />
+                              both files
+                            </button>
+                          </div>
+                        </div>
+                      ))}
                     </div>
                   )}
                 </div>

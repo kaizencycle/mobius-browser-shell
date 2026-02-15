@@ -14,6 +14,7 @@
  * - GET  /mic/wallet  — Get wallet balance (derived from ledger)
  * - GET  /mic/events  — Get recent ledger events
  * - POST /mic/earn    — Write earning event to ledger
+ * - POST /mic/burn    — Burn MIC from wallet (negative ledger entry)
  */
 import { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
 import { useAuth } from './AuthContext';
@@ -48,6 +49,7 @@ interface WalletContextType {
   error: string | null;
   refreshWallet: () => Promise<void>;
   earnMIC: (source: string, meta?: Record<string, unknown>) => Promise<boolean>;
+  burnMIC: (amount: number, source: string, meta?: Record<string, unknown>) => Promise<boolean>;
 
   // ── Local blockchain ──
   blockchain: MICBlock[];
@@ -194,6 +196,79 @@ export function WalletProvider({ children }: { children: ReactNode }) {
     [token, API_BASE, refreshWallet, addBlock, user],
   );
 
+  // ── Burn MIC: writes negative entry to API ledger and local chain ──
+  const burnMIC = useCallback(
+    async (amount: number, source: string, meta?: Record<string, unknown>): Promise<boolean> => {
+      const recipient = user?.id || user?.email || 'local-user';
+      const burnAmount = Math.round(amount * 100) / 100;
+
+      if (!Number.isFinite(burnAmount) || burnAmount <= 0) {
+        return false;
+      }
+
+      // Authenticated: API is source of truth, then mirror to local chain
+      if (token) {
+        try {
+          const response = await fetch(`${API_BASE}/mic/burn`, {
+            method: 'POST',
+            headers: {
+              Authorization: `Bearer ${token}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ amount: burnAmount, source, meta: meta || {} }),
+          });
+
+          if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}));
+            console.error('Failed to burn MIC (API):', errorData);
+            return false;
+          }
+
+          const result = await response.json();
+          try {
+            await addBlock([
+              {
+                source,
+                amount: -burnAmount,
+                recipient,
+                meta: { ...(meta || {}), burn: true, ledger_proof: result.ledger_proof },
+              },
+            ]);
+          } catch (blockErr) {
+            console.warn('Failed to mirror burn to local blockchain:', blockErr);
+          }
+
+          await refreshWallet();
+          return true;
+        } catch (err) {
+          console.error('Failed to burn MIC (API):', err);
+          return false;
+        }
+      }
+
+      // Offline/local mode: enforce local balance before burning
+      if (getChainBalance(recipient) < burnAmount) {
+        return false;
+      }
+
+      try {
+        await addBlock([
+          {
+            source,
+            amount: -burnAmount,
+            recipient,
+            meta: { ...(meta || {}), burn: true, local_only: true },
+          },
+        ]);
+        return true;
+      } catch (blockErr) {
+        console.warn('Failed to write burn to local blockchain:', blockErr);
+        return false;
+      }
+    },
+    [token, API_BASE, refreshWallet, addBlock, getChainBalance, user],
+  );
+
   useEffect(() => {
     refreshWallet();
   }, [refreshWallet]);
@@ -207,6 +282,7 @@ export function WalletProvider({ children }: { children: ReactNode }) {
         error,
         refreshWallet,
         earnMIC,
+        burnMIC,
         blockchain,
         chainStats,
         chainLoading,
