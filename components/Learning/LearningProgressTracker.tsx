@@ -1932,14 +1932,37 @@ function getModuleCategory(id: string): ModuleCategory {
   return categoryMap[id] || 'all';
 }
 
+// ═══════════════════════════════════════════════════
+// MIC LEVELING CONFIG — MIC is the sole reward/XP currency
+// ═══════════════════════════════════════════════════
+
+const MIC_PER_LEVEL = 200;          // MIC needed per level
+const STREAK_BONUS_RATE = 0.05;     // 5% of base per streak step (capped at 10)
+const PERFECT_BONUS_RATE = 0.15;    // 15% bonus for 100% accuracy
+const MIN_ACCURACY_THRESHOLD = 0.50; // Minimum 50% to earn MIC
+
+function micToLevel(totalMic: number): number {
+  return Math.floor(totalMic / MIC_PER_LEVEL) + 1;
+}
+
+function micInCurrentLevel(totalMic: number): number {
+  return totalMic % MIC_PER_LEVEL;
+}
+
+function micToNextLevel(totalMic: number): number {
+  return MIC_PER_LEVEL - micInCurrentLevel(totalMic);
+}
+
 // Initial user progress state
 const INITIAL_PROGRESS: UserLearningProgress = {
   totalMicEarned: 0,
   modulesCompleted: 0,
   currentStreak: 0,
+  bestStreak: 0,
   totalLearningMinutes: 0,
+  totalCorrect: 0,
+  totalQuestions: 0,
   level: 1,
-  experiencePoints: 0
 };
 
 // ═══════════════════════════════════════════════════
@@ -2028,16 +2051,25 @@ export const LearningProgressTracker: React.FC = () => {
   const handleQuizComplete = async (accuracy: number) => {
     if (!activeModule) return;
 
-    // Calculate rewards based on accuracy
-    const accuracyMultiplier = Math.max(accuracy, 0.70); // Minimum 70% threshold
-    const micEarned = Math.round(activeModule.micReward * accuracyMultiplier);
-    const xpEarned = micEarned * 2;
+    // ═══ MIC Reward Calculation ═══
+    // MIC is the SOLE reward currency — no separate XP
+    const correctCount = Math.round(accuracy * activeModule.questions.length);
+    const accuracyMultiplier = Math.max(accuracy, MIN_ACCURACY_THRESHOLD);
+    const baseMic = Math.round(activeModule.micReward * accuracyMultiplier);
 
-    // Check for perfect score bonus
-    const perfectBonus = accuracy === 1.0 ? Math.round(activeModule.micReward * 0.1) : 0;
-    const totalMicEarned = micEarned + perfectBonus;
+    // Streak bonus: 5% per consecutive correct (capped at 10)
+    const streakForBonus = Math.min(userProgress.currentStreak + 1, 10);
+    const streakBonus = streakForBonus >= 2
+      ? Math.round(activeModule.micReward * STREAK_BONUS_RATE * (streakForBonus - 1))
+      : 0;
+
+    // Perfect score bonus: 15% extra
+    const perfectBonus = accuracy === 1.0 ? Math.round(activeModule.micReward * PERFECT_BONUS_RATE) : 0;
+
+    const totalMicEarned = baseMic + streakBonus + perfectBonus;
 
     // Update module status
+    const alreadyCompleted = modules.find(m => m.id === activeModule.id)?.completed ?? false;
     const updatedModules = modules.map(m => 
       m.id === activeModule.id 
         ? { ...m, completed: true, progress: 100, completedAt: new Date().toISOString() }
@@ -2045,17 +2077,24 @@ export const LearningProgressTracker: React.FC = () => {
     );
     setModules(updatedModules);
 
-    // Calculate new level
-    const newXP = userProgress.experiencePoints + xpEarned;
-    const newLevel = Math.floor(newXP / 100) + 1;
+    // ═══ Level is derived from cumulative MIC ═══
+    const newTotalMic = userProgress.totalMicEarned + totalMicEarned;
+    const previousLevel = userProgress.level;
+    const newLevel = micToLevel(newTotalMic);
+    const leveledUp = newLevel > previousLevel;
 
-    // Update user progress
+    const newStreak = userProgress.currentStreak + 1;
+    const newBestStreak = Math.max(userProgress.bestStreak, newStreak);
+
+    // Update user progress — MIC drives everything
     const newProgress: UserLearningProgress = {
-      totalMicEarned: userProgress.totalMicEarned + totalMicEarned,
-      modulesCompleted: userProgress.modulesCompleted + (modules.find(m => m.id === activeModule.id)?.completed ? 0 : 1),
-      currentStreak: userProgress.currentStreak + 1,
+      totalMicEarned: newTotalMic,
+      modulesCompleted: userProgress.modulesCompleted + (alreadyCompleted ? 0 : 1),
+      currentStreak: newStreak,
+      bestStreak: newBestStreak,
       totalLearningMinutes: userProgress.totalLearningMinutes + activeModule.estimatedMinutes,
-      experiencePoints: newXP,
+      totalCorrect: userProgress.totalCorrect + correctCount,
+      totalQuestions: userProgress.totalQuestions + activeModule.questions.length,
       level: newLevel,
       lastActivityDate: new Date().toISOString()
     };
@@ -2096,16 +2135,21 @@ export const LearningProgressTracker: React.FC = () => {
       const success = await earnMIC('learning_module_completion', {
         module_id: activeModule.id,
         module_title: activeModule.title,
-        accuracy: accuracy,
+        accuracy,
         mic_earned: totalMicEarned,
+        base_mic: baseMic,
+        streak_bonus: streakBonus,
+        perfect_bonus: perfectBonus,
         perfect_score: accuracy === 1.0,
         difficulty: activeModule.difficulty,
         base_reward: activeModule.micReward,
-        streak: userProgress.currentStreak
+        streak: newStreak,
+        level: newLevel,
+        leveled_up: leveledUp,
       });
       
       if (success) {
-        console.log('MIC earned successfully');
+        console.log('MIC earned successfully:', totalMicEarned, leveledUp ? `(LEVEL UP to ${newLevel}!)` : '');
       }
     }
 
@@ -2161,55 +2205,86 @@ export const LearningProgressTracker: React.FC = () => {
           </div>
         </div>
 
-        {/* Stats Grid */}
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-3 sm:gap-4">
-          <div className="bg-white rounded-lg p-3 sm:p-4 border border-stone-200">
-            <div className="text-xs text-stone-500 mb-1">Total MIC</div>
-            <div className="text-xl sm:text-2xl font-bold text-amber-500">
-              {userProgress.totalMicEarned}
+        {/* MIC Hero Stat */}
+        <div className="bg-white rounded-xl p-4 sm:p-5 border-2 border-amber-300 mb-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <div className="text-xs text-stone-500 uppercase tracking-wide font-medium mb-1">Total MIC Earned</div>
+              <div className="text-3xl sm:text-4xl font-bold text-amber-500 flex items-center gap-2">
+                <Award className="w-7 h-7 sm:w-8 sm:h-8" />
+                {userProgress.totalMicEarned.toLocaleString()}
+              </div>
+              <div className="text-xs text-stone-400 mt-1">
+                Mobius Integrity Credits — your learning drives your value
+              </div>
+            </div>
+            <div className="text-right hidden sm:block">
+              <div className="text-xs text-stone-400 mb-0.5">Accuracy</div>
+              <div className="text-lg font-bold text-stone-700">
+                {userProgress.totalQuestions > 0
+                  ? `${Math.round((userProgress.totalCorrect / userProgress.totalQuestions) * 100)}%`
+                  : '—'}
+              </div>
             </div>
           </div>
-          <div className="bg-white rounded-lg p-3 sm:p-4 border border-stone-200">
-            <div className="text-xs text-stone-500 mb-1">Completed</div>
-            <div className="text-xl sm:text-2xl font-bold text-emerald-600">
+        </div>
+
+        {/* Stats Grid */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <div className="bg-white rounded-lg p-3 border border-stone-200">
+            <div className="text-xs text-stone-500 mb-1">Modules</div>
+            <div className="text-lg sm:text-xl font-bold text-emerald-600">
               {completedCount}/{totalModules}
             </div>
           </div>
-          <div className="bg-white rounded-lg p-3 sm:p-4 border border-stone-200">
+          <div className="bg-white rounded-lg p-3 border border-stone-200">
             <div className="text-xs text-stone-500 mb-1">Streak</div>
-            <div className="text-xl sm:text-2xl font-bold text-orange-500 flex items-center gap-1">
+            <div className="text-lg sm:text-xl font-bold text-orange-500 flex items-center gap-1">
               {userProgress.currentStreak}
-              {userProgress.currentStreak > 0 && <Flame className="w-5 h-5" />}
+              {userProgress.currentStreak > 0 && <Flame className="w-4 h-4" />}
+              {userProgress.bestStreak > userProgress.currentStreak && (
+                <span className="text-xs font-normal text-stone-400 ml-1">best: {userProgress.bestStreak}</span>
+              )}
             </div>
           </div>
-          <div className="bg-white rounded-lg p-3 sm:p-4 border border-stone-200">
+          <div className="bg-white rounded-lg p-3 border border-stone-200">
             <div className="text-xs text-stone-500 mb-1">Learning Time</div>
-            <div className="text-xl sm:text-2xl font-bold text-blue-600">
-              {userProgress.totalLearningMinutes}m
+            <div className="text-lg sm:text-xl font-bold text-blue-600">
+              {userProgress.totalLearningMinutes >= 60
+                ? `${Math.floor(userProgress.totalLearningMinutes / 60)}h ${userProgress.totalLearningMinutes % 60}m`
+                : `${userProgress.totalLearningMinutes}m`
+              }
             </div>
           </div>
-          <div className="bg-white rounded-lg p-3 sm:p-4 border border-stone-200 col-span-2 md:col-span-1">
+          <div className="bg-white rounded-lg p-3 border border-stone-200">
             <div className="text-xs text-stone-500 mb-1">Completion</div>
-            <div className="text-xl sm:text-2xl font-bold text-violet-600">
+            <div className="text-lg sm:text-xl font-bold text-violet-600">
               {completionPct}%
             </div>
           </div>
         </div>
 
-        {/* XP Progress Bar */}
+        {/* MIC Level Progress Bar */}
         <div className="mt-4">
           <div className="flex items-center justify-between text-xs sm:text-sm text-stone-600 mb-2">
-            <span className="flex items-center gap-1">
-              <Zap className="w-3.5 h-3.5 text-violet-500" />
-              {userProgress.experiencePoints} XP
+            <span className="flex items-center gap-1.5 font-medium">
+              <Award className="w-3.5 h-3.5 text-amber-500" />
+              Level {userProgress.level}
             </span>
-            <span>{userProgress.experiencePoints % 100}/100 to Level {userProgress.level + 1}</span>
+            <span className="text-stone-400">
+              {micInCurrentLevel(userProgress.totalMicEarned)}/{MIC_PER_LEVEL} MIC to Level {userProgress.level + 1}
+            </span>
           </div>
-          <div className="w-full bg-stone-200 rounded-full h-2.5">
+          <div className="w-full bg-stone-200 rounded-full h-3 overflow-hidden">
             <div
-              className="bg-gradient-to-r from-violet-500 to-indigo-500 h-2.5 rounded-full transition-all duration-700 ease-out"
-              style={{ width: `${(userProgress.experiencePoints % 100)}%` }}
-            />
+              className="h-full bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 rounded-full transition-all duration-700 ease-out relative"
+              style={{ width: `${(micInCurrentLevel(userProgress.totalMicEarned) / MIC_PER_LEVEL) * 100}%` }}
+            >
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent" />
+            </div>
+          </div>
+          <div className="text-xs text-stone-400 mt-1 text-center">
+            {micToNextLevel(userProgress.totalMicEarned)} MIC until next level
           </div>
         </div>
       </div>
@@ -2330,9 +2405,9 @@ export const LearningProgressTracker: React.FC = () => {
                     <Brain className="w-4 h-4" />
                     <span>{module.questions.length} questions</span>
                   </div>
-                  <div className="flex items-center gap-1.5 text-amber-500">
-                    <Sparkles className="w-4 h-4" />
-                    <span>{module.questions.reduce((s, q) => s + q.points, 0)} pts</span>
+                  <div className="flex items-center gap-1.5 text-amber-500 font-medium">
+                    <Award className="w-4 h-4" />
+                    <span>up to {Math.round(module.micReward * (1 + PERFECT_BONUS_RATE))} MIC</span>
                   </div>
                 </div>
 
@@ -2403,10 +2478,10 @@ export const LearningProgressTracker: React.FC = () => {
 
         {/* Testnet info */}
         <div className="text-center text-xs text-stone-400 space-y-1">
-          <p>🧪 Testnet Mode — XP and MIC are stored locally. No wallet connection required.</p>
-          <p>When mainnet launches, your learning history converts to MIC at verified rates.</p>
+          <p>🧪 Testnet Mode — MIC earned locally. Each correct answer earns real Mobius Integrity Credits.</p>
+          <p>On mainnet, MIC backs your reputation, unlocks features, and reflects verified learning.</p>
           <p className="text-stone-300 mt-2">
-            {totalModules} modules • {modules.reduce((s, m) => s + m.questions.length, 0)} questions • {totalAvailableMIC} MIC available
+            {totalModules} modules • {modules.reduce((s, m) => s + m.questions.length, 0)} questions • {totalAvailableMIC}+ MIC available
           </p>
         </div>
       </div>

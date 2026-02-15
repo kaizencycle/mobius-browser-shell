@@ -142,12 +142,14 @@ export interface LearningSession {
 }
 
 export interface UserLearningProgress {
-  totalMicEarned: number;
+  totalMicEarned: number;       // MIC IS the XP — sole progression currency
   modulesCompleted: number;
   currentStreak: number;
+  bestStreak: number;
   totalLearningMinutes: number;
-  level: number;
-  experiencePoints: number;
+  totalCorrect: number;
+  totalQuestions: number;
+  level: number;                // Derived from totalMicEarned
   lastActivityDate?: string;
 }
 
@@ -161,11 +163,12 @@ export interface QuizAttempt {
 export interface ModuleCompletionResult {
   moduleId: string;
   accuracy: number;
-  micEarned: number;
-  xpEarned: number;
+  micEarned: number;            // MIC is the sole reward currency
+  baseMic: number;
+  streakBonus: number;
+  perfectBonus: number;
   newLevel?: number;
-  streakBonus?: number;
-  perfectScoreBonus?: boolean;
+  leveledUp?: boolean;
 }
 
 // ============================================
