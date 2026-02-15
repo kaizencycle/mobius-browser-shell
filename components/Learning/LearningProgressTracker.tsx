@@ -2048,7 +2048,7 @@ export const LearningProgressTracker: React.FC = () => {
     setShowQuiz(true);
   };
 
-  const handleQuizComplete = async (accuracy: number) => {
+  const handleQuizComplete = async (accuracy: number, atlasAssistBonus: number = 0) => {
     if (!activeModule) return;
 
     // ═══ MIC Reward Calculation ═══
@@ -2066,7 +2066,10 @@ export const LearningProgressTracker: React.FC = () => {
     // Perfect score bonus: 15% extra
     const perfectBonus = accuracy === 1.0 ? Math.round(activeModule.micReward * PERFECT_BONUS_RATE) : 0;
 
-    const totalMicEarned = baseMic + streakBonus + perfectBonus;
+    // ATLAS Assist bonus: earned by getting questions right after ATLAS reframe
+    const atlasBonus = atlasAssistBonus;
+
+    const totalMicEarned = baseMic + streakBonus + perfectBonus + atlasBonus;
 
     // Update module status
     const alreadyCompleted = modules.find(m => m.id === activeModule.id)?.completed ?? false;
@@ -2140,6 +2143,7 @@ export const LearningProgressTracker: React.FC = () => {
         base_mic: baseMic,
         streak_bonus: streakBonus,
         perfect_bonus: perfectBonus,
+        atlas_assist_bonus: atlasBonus,
         perfect_score: accuracy === 1.0,
         difficulty: activeModule.difficulty,
         base_reward: activeModule.micReward,

@@ -4,6 +4,13 @@ import {
   Award, Sparkles, ArrowLeft, Flame, Target, Zap
 } from 'lucide-react';
 import { LearningModule, QuizQuestion } from '../../types';
+import { 
+  useAtlas, 
+  AtlasInterventionCard, 
+  AtlasAssistBadge, 
+  getAtlasAssistMessage,
+  ATLAS_ASSIST_BONUS 
+} from './AtlasIntervention';
 
 // ═══ MIC Reward Constants (must match LearningProgressTracker) ═══
 const MIN_ACCURACY_THRESHOLD = 0.50;
@@ -12,7 +19,7 @@ const PERFECT_BONUS_RATE = 0.15;
 
 interface QuizModuleProps {
   module: LearningModule;
-  onComplete: (accuracy: number) => void;
+  onComplete: (accuracy: number, atlasAssistBonus?: number) => void;
   onCancel: () => void;
 }
 
@@ -30,6 +37,11 @@ export const QuizModule: React.FC<QuizModuleProps> = ({
   const [isCompleted, setIsCompleted] = useState(false);
   const [currentStreak, setCurrentStreak] = useState(0);
   const [bestStreak, setBestStreak] = useState(0);
+
+  // ═══ ATLAS Intervention System ═══
+  const atlas = useAtlas({ moduleId: module.id });
+  const [atlasAssistMessage, setAtlasAssistMessage] = useState<string | null>(null);
+  const [isRetrying, setIsRetrying] = useState(false);
 
   const currentQuestion = module.questions[currentQuestionIndex];
   const isCorrectAnswer = selectedAnswer !== null && selectedAnswer === currentQuestion?.correctAnswer;
@@ -65,7 +77,16 @@ export const QuizModule: React.FC<QuizModuleProps> = ({
   const handleSubmitAnswer = () => {
     if (selectedAnswer === null) return;
 
-    const isCorrect = selectedAnswer === currentQuestion.correctAnswer;
+    // Use ATLAS to process the answer
+    const atlasResult = atlas.handleAnswer(
+      currentQuestionIndex,
+      selectedAnswer,
+      currentQuestion.correctAnswer,
+      currentQuestion.question,
+      currentQuestion.options
+    );
+
+    const isCorrect = atlasResult.isCorrect;
 
     // Update answers array
     const newAnswers = [...answers];
@@ -87,8 +108,26 @@ export const QuizModule: React.FC<QuizModuleProps> = ({
       setCurrentStreak(0);
     }
 
+    // Handle ATLAS assist badge
+    if (atlasResult.atlasAssist) {
+      setAtlasAssistMessage(getAtlasAssistMessage());
+    } else {
+      setAtlasAssistMessage(null);
+    }
+
+    // Reset retry state
+    setIsRetrying(false);
+
     // Show explanation
     setShowExplanation(true);
+  };
+
+  // ATLAS retry: let user try the question again after intervention
+  const handleAtlasRetry = () => {
+    setSelectedAnswer(null);
+    setShowExplanation(false);
+    setIsRetrying(true);
+    atlas.clearIntervention();
   };
 
   const handleNextQuestion = () => {
@@ -104,7 +143,7 @@ export const QuizModule: React.FC<QuizModuleProps> = ({
 
   const handleCompleteQuiz = () => {
     const accuracy = module.questions.length > 0 ? correctAnswers / module.questions.length : 0;
-    onComplete(accuracy);
+    onComplete(accuracy, atlas.totalAssistBonus);
   };
 
   // ═══════════════════════════════════════════
@@ -122,7 +161,8 @@ export const QuizModule: React.FC<QuizModuleProps> = ({
     const perfectBonus = accuracy === 100 
       ? Math.round(module.micReward * PERFECT_BONUS_RATE) 
       : 0;
-    const totalMic = baseMic + streakBonus + perfectBonus;
+    const atlasBonus = atlas.totalAssistBonus;
+    const totalMic = baseMic + streakBonus + perfectBonus + atlasBonus;
 
     return (
       <div className="max-w-2xl mx-auto p-4 sm:p-6">
@@ -178,6 +218,15 @@ export const QuizModule: React.FC<QuizModuleProps> = ({
                   <span className="font-semibold text-violet-600">+{perfectBonus} MIC</span>
                 </div>
               )}
+              {atlasBonus > 0 && (
+                <div className="flex justify-between text-stone-600">
+                  <span className="flex items-center gap-1">
+                    ATLAS Assist
+                    <span>🔭</span>
+                  </span>
+                  <span className="font-semibold text-amber-400">+{atlasBonus} MIC</span>
+                </div>
+              )}
             </div>
           </div>
 
@@ -210,6 +259,7 @@ export const QuizModule: React.FC<QuizModuleProps> = ({
             <div className="space-y-2">
               {module.questions.map((q, idx) => {
                 const wasCorrect = answers[idx] === q.correctAnswer;
+                const wasAtlasAssisted = atlas.assistedQuestions.has(idx);
                 const micVal = questionMicValue(q);
                 return (
                   <div key={idx} className="flex items-start gap-2 text-sm">
@@ -220,6 +270,11 @@ export const QuizModule: React.FC<QuizModuleProps> = ({
                     )}
                     <span className={`flex-1 ${wasCorrect ? 'text-stone-700' : 'text-stone-400'}`}>
                       {q.question.length > 70 ? q.question.substring(0, 70) + '...' : q.question}
+                      {wasCorrect && wasAtlasAssisted && (
+                        <span className="ml-1.5 inline-flex items-center gap-0.5 text-xs text-amber-500 font-medium">
+                          🔭 ATLAS Assist
+                        </span>
+                      )}
                     </span>
                     <span className={`text-xs font-medium flex-shrink-0 ${wasCorrect ? 'text-amber-500' : 'text-stone-300'}`}>
                       {wasCorrect ? `+${micVal}` : '0'} MIC
@@ -313,11 +368,11 @@ export const QuizModule: React.FC<QuizModuleProps> = ({
           )}
         </div>
         <div className="flex items-center gap-3">
-          {/* Running MIC earned */}
-          {runningMicEarned > 0 && (
+          {/* Running MIC earned (including ATLAS assist bonus) */}
+          {(runningMicEarned > 0 || atlas.totalAssistBonus > 0) && (
             <span className="flex items-center gap-1 text-amber-500 font-bold">
               <Award className="w-3.5 h-3.5" />
-              {runningMicEarned} MIC
+              {runningMicEarned + atlas.totalAssistBonus} MIC
             </span>
           )}
           {/* This question's MIC value */}
@@ -389,36 +444,59 @@ export const QuizModule: React.FC<QuizModuleProps> = ({
           })}
         </div>
 
-        {/* Explanation */}
+        {/* Explanation / ATLAS Intervention */}
         {showExplanation && (
-          <div className={`
-            p-4 rounded-xl border-2 mb-4
-            ${isCorrectAnswer 
-              ? 'bg-emerald-50 border-emerald-200' 
-              : 'bg-amber-50 border-amber-200'
-            }
-          `}>
-            <div className="flex items-start gap-3">
-              {isCorrectAnswer ? (
-                <CheckCircle2 className="w-5 h-5 text-emerald-500 mt-0.5 flex-shrink-0" />
-              ) : (
-                <HelpCircle className="w-5 h-5 text-amber-500 mt-0.5 flex-shrink-0" />
-              )}
-              <div>
-                <h4 className={`font-semibold mb-1 ${isCorrectAnswer ? 'text-emerald-700' : 'text-amber-700'}`}>
-                  {isCorrectAnswer 
-                    ? (currentStreak >= 3 
+          <>
+            {/* Correct answer feedback */}
+            {isCorrectAnswer && (
+              <div className="p-4 rounded-xl border-2 mb-4 bg-emerald-50 border-emerald-200">
+                <div className="flex items-start gap-3">
+                  <CheckCircle2 className="w-5 h-5 text-emerald-500 mt-0.5 flex-shrink-0" />
+                  <div>
+                    <h4 className="font-semibold mb-1 text-emerald-700">
+                      {currentStreak >= 3 
                         ? `🔥 Correct! ${currentStreak} in a row! +${currentQMic} MIC` 
-                        : `✓ Correct! +${currentQMic} MIC`)
-                    : '✗ Not quite — no MIC for this one'
-                  }
-                </h4>
-                <p className="text-sm text-stone-700 leading-relaxed">
-                  {currentQuestion.explanation}
-                </p>
+                        : `✓ Correct! +${currentQMic} MIC`}
+                    </h4>
+                    <p className="text-sm text-stone-700 leading-relaxed">
+                      {currentQuestion.explanation}
+                    </p>
+                    {/* ATLAS Assist Badge — shows when user got it right after a retry */}
+                    {atlasAssistMessage && (
+                      <div className="mt-3">
+                        <AtlasAssistBadge message={atlasAssistMessage} />
+                      </div>
+                    )}
+                  </div>
+                </div>
               </div>
-            </div>
-          </div>
+            )}
+
+            {/* Wrong answer — ATLAS intervention replaces the generic "Not quite" */}
+            {!isCorrectAnswer && (
+              <div className="space-y-3 mb-4">
+                {/* Brief wrong-answer indicator */}
+                <div className="p-3 rounded-xl border-2 bg-stone-50 border-stone-200">
+                  <div className="flex items-start gap-3">
+                    <HelpCircle className="w-5 h-5 text-stone-400 mt-0.5 flex-shrink-0" />
+                    <div>
+                      <h4 className="font-semibold mb-1 text-stone-500">
+                        Not this one — but let's look at why.
+                      </h4>
+                    </div>
+                  </div>
+                </div>
+
+                {/* ATLAS Intervention Card */}
+                {atlas.intervention && (
+                  <AtlasInterventionCard 
+                    intervention={atlas.intervention} 
+                    onRetry={handleAtlasRetry}
+                  />
+                )}
+              </div>
+            )}
+          </>
         )}
 
         {/* Action Buttons */}
