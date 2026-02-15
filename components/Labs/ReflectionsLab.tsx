@@ -1,5 +1,5 @@
 // components/Labs/ReflectionsLab.tsx
-import React, { useEffect, useState, useCallback, useMemo } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import {
   Plus,
   BookOpen,
@@ -15,6 +15,7 @@ import { useWallet } from '../../contexts/WalletContext';
 
 type PhaseId = 'raw' | 'mirror' | 'reframe' | 'recode';
 type ReflectionRewardId = 'spark' | 'geist_mode' | 'epiphany';
+type ReflectionAnalysis = ReturnType<typeof analyzeReflection>;
 
 interface Phase {
   id: PhaseId;
@@ -30,38 +31,48 @@ interface ReflectionEntry {
   title: string;
   phases: Phase[];
   rewardClaims: ReflectionRewardId[];
+  rewardRollMilestone: number;
 }
 
 const STORAGE_KEY = 'mobius_reflections_v1';
 const SUBSTANTIVE_PHASE_WORDS = 12;
+const HIDDEN_REWARD_WORD_STEP = 48;
 
 const REFLECTION_REWARDS: Array<{
   id: ReflectionRewardId;
-  label: string;
   source: string;
   mic: number;
-  unlockHint: string;
+  minWords: number;
+  minCompletedPhases: number;
+  baseChance: number;
+  signalBoostChance: number;
 }> = [
   {
     id: 'spark',
-    label: 'Spark',
     source: 'reflection_spark',
     mic: 4,
-    unlockHint: 'Write one meaningful phase or mention a spark.',
+    minWords: 24,
+    minCompletedPhases: 1,
+    baseChance: 0.16,
+    signalBoostChance: 0.08,
   },
   {
     id: 'geist_mode',
-    label: 'Geist Mode',
     source: 'reflection_geist_mode',
     mic: 7,
-    unlockHint: 'Reach 3 substantial phases or mention geist/giest mode.',
+    minWords: 90,
+    minCompletedPhases: 3,
+    baseChance: 0.11,
+    signalBoostChance: 0.07,
   },
   {
     id: 'epiphany',
-    label: 'Epiphany',
     source: 'reflection_epiphany',
     mic: 12,
-    unlockHint: 'Complete all phases deeply or describe an epiphany.',
+    minWords: 160,
+    minCompletedPhases: 4,
+    baseChance: 0.07,
+    signalBoostChance: 0.06,
   },
 ];
 
@@ -119,14 +130,44 @@ function analyzeReflection(entry: ReflectionEntry) {
     hasSparkSignal,
     hasGeistSignal,
     hasEpiphanySignal,
-    unlocked: {
-      spark: hasSparkSignal || (completedPhaseCount >= 1 && totalWords >= 24),
-      geist_mode: hasGeistSignal || (completedPhaseCount >= 3 && totalWords >= 90),
-      epiphany:
-        hasEpiphanySignal ||
-        (completedPhaseCount === PHASE_TEMPLATE.length && totalWords >= 160),
-    } as Record<ReflectionRewardId, boolean>,
   };
+}
+
+function secureRandom01(): number {
+  if (typeof crypto !== 'undefined' && typeof crypto.getRandomValues === 'function') {
+    const randomArray = new Uint32Array(1);
+    crypto.getRandomValues(randomArray);
+    return randomArray[0] / 0xffffffff;
+  }
+  return Math.random();
+}
+
+function signalBoostForReward(rewardId: ReflectionRewardId, analysis: ReflectionAnalysis): boolean {
+  if (rewardId === 'spark') return analysis.hasSparkSignal;
+  if (rewardId === 'geist_mode') return analysis.hasGeistSignal;
+  return analysis.hasEpiphanySignal;
+}
+
+function rollHiddenReward(entry: ReflectionEntry, analysis: ReflectionAnalysis) {
+  const claimed = new Set(entry.rewardClaims);
+  const sortedRewards = [...REFLECTION_REWARDS].sort((a, b) => b.mic - a.mic);
+
+  for (const reward of sortedRewards) {
+    if (claimed.has(reward.id)) continue;
+    if (analysis.totalWords < reward.minWords) continue;
+    if (analysis.completedPhaseCount < reward.minCompletedPhases) continue;
+
+    const hasSignalBoost = signalBoostForReward(reward.id, analysis);
+    const chance = Math.min(
+      0.9,
+      reward.baseChance + (hasSignalBoost ? reward.signalBoostChance : 0)
+    );
+    if (secureRandom01() < chance) {
+      return reward;
+    }
+  }
+
+  return null;
 }
 
 function createNewEntry(): ReflectionEntry {
@@ -144,6 +185,7 @@ function createNewEntry(): ReflectionEntry {
       content: '',
     })),
     rewardClaims: [],
+    rewardRollMilestone: 0,
   };
 }
 
@@ -152,7 +194,6 @@ export const ReflectionsLab: React.FC = () => {
   const [activeEntryId, setActiveEntryId] = useState<string | null>(null);
   const [activePhaseId, setActivePhaseId] = useState<PhaseId>('raw');
   const [conceptsExtracted, setConceptsExtracted] = useState(false);
-  const [claimingReward, setClaimingReward] = useState<ReflectionRewardId | null>(null);
   const [rewardNotice, setRewardNotice] = useState<string | null>(null);
   
   // Knowledge Graph integration
@@ -173,6 +214,10 @@ export const ReflectionsLab: React.FC = () => {
                 REFLECTION_REWARDS.some((reward) => reward.id === claim)
               )
             : [],
+          rewardRollMilestone:
+            typeof entry.rewardRollMilestone === 'number' && entry.rewardRollMilestone >= 0
+              ? Math.floor(entry.rewardRollMilestone)
+              : 0,
         }));
         setEntries(normalized);
         setActiveEntryId(normalized[0].id);
@@ -222,24 +267,94 @@ export const ReflectionsLab: React.FC = () => {
     );
   };
 
+  const grantHiddenReward = useCallback(
+    async ({
+      reward,
+      entry,
+      analysis,
+    }: {
+      reward: (typeof REFLECTION_REWARDS)[number];
+      entry: ReflectionEntry;
+      analysis: ReflectionAnalysis;
+    }) => {
+      const success = await earnMIC(reward.source, {
+        mic_earned: reward.mic,
+        xp_earned: reward.mic,
+        hidden_reward: true,
+        reward_tier: reward.id,
+        entry_id: entry.id,
+        entry_title: entry.title,
+        total_words: analysis.totalWords,
+        completed_phases: analysis.completedPhaseCount,
+        has_spark_signal: analysis.hasSparkSignal,
+        has_geist_signal: analysis.hasGeistSignal,
+        has_epiphany_signal: analysis.hasEpiphanySignal,
+      });
+
+      if (success) {
+        setRewardNotice(`A hidden reflection bonus crystallized: +${reward.mic} MIC XP`);
+      } else {
+        setRewardNotice('A hidden reflection bonus was detected, but minting failed. Try again soon.');
+      }
+    },
+    [earnMIC]
+  );
+
   const handlePhaseChange = (phaseId: PhaseId, content: string) => {
     if (!activeEntryId) return;
 
-    setEntries((prev) =>
-      prev.map((entry) =>
-        entry.id === activeEntryId
-          ? {
-              ...entry,
-              phases: entry.phases.map((phase) =>
-                phase.id === phaseId ? { ...phase, content } : phase
-              ),
-            }
-          : entry
-      )
-    );
+    let hiddenRewardGrant:
+      | {
+          reward: (typeof REFLECTION_REWARDS)[number];
+          entry: ReflectionEntry;
+          analysis: ReflectionAnalysis;
+        }
+      | null = null;
+
+    const updatedEntries = entries.map((entry) => {
+      if (entry.id !== activeEntryId) return entry;
+
+      let updatedEntry: ReflectionEntry = {
+        ...entry,
+        phases: entry.phases.map((phase) =>
+          phase.id === phaseId ? { ...phase, content } : phase
+        ),
+      };
+
+      const analysis = analyzeReflection(updatedEntry);
+      const reachedMilestone = Math.floor(analysis.totalWords / HIDDEN_REWARD_WORD_STEP);
+
+      if (reachedMilestone > updatedEntry.rewardRollMilestone) {
+        for (
+          let milestone = updatedEntry.rewardRollMilestone + 1;
+          milestone <= reachedMilestone;
+          milestone += 1
+        ) {
+          updatedEntry = { ...updatedEntry, rewardRollMilestone: milestone };
+          if (hiddenRewardGrant) continue;
+
+          const reward = rollHiddenReward(updatedEntry, analysis);
+          if (!reward) continue;
+
+          updatedEntry = {
+            ...updatedEntry,
+            rewardClaims: [...updatedEntry.rewardClaims, reward.id],
+          };
+          hiddenRewardGrant = { reward, entry: updatedEntry, analysis };
+          break;
+        }
+      }
+
+      return updatedEntry;
+    });
+
+    setEntries(updatedEntries);
     
     // Reset concepts extracted flag when content changes
     setConceptsExtracted(false);
+    if (hiddenRewardGrant) {
+      void grantHiddenReward(hiddenRewardGrant);
+    }
   };
 
   // Extract concepts from reflection and add to knowledge graph
@@ -267,57 +382,6 @@ export const ReflectionsLab: React.FC = () => {
       ? entries.find((e) => e.id === activeEntryId)!
       : null;
 
-  const activeEntryAnalysis = useMemo(
-    () => (activeEntry ? analyzeReflection(activeEntry) : null),
-    [activeEntry]
-  );
-
-  const handleClaimReward = useCallback(
-    async (rewardId: ReflectionRewardId) => {
-      if (!activeEntry || claimingReward) return;
-
-      const reward = REFLECTION_REWARDS.find((item) => item.id === rewardId);
-      if (!reward) return;
-
-      if (activeEntry.rewardClaims.includes(rewardId)) return;
-
-      const analysis = analyzeReflection(activeEntry);
-      if (!analysis.unlocked[rewardId]) return;
-
-      setClaimingReward(rewardId);
-      setRewardNotice(null);
-
-      const success = await earnMIC(reward.source, {
-        mic_earned: reward.mic,
-        xp_earned: reward.mic,
-        reward_tier: rewardId,
-        entry_id: activeEntry.id,
-        entry_title: activeEntry.title,
-        total_words: analysis.totalWords,
-        completed_phases: analysis.completedPhaseCount,
-        has_spark_signal: analysis.hasSparkSignal,
-        has_geist_signal: analysis.hasGeistSignal,
-        has_epiphany_signal: analysis.hasEpiphanySignal,
-      });
-
-      if (success) {
-        setEntries((prev) =>
-          prev.map((entry) =>
-            entry.id === activeEntry.id && !entry.rewardClaims.includes(rewardId)
-              ? { ...entry, rewardClaims: [...entry.rewardClaims, rewardId] }
-              : entry
-          )
-        );
-        setRewardNotice(`+${reward.mic} MIC XP claimed for ${reward.label}.`);
-      } else {
-        setRewardNotice(`Could not claim ${reward.label} right now. Please retry.`);
-      }
-
-      setClaimingReward(null);
-    },
-    [activeEntry, claimingReward, earnMIC]
-  );
-
   const activePhase =
     activeEntry?.phases.find((p) => p.id === activePhaseId) ?? null;
   const activePhaseIndex = PHASE_TEMPLATE.findIndex((phase) => phase.id === activePhaseId);
@@ -328,6 +392,12 @@ export const ReflectionsLab: React.FC = () => {
           100
       )
     : 0;
+
+  useEffect(() => {
+    if (!rewardNotice) return;
+    const timeoutId = window.setTimeout(() => setRewardNotice(null), 5000);
+    return () => window.clearTimeout(timeoutId);
+  }, [rewardNotice]);
 
   return (
     <div className="h-full flex flex-col bg-stone-50 overflow-hidden">
@@ -451,9 +521,7 @@ export const ReflectionsLab: React.FC = () => {
             {activeEntry && (
               <div className="flex items-center justify-between text-[11px] text-stone-500">
                 <span>{activeProgressPct}% complete</span>
-                <span>
-                  {activeEntry.rewardClaims.length}/{REFLECTION_REWARDS.length} rewards claimed
-                </span>
+                <span>Private reflection ledger active</span>
               </div>
             )}
           </div>
@@ -608,77 +676,20 @@ export const ReflectionsLab: React.FC = () => {
                   </div>
                 </div>
 
-                {activeEntryAnalysis && (
-                  <div className="rounded-lg border border-amber-200 bg-amber-50/60 p-3 space-y-2">
-                    <div className="flex items-center justify-between">
-                      <span className="text-[11px] font-semibold text-amber-700">
-                        Reflection XP Loop (MIC)
-                      </span>
-                      <span className="text-[10px] text-amber-600">
-                        {activeEntry.rewardClaims.length}/{REFLECTION_REWARDS.length} claimed
-                      </span>
-                    </div>
-
-                    <div className="grid gap-2 sm:grid-cols-3">
-                      {REFLECTION_REWARDS.map((reward) => {
-                        const claimed = activeEntry.rewardClaims.includes(reward.id);
-                        const unlocked = activeEntryAnalysis.unlocked[reward.id];
-                        const isClaiming = claimingReward === reward.id;
-
-                        return (
-                          <div
-                            key={reward.id}
-                            className="rounded-md border border-stone-200 bg-white px-2 py-2 space-y-1.5"
-                          >
-                            <div className="flex items-center justify-between text-[10px]">
-                              <span className="font-semibold text-stone-700">{reward.label}</span>
-                              <span className="font-bold text-amber-600">+{reward.mic} MIC</span>
-                            </div>
-                            <p className="text-[10px] text-stone-500 min-h-[30px]">
-                              {reward.unlockHint}
-                            </p>
-                            <button
-                              onClick={() => void handleClaimReward(reward.id)}
-                              disabled={claimed || !unlocked || !!claimingReward}
-                              className={`w-full rounded-md px-2 py-1.5 text-[10px] font-medium transition ${
-                                claimed
-                                  ? 'bg-emerald-50 text-emerald-700 border border-emerald-200 cursor-default'
-                                  : unlocked
-                                  ? 'bg-stone-900 text-stone-50 hover:bg-stone-800'
-                                  : 'bg-stone-100 text-stone-400 border border-stone-200 cursor-not-allowed'
-                              }`}
-                            >
-                              {claimed
-                                ? 'Claimed ✓'
-                                : isClaiming
-                                ? 'Claiming...'
-                                : unlocked
-                                ? 'Claim XP (MIC)'
-                                : 'Locked'}
-                            </button>
-                          </div>
-                        );
-                      })}
-                    </div>
-
-                    <div className="text-[10px] text-amber-700/80">
-                      Signals:{' '}
-                      {[
-                        activeEntryAnalysis.hasSparkSignal ? 'spark' : null,
-                        activeEntryAnalysis.hasGeistSignal ? 'geist/giest mode' : null,
-                        activeEntryAnalysis.hasEpiphanySignal ? 'epiphany' : null,
-                      ]
-                        .filter(Boolean)
-                        .join(', ') || 'none yet'}
-                    </div>
-
-                    {rewardNotice && (
-                      <div className="text-[10px] text-emerald-700 bg-emerald-50 border border-emerald-200 rounded px-2 py-1">
-                        {rewardNotice}
-                      </div>
-                    )}
+                <div className="rounded-lg border border-amber-200 bg-amber-50/60 p-3 space-y-2">
+                  <div className="text-[11px] font-semibold text-amber-700">
+                    Reflection XP Loop (hidden RNG)
                   </div>
-                )}
+                  <div className="text-[10px] text-amber-700/80">
+                    Bonus rewards trigger stochastically as your reflection deepens. The reward
+                    path is intentionally private to prevent gamification.
+                  </div>
+                  {rewardNotice && (
+                    <div className="text-[10px] text-emerald-700 bg-emerald-50 border border-emerald-200 rounded px-2 py-1">
+                      {rewardNotice}
+                    </div>
+                  )}
+                </div>
               </div>
             </>
           )}
