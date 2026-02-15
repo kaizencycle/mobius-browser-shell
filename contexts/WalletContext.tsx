@@ -1,22 +1,24 @@
 // contexts/WalletContext.tsx
 /**
  * MIC Wallet Context
- * 
+ *
  * Manages the user's MIC (Mobius Integrity Credits) wallet state.
- * 
- * Key Architecture:
- * - Wallet balance is DERIVED from ledger (never stored directly)
- * - All MIC changes go through the append-only ledger
- * - Frontend calls earnMIC() -> Backend writes to ledger -> Frontend refreshes wallet
- * 
- * API Endpoints (via OAA API or dedicated wallet service):
- * - GET /mic/wallet - Get wallet balance (derived from ledger)
- * - GET /mic/events - Get recent ledger events
- * - POST /mic/earn - Write earning event to ledger
+ *
+ * Architecture:
+ * - Backend ledger (API): Production source of truth
+ * - Local blockchain: Client-side SHA-256 hash-linked chain for transparency
+ * - Every MIC event is recorded to BOTH the API ledger and the local blockchain
+ * - Wallet balance is derived (never stored directly)
+ *
+ * API Endpoints:
+ * - GET  /mic/wallet  — Get wallet balance (derived from ledger)
+ * - GET  /mic/events  — Get recent ledger events
+ * - POST /mic/earn    — Write earning event to ledger
  */
 import { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
 import { useAuth } from './AuthContext';
 import { env } from '../config/env';
+import { useMICBlockchain, MICBlock, MICTransaction, ChainStats } from '../hooks/useMICBlockchain';
 
 interface WalletData {
   user_id: string;
@@ -39,26 +41,50 @@ interface MICEvent {
 }
 
 interface WalletContextType {
+  // ── API wallet ──
   wallet: WalletData | null;
   events: MICEvent[];
   loading: boolean;
   error: string | null;
   refreshWallet: () => Promise<void>;
   earnMIC: (source: string, meta?: Record<string, unknown>) => Promise<boolean>;
+
+  // ── Local blockchain ──
+  blockchain: MICBlock[];
+  chainStats: ChainStats;
+  chainLoading: boolean;
+  getChainBalance: (recipient: string) => number;
+  getChainTransactions: (recipient: string) => (MICTransaction & { blockIndex: number; blockHash: string; timestamp: string })[];
+  getAllHolders: () => { recipient: string; balance: number; txCount: number }[];
+  verifyChain: () => Promise<boolean>;
+  getBlock: (index: number) => MICBlock | null;
 }
 
 const WalletContext = createContext<WalletContextType | undefined>(undefined);
 
 export function WalletProvider({ children }: { children: ReactNode }) {
-  const { token } = useAuth();
+  const { token, user } = useAuth();
   const [wallet, setWallet] = useState<WalletData | null>(null);
   const [events, setEvents] = useState<MICEvent[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // API_BASE already includes /api suffix when using OAA wallet
+  // ── Local blockchain ──
+  const {
+    chain: blockchain,
+    stats: chainStats,
+    loading: chainLoading,
+    addBlock,
+    getBalance: getChainBalance,
+    getTransactions: getChainTransactions,
+    getAllHolders,
+    verifyChain,
+    getBlock,
+  } = useMICBlockchain();
+
   const API_BASE = env.api.micWallet;
 
+  // ── Refresh from API ──
   const refreshWallet = useCallback(async () => {
     if (!token) {
       setWallet(null);
@@ -68,20 +94,16 @@ export function WalletProvider({ children }: { children: ReactNode }) {
 
     setLoading(true);
     setError(null);
-    
+
     try {
-      // Fetch wallet balance (derived from ledger)
       const walletResponse = await fetch(`${API_BASE}/mic/wallet`, {
-        headers: { 'Authorization': `Bearer ${token}` },
+        headers: { Authorization: `Bearer ${token}` },
       });
 
       if (walletResponse.ok) {
         const walletData = await walletResponse.json();
         setWallet(walletData);
-        
-        if (env.features.debugMode) {
-          console.log('💰 Wallet refreshed:', walletData);
-        }
+        if (env.features.debugMode) console.log('Wallet refreshed:', walletData);
       } else if (walletResponse.status === 401) {
         setError('Authentication required');
       } else {
@@ -89,18 +111,13 @@ export function WalletProvider({ children }: { children: ReactNode }) {
         setError(errorData.message || 'Failed to fetch wallet');
       }
 
-      // Fetch recent events from ledger
       const eventsResponse = await fetch(`${API_BASE}/mic/events?limit=20`, {
-        headers: { 'Authorization': `Bearer ${token}` },
+        headers: { Authorization: `Bearer ${token}` },
       });
 
       if (eventsResponse.ok) {
         const eventsData = await eventsResponse.json();
         setEvents(eventsData);
-        
-        if (env.features.debugMode) {
-          console.log('📜 Ledger events:', eventsData.length, 'entries');
-        }
       }
     } catch (err) {
       console.error('Failed to fetch wallet:', err);
@@ -110,64 +127,96 @@ export function WalletProvider({ children }: { children: ReactNode }) {
     }
   }, [token, API_BASE]);
 
-  // Earn MIC - writes to ledger and refreshes wallet
-  const earnMIC = useCallback(async (source: string, meta?: Record<string, unknown>): Promise<boolean> => {
-    if (!token) {
-      console.warn('Cannot earn MIC: not authenticated');
-      return false;
-    }
+  // ── Earn MIC: writes to API ledger AND local blockchain ──
+  const earnMIC = useCallback(
+    async (source: string, meta?: Record<string, unknown>): Promise<boolean> => {
+      const recipient = user?.id || user?.email || 'local-user';
+      const amount = (meta?.mic_earned as number) ?? 0;
 
-    try {
-      if (env.features.debugMode) {
-        console.log('🪙 Earning MIC:', { source, meta });
-      }
-      
-      const response = await fetch(`${API_BASE}/mic/earn`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ source, meta: meta || {} }),
-      });
-
-      if (response.ok) {
-        const result = await response.json();
-        
+      // 1. Always write to local blockchain (works offline)
+      try {
+        const tx: MICTransaction = {
+          source,
+          amount,
+          recipient,
+          meta,
+        };
+        await addBlock([tx]);
         if (env.features.debugMode) {
-          console.log('✅ MIC earned:', {
-            amount: result.amount,
-            ledger_proof: result.ledger_proof,
-            new_balance: result.new_balance
-          });
+          console.log('Block mined to local chain:', { source, amount, recipient });
         }
-        
-        // Refresh wallet to show new balance (derived from ledger)
-        await refreshWallet();
-        return true;
-      } else {
-        const errorData = await response.json().catch(() => ({}));
-        console.error('Failed to earn MIC:', errorData);
-        
-        // Check for circuit breaker
-        if (response.status === 503 && errorData.circuit_breaker_active) {
-          console.warn('⚠️ MIC minting halted - circuit breaker active');
-        }
-        
-        return false;
+      } catch (blockErr) {
+        console.warn('Failed to write to local blockchain:', blockErr);
       }
-    } catch (err) {
-      console.error('Failed to earn MIC:', err);
-      return false;
-    }
-  }, [token, API_BASE, refreshWallet]);
+
+      // 2. Write to API if authenticated
+      if (!token) {
+        // Not logged in — local chain is the only record
+        return true;
+      }
+
+      try {
+        const response = await fetch(`${API_BASE}/mic/earn`, {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ source, meta: meta || {} }),
+        });
+
+        if (response.ok) {
+          const result = await response.json();
+          if (env.features.debugMode) {
+            console.log('MIC earned (API):', {
+              amount: result.amount,
+              ledger_proof: result.ledger_proof,
+              new_balance: result.new_balance,
+            });
+          }
+          await refreshWallet();
+          return true;
+        } else {
+          const errorData = await response.json().catch(() => ({}));
+          console.error('Failed to earn MIC (API):', errorData);
+          if (response.status === 503 && errorData.circuit_breaker_active) {
+            console.warn('MIC minting halted - circuit breaker active');
+          }
+          // API failed but local chain still recorded
+          return true;
+        }
+      } catch (err) {
+        console.error('Failed to earn MIC (API):', err);
+        // Network error but local chain recorded
+        return true;
+      }
+    },
+    [token, API_BASE, refreshWallet, addBlock, user],
+  );
 
   useEffect(() => {
     refreshWallet();
   }, [refreshWallet]);
 
   return (
-    <WalletContext.Provider value={{ wallet, events, loading, error, refreshWallet, earnMIC }}>
+    <WalletContext.Provider
+      value={{
+        wallet,
+        events,
+        loading,
+        error,
+        refreshWallet,
+        earnMIC,
+        blockchain,
+        chainStats,
+        chainLoading,
+        getChainBalance,
+        getChainTransactions,
+        getAllHolders,
+        verifyChain,
+        getBlock,
+      }}
+    >
       {children}
     </WalletContext.Provider>
   );

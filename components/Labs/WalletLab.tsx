@@ -1,9 +1,10 @@
 
-import React from 'react';
-import { Wallet, ShieldCheck, Activity, Zap, Hexagon, TrendingUp, History, Lock, ChevronRight, Fingerprint, AlertTriangle, ExternalLink } from 'lucide-react';
+import React, { useState } from 'react';
+import { Wallet, ShieldCheck, Activity, Zap, Hexagon, TrendingUp, History, Lock, ChevronRight, Fingerprint, AlertTriangle, ExternalLink, Link2, Layers } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useWallet } from '../../contexts/WalletContext';
 import { env } from '../../config/env';
+import { MICBlockchainExplorer } from './MICBlockchainExplorer';
 
 const SHARD_ARCHETYPES = [
   { id: 'CIV', name: 'Civic', weight: 0.25, score: 12, color: 'text-amber-600', bg: 'bg-amber-100', bar: 'bg-amber-500' },
@@ -105,9 +106,12 @@ const TestnetDisclaimer: React.FC = () => {
   );
 };
 
+type WalletView = 'wallet' | 'blockchain';
+
 export const WalletLab: React.FC = () => {
   const { user } = useAuth();
-  const { wallet, events, loading, refreshWallet } = useWallet();
+  const { wallet, events, loading, refreshWallet, chainStats } = useWallet();
+  const [activeView, setActiveView] = useState<WalletView>('wallet');
 
   // Use real balance if available, otherwise show demo
   const displayBalance = wallet?.balance ?? 1240.50;
@@ -118,7 +122,44 @@ export const WalletLab: React.FC = () => {
   return (
     <div className="h-full overflow-y-auto bg-stone-50 p-4 sm:p-6 lg:p-10 font-sans text-stone-900">
       <div className="max-w-6xl mx-auto space-y-4 sm:space-y-6 lg:space-y-8">
-        
+
+        {/* ═══ View Tabs: Wallet / Blockchain ═══ */}
+        <div className="flex gap-2 border-b border-stone-200 pb-0">
+          <button
+            onClick={() => setActiveView('wallet')}
+            className={`
+              flex items-center gap-1.5 px-4 py-2.5 text-sm font-semibold border-b-2 transition-all -mb-px
+              ${activeView === 'wallet'
+                ? 'border-amber-500 text-amber-700'
+                : 'border-transparent text-stone-400 hover:text-stone-600'}
+            `}
+          >
+            <Wallet className="w-4 h-4" />
+            Fractal Wallet
+          </button>
+          <button
+            onClick={() => setActiveView('blockchain')}
+            className={`
+              flex items-center gap-1.5 px-4 py-2.5 text-sm font-semibold border-b-2 transition-all -mb-px
+              ${activeView === 'blockchain'
+                ? 'border-amber-500 text-amber-700'
+                : 'border-transparent text-stone-400 hover:text-stone-600'}
+            `}
+          >
+            <Link2 className="w-4 h-4" />
+            MIC Blockchain
+            <span className="ml-1 px-1.5 py-0.5 bg-stone-100 text-stone-500 rounded text-[10px] font-mono">
+              {chainStats.length} blocks
+            </span>
+          </button>
+        </div>
+
+        {/* ═══ Blockchain View ═══ */}
+        {activeView === 'blockchain' && <MICBlockchainExplorer />}
+
+        {/* ═══ Wallet View (original content) ═══ */}
+        {activeView === 'wallet' && (
+        <>
         {/* Header: Identity & Balance */}
         <div className="flex flex-col lg:flex-row justify-between items-start lg:items-end border-b border-stone-200 pb-4 sm:pb-6 lg:pb-8 gap-4 lg:gap-6">
             <div>
@@ -413,6 +454,9 @@ export const WalletLab: React.FC = () => {
             )}
           </div>
         </div>
+
+        </>
+        )}
 
       </div>
     </div>
