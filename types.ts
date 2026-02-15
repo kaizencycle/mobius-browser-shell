@@ -96,6 +96,81 @@ export interface CivicRadarResponse {
 }
 
 // ============================================
+// ECHO Threat Intelligence Types
+// RAG-powered cyber threat monitoring via ECHO Sentinel
+// ============================================
+
+export type ThreatDomain = 'cyber_threats' | 'cyber_security' | 'digital_health';
+export type ThreatSeverity = 'info' | 'low' | 'medium' | 'high' | 'critical';
+export type ThreatStatus = 'active' | 'mitigated' | 'monitoring' | 'resolved';
+export type EchoAgentStatus = 'scanning' | 'idle' | 'processing' | 'alert' | 'offline';
+
+export interface ThreatIntelligenceEntry {
+  id: string;
+  timestamp: string;
+  domain: ThreatDomain;
+  severity: ThreatSeverity;
+  status: ThreatStatus;
+  title: string;
+  summary: string;
+  details: string;
+  indicators: string[];          // IOCs, CVEs, hashes, URLs
+  recommendations: string[];
+  ragSources: ThreatRAGSource[];
+  tags: string[];
+  ttl: number;                   // Time-to-live in hours before re-scan
+  echoConfidence: number;        // 0-1 ECHO's confidence in the finding
+}
+
+export interface ThreatRAGSource {
+  name: string;
+  url?: string;
+  type: 'cve_db' | 'threat_feed' | 'advisory' | 'news' | 'research' | 'health_advisory';
+  retrievedAt: string;
+  relevanceScore: number;        // 0-1 RAG relevance
+}
+
+export interface EchoScanCycle {
+  id: string;
+  startedAt: string;
+  completedAt?: string;
+  domain: ThreatDomain;
+  status: 'running' | 'completed' | 'failed';
+  entriesFound: number;
+  ragQueriesPerformed: number;
+  nextScheduledAt: string;
+}
+
+export interface EchoAgentState {
+  status: EchoAgentStatus;
+  lastScanCycle: EchoScanCycle | null;
+  uptime: number;                // seconds
+  totalScansCompleted: number;
+  totalThreatsIdentified: number;
+  activeThreatCount: number;
+  domainCoverage: Record<ThreatDomain, {
+    lastScanned: string;
+    threatCount: number;
+    healthScore: number;         // 0-1
+  }>;
+  cronSchedule: string;          // cron expression
+  nextScanAt: string;
+  integrity: number;             // 0-1
+}
+
+export interface ThreatIntelligenceFeed {
+  entries: ThreatIntelligenceEntry[];
+  agentState: EchoAgentState;
+  metadata: {
+    lastUpdated: string;
+    totalEntries: number;
+    criticalCount: number;
+    highCount: number;
+    domainBreakdown: Record<ThreatDomain, number>;
+  };
+}
+
+// ============================================
 // Learning Hub Types
 // Learn-to-earn system with MIC rewards
 // ============================================
