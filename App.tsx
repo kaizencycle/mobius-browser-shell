@@ -10,7 +10,7 @@ import { HiveLab } from './components/Labs/HiveLab';
 import { ReflectionsLab } from './components/Labs/ReflectionsLab';
 import { CitizenShieldLab } from './components/Labs/CitizenShieldLab';
 import { WalletLab } from './components/Labs/WalletLab';
-import { JadeLab } from './components/Labs/JadeLab';
+import { UnderConstructionLab } from './components/Labs/UnderConstructionLab';
 import { KnowledgeGraphLab } from './components/KnowledgeGraph';
 import { Tornado, Coffee, CheckCircle, Menu, X, User, LogOut } from 'lucide-react';
 import { wakeAllServices, env } from './config/env';
@@ -49,7 +49,13 @@ const App: React.FC = () => {
       case TabId.REFLECTIONS: return <ReflectionsLab />;
       case TabId.KNOWLEDGE_GRAPH: return <KnowledgeGraphLab />;
       case TabId.SHIELD: return <CitizenShieldLab />;
-      case TabId.JADE: return <JadeLab />;
+      case TabId.JADE:
+        return (
+          <UnderConstructionLab
+            labName="Jade Chamber"
+            subtitle="JADE is temporarily paused while we prepare the next release."
+          />
+        );
       case TabId.WALLET: return <WalletLab />;
       default: return <OAALab />;
     }
