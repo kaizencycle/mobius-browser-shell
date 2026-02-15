@@ -48,6 +48,21 @@ const EARNING_SOURCE_LABELS: Record<string, { icon: string; label: string; color
     label: 'Reflection Complete',
     color: 'text-purple-600 bg-purple-50'
   },
+  'reflection_spark': {
+    icon: '✨',
+    label: 'Reflection Spark',
+    color: 'text-fuchsia-600 bg-fuchsia-50'
+  },
+  'reflection_geist_mode': {
+    icon: '🧠',
+    label: 'Reflection Geist Mode',
+    color: 'text-indigo-600 bg-indigo-50'
+  },
+  'reflection_epiphany': {
+    icon: '💡',
+    label: 'Reflection Epiphany',
+    color: 'text-violet-600 bg-violet-50'
+  },
   'shield_module_complete': {
     icon: '🛡️',
     label: 'Shield Module Complete',

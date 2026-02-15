@@ -23,6 +23,9 @@ const SOURCE_LABELS: Record<string, { icon: string; label: string }> = {
   oaa_tutor_session_complete:    { icon: '🎓', label: 'OAA Session' },
   reflection_entry_created:      { icon: '✨', label: 'Reflection' },
   reflection_entry_complete:     { icon: '✨', label: 'Reflection Complete' },
+  reflection_spark:              { icon: '✨', label: 'Reflection Spark' },
+  reflection_geist_mode:         { icon: '🧠', label: 'Reflection Geist Mode' },
+  reflection_epiphany:           { icon: '💡', label: 'Reflection Epiphany' },
   shield_module_complete:        { icon: '🛡️', label: 'Shield Module' },
   civic_radar_action_taken:      { icon: '📡', label: 'Civic Radar' },
 };
