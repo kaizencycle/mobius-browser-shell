@@ -509,7 +509,7 @@ export const ReflectionsLab: React.FC = () => {
 
   const recipient = user?.id || user?.email || 'local-user';
   const chainTransactions = getChainTransactions(recipient);
-  const loopMicEarned = Math.round(
+  const loopMicEarnedFromChain = Math.round(
     chainTransactions
       .filter(
         (tx) =>
@@ -520,6 +520,7 @@ export const ReflectionsLab: React.FC = () => {
       )
       .reduce((sum, tx) => sum + tx.amount, 0) * 100
   ) / 100;
+  const loopMicEarned = Math.max(loopMicEarnedFromChain, wallet?.total_earned ?? 0);
   const availableMic = wallet?.balance ?? getChainBalance(recipient);
   const reachedLoopThreshold = loopMicEarned >= AGENT_BURN_COST;
   const canBurnForAgent = availableMic >= AGENT_BURN_COST;
