@@ -17,7 +17,7 @@ import { PasskeyService } from '../services/PasskeyService';
 type GateView = 'landing' | 'registering' | 'authenticating';
 
 export function AuthGate({ children }: { children: React.ReactNode }) {
-  const { status, register, authenticate, error, clearError } = useAuth();
+  const { status, register, authenticate, restoreFromCache, hasIdentityCache, error, clearError } = useAuth();
   const [view, setView] = useState<GateView>('landing');
   const [isPlatformAvailable, setIsPlatformAvailable] = useState(true);
   const [isWorking, setIsWorking] = useState(false);
@@ -46,6 +46,14 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
     setView('authenticating');
     setIsWorking(true);
     await authenticate();
+    setIsWorking(false);
+  };
+
+  const handleRestoreFromCache = async () => {
+    clearError();
+    setView('authenticating');
+    setIsWorking(true);
+    await restoreFromCache();
     setIsWorking(false);
   };
 
@@ -105,6 +113,18 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
             >
               Sign in with passkey
             </button>
+
+            {hasIdentityCache && !isWorking && !error && (
+              <div className="w-full p-3 bg-stone-800/50 border border-stone-700/50 rounded-xl flex items-center justify-between">
+                <p className="text-stone-400 text-xs">This device has a saved identity</p>
+                <button
+                  onClick={handleRestoreFromCache}
+                  className="text-xs text-amber-400 hover:text-amber-300 font-medium transition-colors"
+                >
+                  Restore →
+                </button>
+              </div>
+            )}
 
             <div className="flex items-center gap-3">
               <div className="flex-1 h-px bg-stone-800" />
