@@ -65,6 +65,26 @@ export function useAuth(): AuthContextValue {
 // ── Provider ──────────────────────────────────────────────────────────────────
 
 const SESSION_KEY = 'mobius_session';
+const ATLAS_ENDPOINT =
+  (import.meta.env.VITE_ATLAS_URL as string | undefined) || '/api/atlas/events';
+
+function logAuthEvent(
+  event: 'REGISTER' | 'AUTHENTICATE' | 'SIGN_OUT' | 'CACHE_RESTORE',
+  citizenId: string,
+): void {
+  fetch(ATLAS_ENDPOINT, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      type: 'AUTH_LIFECYCLE',
+      event,
+      citizenId,
+      timestamp: new Date().toISOString(),
+      userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : '',
+    }),
+    keepalive: true,
+  }).catch(() => {});
+}
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [status, setStatus] = useState<AuthStatus>('loading');
@@ -108,6 +128,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       const result = await PasskeyService.register();
       persistSession(result.identity);
+      logAuthEvent('REGISTER', result.identity.citizenId);
       if (result.credentialForCache) {
         await IdentityCache.store(result.identity, result.credentialForCache);
         setHasIdentityCache(true);
@@ -122,6 +143,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       const identity = await PasskeyService.authenticate();
       persistSession(identity);
+      logAuthEvent('AUTHENTICATE', identity.citizenId);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Authentication failed');
     }
@@ -138,6 +160,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
       const identity = await PasskeyService.authenticateFromCache(cached.credential);
       persistSession(identity);
+      logAuthEvent('CACHE_RESTORE', identity.citizenId);
     } catch (err) {
       IdentityCache.clear();
       setHasIdentityCache(false);
@@ -146,11 +169,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [persistSession]);
 
   const signOut = useCallback(() => {
+    if (citizen) logAuthEvent('SIGN_OUT', citizen.citizenId);
     sessionStorage.removeItem(SESSION_KEY);
     setCitizen(null);
     setStatus('unauthenticated');
     // Note: we do NOT clear IdentityCache on signOut — citizen may want to restore later
-  }, []);
+  }, [citizen]);
 
   const clearError = useCallback(() => setError(null), []);
 
