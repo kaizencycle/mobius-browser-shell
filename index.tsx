@@ -4,6 +4,7 @@ import ReactDOM from 'react-dom/client';
 import App from './App';
 import { AuthProvider } from './contexts/AuthContext';
 import { AuthGate } from './components/AuthGate';
+import { OnboardingGate } from './components/onboarding/OnboardingGate';
 import { WalletProvider } from './contexts/WalletContext';
 import { KnowledgeGraphProvider } from './contexts/KnowledgeGraphContext';
 import { RootErrorBoundary } from './components/RootErrorBoundary';
@@ -19,11 +20,13 @@ root.render(
     <RootErrorBoundary>
       <AuthProvider>
         <AuthGate>
+          <OnboardingGate>
           <WalletProvider>
             <KnowledgeGraphProvider>
               <App />
             </KnowledgeGraphProvider>
           </WalletProvider>
+          </OnboardingGate>
         </AuthGate>
       </AuthProvider>
     </RootErrorBoundary>

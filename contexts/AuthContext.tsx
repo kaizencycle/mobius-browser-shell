@@ -176,6 +176,42 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [persistSession, logAuthEvent]);
 
+  const completeOnboarding = useCallback(
+    async (payload: {
+      citizenId: string;
+      handle: string | null;
+      consents: { integrity: boolean; data: boolean };
+    }) => {
+      const res = await fetch('/api/onboarding/complete', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error((err as { error?: string }).error ?? 'Onboarding failed');
+      }
+
+      const { citizen: updatedCitizen } = await res.json();
+      persistSession(updatedCitizen);
+
+      // ATLAS audit event
+      fetch('/api/atlas/events', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        keepalive: true,
+        body: JSON.stringify({
+          type: 'AUTH_LIFECYCLE',
+          event: 'ONBOARDING_COMPLETE',
+          citizenId: payload.citizenId,
+          timestamp: new Date().toISOString(),
+        }),
+      }).catch(() => {});
+    },
+    [persistSession],
+  );
+
   const signOut = useCallback(() => {
     const id = citizen?.citizenId ?? null;
     sessionStorage.removeItem(SESSION_KEY);
