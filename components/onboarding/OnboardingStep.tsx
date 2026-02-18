@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, type ReactNode } from 'react';
 import type { OnboardingStepDef } from './onboardingSteps';
 
 interface OnboardingStepProps {
@@ -13,6 +13,7 @@ interface OnboardingStepProps {
   isSubmitting: boolean;
   isLastStep: boolean;
   error: string | null;
+  citizenId?: string;
 }
 
 /**
@@ -30,7 +31,23 @@ export function OnboardingStep({
   isSubmitting,
   isLastStep,
   error,
+  citizenId,
 }: OnboardingStepProps) {
+  // Funnel analytics: track step views for drop-off analysis
+  useEffect(() => {
+    fetch('/api/atlas/events', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      keepalive: true,
+      body: JSON.stringify({
+        type: 'ONBOARDING_STEP_VIEW',
+        step: step.id,
+        citizenId: citizenId ?? undefined,
+        timestamp: new Date().toISOString(),
+      }),
+    }).catch(() => {});
+  }, [step.id, citizenId]);
+
   return (
     <div className="flex flex-col gap-8">
       {/* Header */}
@@ -124,6 +141,29 @@ function HandleStep({
 }) {
   const [value, setValue] = useState(initial);
   const [validationError, setValidationError] = useState<string | null>(null);
+  const [availability, setAvailability] = useState<boolean | null>(null);
+  const [isChecking, setIsChecking] = useState(false);
+
+  // Debounced handle availability check
+  useEffect(() => {
+    if (!value || value.length < 2 || !/^[a-zA-Z0-9_-]+$/.test(value)) {
+      setAvailability(null);
+      return;
+    }
+    setIsChecking(true);
+    setAvailability(null);
+    const timer = setTimeout(async () => {
+      try {
+        const res = await fetch(`/api/onboarding/check-handle?handle=${encodeURIComponent(value)}`);
+        setAvailability(res.ok && (await res.json().catch(() => ({})) as { available?: boolean }).available !== false);
+      } catch {
+        setAvailability(null); // Fail open
+      } finally {
+        setIsChecking(false);
+      }
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [value]);
 
   const validate = (v: string) => {
     if (!v) return null; // empty = skip
@@ -136,6 +176,10 @@ function HandleStep({
   const handleSubmit = () => {
     const err = validate(value);
     if (err) { setValidationError(err); return; }
+    if (value && availability === false) {
+      setValidationError('Handle is already taken');
+      return;
+    }
     onNext(value.trim());
   };
 
@@ -166,8 +210,11 @@ function HandleStep({
           <p className="text-red-400 text-xs">{validationError}</p>
         )}
         {value && !validationError && (
-          <p className="text-stone-600 text-xs">
-            You&apos;ll appear as <span className="text-stone-400">@{value}</span>
+          <p className="text-stone-600 text-xs flex items-center gap-1.5 flex-wrap">
+            {isChecking && <span className="text-stone-500">Checking…</span>}
+            {!isChecking && availability === true && <span className="text-emerald-500">● Available</span>}
+            {!isChecking && availability === false && <span className="text-red-400">● Taken</span>}
+            <span>You&apos;ll appear as <span className="text-stone-400">@{value}</span></span>
           </p>
         )}
       </div>
@@ -179,6 +226,14 @@ function HandleStep({
       </div>
     </div>
   );
+}
+
+function speakCovenant(text: string) {
+  if (typeof window === 'undefined' || !window.speechSynthesis) return;
+  const utterance = new SpeechSynthesisUtterance(text);
+  utterance.rate = 0.9;
+  window.speechSynthesis.cancel();
+  window.speechSynthesis.speak(utterance);
 }
 
 function CovenantsStep({
@@ -202,12 +257,14 @@ function CovenantsStep({
           onChange={setIntegrity}
           label="I commit to Integrity"
           description="I will act in good faith. My actions in Mobius systems carry my identity and my accountability."
+          onListen={() => speakCovenant('I commit to Integrity. I will act in good faith. My actions in Mobius systems carry my identity and my accountability.')}
         />
         <ConsentToggle
           checked={data}
           onChange={setData}
           label="I understand data custodianship"
           description="Mobius holds my data in trust, not in ownership. I can export or delete it at any time."
+          onListen={() => speakCovenant('I understand data custodianship. Mobius holds my data in trust, not in ownership. I can export or delete it at any time.')}
         />
       </div>
 
@@ -263,7 +320,7 @@ function PrimaryButton({
 }: {
   onClick: () => void;
   disabled?: boolean;
-  children: React.ReactNode;
+  children: ReactNode;
 }) {
   return (
     <button
@@ -281,37 +338,50 @@ function ConsentToggle({
   onChange,
   label,
   description,
+  onListen,
 }: {
   checked: boolean;
   onChange: (v: boolean) => void;
   label: string;
   description: string;
+  onListen?: () => void;
 }) {
   return (
-    <button
-      type="button"
-      onClick={() => onChange(!checked)}
-      className={`w-full text-left p-4 rounded-xl border transition-all ${
-        checked
-          ? 'bg-stone-800/60 border-stone-600'
-          : 'bg-stone-900/40 border-stone-800 hover:border-stone-700'
-      }`}
-    >
-      <div className="flex items-start gap-3">
-        <span
-          className={`mt-0.5 text-lg select-none transition-colors ${
-            checked ? 'text-stone-300' : 'text-stone-700'
-          }`}
-        >
-          {checked ? '◉' : '○'}
-        </span>
-        <div className="flex flex-col gap-0.5">
-          <p className={`text-sm font-medium transition-colors ${checked ? 'text-stone-100' : 'text-stone-500'}`}>
-            {label}
-          </p>
-          <p className="text-stone-600 text-xs leading-relaxed">{description}</p>
+    <div className={`w-full text-left p-4 rounded-xl border transition-all ${
+      checked
+        ? 'bg-stone-800/60 border-stone-600'
+        : 'bg-stone-900/40 border-stone-800 hover:border-stone-700'
+    }`}>
+      <button
+        type="button"
+        onClick={() => onChange(!checked)}
+        className="w-full text-left"
+      >
+        <div className="flex items-start gap-3">
+          <span
+            className={`mt-0.5 text-lg select-none transition-colors ${
+              checked ? 'text-stone-300' : 'text-stone-700'
+            }`}
+          >
+            {checked ? '◉' : '○'}
+          </span>
+          <div className="flex flex-col gap-0.5 flex-1">
+            <p className={`text-sm font-medium transition-colors ${checked ? 'text-stone-100' : 'text-stone-500'}`}>
+              {label}
+            </p>
+            <p className="text-stone-600 text-xs leading-relaxed">{description}</p>
+          </div>
         </div>
-      </div>
-    </button>
+      </button>
+      {onListen && typeof window !== 'undefined' && 'speechSynthesis' in window && (
+        <button
+          type="button"
+          onClick={(e) => { e.stopPropagation(); onListen(); }}
+          className="mt-2 text-[10px] text-stone-600 hover:text-stone-400 transition-colors"
+        >
+          Listen
+        </button>
+      )}
+    </div>
   );
 }

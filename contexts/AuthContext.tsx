@@ -157,6 +157,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signOut = useCallback(() => {
     sessionStorage.removeItem(SESSION_KEY);
     sessionStorage.removeItem('mobius:onboarding:step');
+    try {
+      localStorage.removeItem('mobius:onboarding:pending');
+    } catch {
+      /* ignore */
+    }
     setCitizen(null);
     setStatus('unauthenticated');
   }, []);

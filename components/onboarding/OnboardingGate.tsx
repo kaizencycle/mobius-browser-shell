@@ -1,9 +1,10 @@
-import { useState } from 'react';
+import { useState, useEffect, useCallback, type ReactNode } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { OnboardingStep } from './OnboardingStep';
 import { ONBOARDING_STEPS } from './onboardingSteps';
 
 const ONBOARDING_STEP_KEY = 'mobius:onboarding:step';
+const ONBOARDING_PENDING_KEY = 'mobius:onboarding:pending';
 
 /**
  * OnboardingGate
@@ -24,7 +25,7 @@ const ONBOARDING_STEP_KEY = 'mobius:onboarding:step';
  * - Minimum viable: handle + covenant consent is enough to start
  * - State is kept locally until final submit — one API call at the end
  */
-export function OnboardingGate({ children }: { children: React.ReactNode }) {
+export function OnboardingGate({ children }: { children: ReactNode }) {
   const { citizen } = useAuth();
 
   // Pass through authenticated + already onboarded citizens immediately
@@ -64,10 +65,66 @@ function OnboardingFlow() {
   const [formState, setFormState] = useState<OnboardingState>(INITIAL_STATE);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showOfflineQueue, setShowOfflineQueue] = useState(false);
 
   const currentStep = ONBOARDING_STEPS[currentStepIndex];
   const isLastStep = currentStepIndex === ONBOARDING_STEPS.length - 1;
   const progress = ((currentStepIndex + 1) / ONBOARDING_STEPS.length) * 100;
+
+  const submitPayload = useCallback(
+    (payload: { citizenId: string; handle: string | null; consents: { integrity: boolean; data: boolean } }) =>
+      completeOnboarding(payload),
+    [completeOnboarding],
+  );
+
+  // Retry pending onboarding when back online
+  useEffect(() => {
+    if (!navigator.onLine) return;
+    try {
+      const raw = localStorage.getItem(ONBOARDING_PENDING_KEY);
+      if (!raw) return;
+      const payload = JSON.parse(raw) as {
+        citizenId: string;
+        handle: string | null;
+        consents: { integrity: boolean; data: boolean };
+      };
+      localStorage.removeItem(ONBOARDING_PENDING_KEY);
+      setShowOfflineQueue(false);
+      submitPayload(payload).then(() => {
+        sessionStorage.removeItem(ONBOARDING_STEP_KEY);
+      }).catch(() => {
+        localStorage.setItem(ONBOARDING_PENDING_KEY, raw);
+      });
+    } catch {
+      localStorage.removeItem(ONBOARDING_PENDING_KEY);
+    }
+  }, [submitPayload]);
+
+  useEffect(() => {
+    const onOnline = () => {
+      try {
+        const raw = localStorage.getItem(ONBOARDING_PENDING_KEY);
+        if (raw && navigator.onLine) {
+          const payload = JSON.parse(raw) as {
+            citizenId: string;
+            handle: string | null;
+            consents: { integrity: boolean; data: boolean };
+          };
+          localStorage.removeItem(ONBOARDING_PENDING_KEY);
+          setShowOfflineQueue(false);
+          submitPayload(payload).then(() => {
+            sessionStorage.removeItem(ONBOARDING_STEP_KEY);
+          }).catch(() => {
+            localStorage.setItem(ONBOARDING_PENDING_KEY, raw);
+          });
+        }
+      } catch {
+        localStorage.removeItem(ONBOARDING_PENDING_KEY);
+      }
+    };
+    window.addEventListener('online', onOnline);
+    return () => window.removeEventListener('online', onOnline);
+  }, [submitPayload]);
 
   const handleNext = async (stepData: Partial<OnboardingState>) => {
     const updated = { ...formState, ...stepData };
@@ -76,18 +133,33 @@ function OnboardingFlow() {
     if (isLastStep) {
       setIsSubmitting(true);
       setError(null);
+      const payload = {
+        citizenId: citizen!.citizenId,
+        handle: updated.handle || null,
+        consents: {
+          integrity: updated.consentIntegrity,
+          data: updated.consentData,
+        },
+      };
       try {
-        await completeOnboarding({
-          citizenId: citizen!.citizenId,
-          handle: updated.handle || null,
-          consents: {
-            integrity: updated.consentIntegrity,
-            data: updated.consentData,
-          },
-        });
+        await completeOnboarding(payload);
         sessionStorage.removeItem(ONBOARDING_STEP_KEY);
+        try {
+          localStorage.removeItem(ONBOARDING_PENDING_KEY);
+        } catch {
+          /* ignore */
+        }
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Something went wrong');
+        if (!navigator.onLine) {
+          try {
+            localStorage.setItem(ONBOARDING_PENDING_KEY, JSON.stringify(payload));
+            setShowOfflineQueue(true);
+          } catch {
+            setError('Offline. Please reconnect and try again.');
+          }
+        } else {
+          setError(err instanceof Error ? err.message : 'Something went wrong');
+        }
         setIsSubmitting(false);
       }
       return;
@@ -114,6 +186,20 @@ function OnboardingFlow() {
     }
   };
 
+  if (showOfflineQueue) {
+    return (
+      <div className="fixed inset-0 flex flex-col bg-stone-950 text-stone-100 items-center justify-center p-6">
+        <div className="flex flex-col gap-4 max-w-sm text-center">
+          <span className="text-4xl font-retro text-stone-500 select-none">⬡</span>
+          <h2 className="text-lg font-semibold text-stone-200">You&apos;re offline</h2>
+          <p className="text-stone-500 text-sm">
+            We&apos;ll complete your onboarding when you&apos;re back online. No need to start over.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="fixed inset-0 flex flex-col bg-stone-950 text-stone-100">
       {/* Progress bar */}
@@ -134,7 +220,7 @@ function OnboardingFlow() {
 
       {/* Step content */}
       <div className="flex-1 flex items-center justify-center p-6 overflow-y-auto">
-        <div className="w-full max-w-sm animate-fadeIn" key={currentStep.id}>
+        <div className="w-full max-w-sm animate-stepIn" key={currentStep.id}>
           <OnboardingStep
             step={currentStep}
             formState={formState}
@@ -143,6 +229,7 @@ function OnboardingFlow() {
             isSubmitting={isSubmitting}
             isLastStep={isLastStep}
             error={error}
+            citizenId={citizen?.citizenId}
           />
         </div>
       </div>
