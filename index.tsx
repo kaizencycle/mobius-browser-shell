@@ -5,6 +5,7 @@ import App from './App';
 import { AuthProvider } from './contexts/AuthContext';
 import { WalletProvider } from './contexts/WalletContext';
 import { KnowledgeGraphProvider } from './contexts/KnowledgeGraphContext';
+import { RootErrorBoundary } from './components/RootErrorBoundary';
 
 const rootElement = document.getElementById('root');
 if (!rootElement) {
@@ -14,12 +15,14 @@ if (!rootElement) {
 const root = ReactDOM.createRoot(rootElement);
 root.render(
   <React.StrictMode>
-    <AuthProvider>
-      <WalletProvider>
-        <KnowledgeGraphProvider>
-          <App />
-        </KnowledgeGraphProvider>
-      </WalletProvider>
-    </AuthProvider>
+    <RootErrorBoundary>
+      <AuthProvider>
+        <WalletProvider>
+          <KnowledgeGraphProvider>
+            <App />
+          </KnowledgeGraphProvider>
+        </WalletProvider>
+      </AuthProvider>
+    </RootErrorBoundary>
   </React.StrictMode>
 );

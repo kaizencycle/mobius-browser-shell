@@ -1,8 +1,10 @@
-
 import React, { useState } from 'react';
 import { SENTINELS } from './constants';
 import { TabId } from './types';
 import { SentinelStatus } from './components/SentinelStatus';
+import { ShellErrorBoundary } from './components/ShellErrorBoundary';
+import { useAtlasErrorLog } from './components/useAtlasErrorLog';
+import { ErrorCodes } from './errors/errorCodes';
 import { Omnibar } from './components/Omnibar';
 import { TabNavigation } from './components/TabNavigation';
 import { OAALab } from './components/Labs/OAALab';
@@ -30,6 +32,9 @@ const App: React.FC = () => {
   const { user, loading: authLoading, logout } = useAuth();
   const { wallet } = useWallet();
 
+  // ATLAS error logging — shared across all panel boundaries
+  const logToAtlas = useAtlasErrorLog();
+
   const handleWakeAllLabs = async () => {
     setIsWaking(true);
     setWakeComplete(false);
@@ -44,20 +49,96 @@ const App: React.FC = () => {
 
   const renderContent = () => {
     switch (activeTab) {
-      case TabId.OAA: return <OAALab />;
-      case TabId.HIVE: return <HiveLab />;
-      case TabId.REFLECTIONS: return <ReflectionsLab />;
-      case TabId.KNOWLEDGE_GRAPH: return <KnowledgeGraphLab />;
-      case TabId.SHIELD: return <CitizenShieldLab />;
+      case TabId.OAA:
+        return (
+          <ShellErrorBoundary
+            appName="OAA Learning Hub"
+            appIcon="📚"
+            errorCode={ErrorCodes.OAA_LOAD_FAILED}
+            onError={logToAtlas}
+          >
+            <OAALab />
+          </ShellErrorBoundary>
+        );
+      case TabId.HIVE:
+        return (
+          <ShellErrorBoundary
+            appName="HIVE (16-bit JRPG)"
+            appIcon="🎮"
+            errorCode={ErrorCodes.HIVE_SESSION_LOST}
+            onError={logToAtlas}
+          >
+            <HiveLab />
+          </ShellErrorBoundary>
+        );
+      case TabId.REFLECTIONS:
+        return (
+          <ShellErrorBoundary
+            appName="Reflections Lab"
+            appIcon="🪞"
+            errorCode={ErrorCodes.REFL_MIRROR_SYNC}
+            onError={logToAtlas}
+          >
+            <ReflectionsLab />
+          </ShellErrorBoundary>
+        );
+      case TabId.KNOWLEDGE_GRAPH:
+        return (
+          <ShellErrorBoundary
+            appName="ATLAS Sentinel"
+            appIcon="⬡"
+            errorCode={ErrorCodes.ATLAS_GRAPH_LOAD}
+            recoverable={false}
+            onError={logToAtlas}
+          >
+            <KnowledgeGraphLab />
+          </ShellErrorBoundary>
+        );
+      case TabId.SHIELD:
+        return (
+          <ShellErrorBoundary
+            appName="Citizen Shield"
+            appIcon="🛡"
+            errorCode={ErrorCodes.SHIELD_AUTH_EXPIRED}
+            onError={logToAtlas}
+          >
+            <CitizenShieldLab />
+          </ShellErrorBoundary>
+        );
       case TabId.JADE:
         return (
-          <UnderConstructionLab
-            labName="Jade Chamber"
-            subtitle="JADE is temporarily paused while we prepare the next release."
-          />
+          <ShellErrorBoundary
+            appName="Jade Chamber"
+            appIcon="🔮"
+            onError={logToAtlas}
+          >
+            <UnderConstructionLab
+              labName="Jade Chamber"
+              subtitle="JADE is temporarily paused while we prepare the next release."
+            />
+          </ShellErrorBoundary>
         );
-      case TabId.WALLET: return <WalletLab />;
-      default: return <OAALab />;
+      case TabId.WALLET:
+        return (
+          <ShellErrorBoundary
+            appName="MIC Wallet"
+            appIcon="◎"
+            errorCode={ErrorCodes.MIC_SYNC_FAILED}
+            onError={logToAtlas}
+          >
+            <WalletLab />
+          </ShellErrorBoundary>
+        );
+      default:
+        return (
+          <ShellErrorBoundary
+            appName="OAA Learning Hub"
+            appIcon="📚"
+            onError={logToAtlas}
+          >
+            <OAALab />
+          </ShellErrorBoundary>
+        );
     }
   };
 

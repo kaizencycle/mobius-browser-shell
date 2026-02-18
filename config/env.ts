@@ -18,6 +18,7 @@ export const env = {
 
   // === BACKEND APIs ===
   api: {
+    atlas: import.meta.env.VITE_ATLAS_URL as string || '/api/atlas/events',
     oaa: import.meta.env.VITE_OAA_API_BASE as string || 'https://oaa-api-library.onrender.com',
     reflections: import.meta.env.VITE_REFLECTIONS_API_BASE as string || 'https://hive-api-2le8.onrender.com',
     citizenShield: import.meta.env.VITE_CITIZEN_SHIELD_API_BASE as string || 'https://lab6-proof-api.onrender.com',
