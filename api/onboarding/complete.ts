@@ -2,14 +2,14 @@
  * api/onboarding/complete.ts
  *
  * POST /api/onboarding/complete
- * Body: { citizenId, handle, consents: { integrity, data } }
+ * Body: { citizenId, consents: { integrity, ecology, custodianship }, handle }
  * → { success: true, citizen: CitizenIdentity }
  *
  * Persists onboarding completion to Mobius identity store (if available)
  * and returns an updated CitizenIdentity with onboarded: true.
  *
  * Degrades gracefully if MOBIUS_IDENTITY_API_URL is not set —
- * returns success and the caller updates state client-side.
+ * returns success with client-side hash, updates local state.
  */
 
 import type { VercelRequest, VercelResponse } from '@vercel/node';
@@ -18,25 +18,10 @@ import { createHash } from 'crypto';
 const IDENTITY_API_URL = process.env.MOBIUS_IDENTITY_API_URL ?? '';
 const IDENTITY_API_KEY = process.env.MOBIUS_IDENTITY_API_KEY ?? '';
 
-// Simple in-memory rate limit: 5 completions per citizenId per hour
-// (prevents handle-cycling abuse)
-const rateLimitMap = new Map<string, { count: number; resetAt: number }>();
-// Per-IP rate limit: 10 completions per hour (prevents handle-squatting)
+// Per-IP rate limit: 5 completions per hour (prevents handle-squatting)
 const ipRateLimitMap = new Map<string, { count: number; resetAt: number }>();
 const RATE_LIMIT_WINDOW_MS = 60 * 60 * 1000;
-const IP_RATE_LIMIT = 10;
-
-function isRateLimited(citizenId: string): boolean {
-  const now = Date.now();
-  const entry = rateLimitMap.get(citizenId);
-  if (!entry || now > entry.resetAt) {
-    rateLimitMap.set(citizenId, { count: 1, resetAt: now + RATE_LIMIT_WINDOW_MS });
-    return false;
-  }
-  if (entry.count >= 5) return true;
-  entry.count++;
-  return false;
-}
+const IP_RATE_LIMIT = 5;
 
 function isIpRateLimited(ip: string): boolean {
   const now = Date.now();
@@ -58,26 +43,41 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const { citizenId, handle, consents } = req.body ?? {};
 
   // ── Validate ───────────────────────────────────────────────────────────────
-  if (!citizenId || typeof citizenId !== 'string' || citizenId.length !== 32 || !/^[0-9a-f]+$/.test(citizenId)) {
+  if (
+    !citizenId ||
+    typeof citizenId !== 'string' ||
+    citizenId.length !== 32 ||
+    !/^[0-9a-f]+$/.test(citizenId)
+  ) {
     return res.status(400).json({ error: 'Invalid citizenId' });
   }
-  if (!consents?.integrity || !consents?.data) {
-    return res.status(400).json({ error: 'Covenant consent required' });
+  if (
+    !consents?.integrity ||
+    !consents?.ecology ||
+    !consents?.custodianship
+  ) {
+    return res.status(400).json({ error: 'All three covenant consents required' });
   }
   if (handle !== null && handle !== undefined && handle !== '') {
-    if (typeof handle !== 'string' || handle.length > 32 || !/^[a-zA-Z0-9_-]+$/.test(handle)) {
+    if (
+      typeof handle !== 'string' ||
+      handle.length < 2 ||
+      handle.length > 32 ||
+      !/^[a-zA-Z0-9_-]+$/.test(handle)
+    ) {
       return res.status(400).json({ error: 'Invalid handle format' });
     }
   }
-  const ip = (req.headers['x-forwarded-for'] as string | undefined)?.split(',')[0]?.trim() ?? 'unknown';
+
+  const ip =
+    (req.headers['x-forwarded-for'] as string | undefined)?.split(',')[0]?.trim() ??
+    'unknown';
   if (isIpRateLimited(ip)) {
     return res.status(429).json({ error: 'Too many requests' });
   }
-  if (isRateLimited(citizenId)) {
-    return res.status(429).json({ error: 'Too many requests' });
-  }
 
-  const handleValue = handle && typeof handle === 'string' ? handle.trim() || null : null;
+  const handleValue =
+    handle && typeof handle === 'string' ? handle.trim() || null : null;
 
   // ── Handle uniqueness (if identity API available) ───────────────────────────
   if (handleValue && IDENTITY_API_URL && IDENTITY_API_KEY) {
@@ -88,13 +88,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           method: 'GET',
           headers: { Authorization: `Bearer ${IDENTITY_API_KEY}` },
           signal: AbortSignal.timeout(3_000),
-        },
+        }
       );
       if (availRes.status === 409) {
         return res.status(409).json({ error: 'Handle taken', field: 'handle' });
       }
       if (availRes.ok) {
-        const availData = (await availRes.json().catch(() => ({}))) as { available?: boolean };
+        const availData = (await availRes.json().catch(() => ({}))) as {
+          available?: boolean;
+        };
         if (availData.available === false) {
           return res.status(409).json({ error: 'Handle taken', field: 'handle' });
         }
@@ -105,10 +107,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   // ── Covenant hash for audit trail ─────────────────────────────────────────
+  const timestamp = new Date().toISOString();
   const covenantPayload = {
     citizenId,
-    consents: { integrity: true, data: true },
-    timestamp: new Date().toISOString(),
+    consents: {
+      integrity: true,
+      ecology: true,
+      custodianship: true,
+    },
+    timestamp,
   };
   const covenantHash = createHash('sha256')
     .update(JSON.stringify(covenantPayload))
@@ -130,14 +137,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           body: JSON.stringify({
             handle: handleValue,
             consents: {
-              integrity: { accepted: true, timestamp: new Date().toISOString() },
-              data: { accepted: true, timestamp: new Date().toISOString() },
+              integrity: { accepted: true, timestamp },
+              ecology: { accepted: true, timestamp },
+              custodianship: { accepted: true, timestamp },
             },
             covenantHash,
-            onboardedAt: new Date().toISOString(),
+            onboardedAt: timestamp,
           }),
           signal: controller.signal,
-        },
+        }
       );
       clearTimeout(timeout);
 
@@ -153,7 +161,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   // ── Handle quality metrics (anonymized, for spam detection) ──────────────────
-  const host = (req.headers['x-forwarded-host'] as string) ?? process.env.VERCEL_URL ?? 'localhost';
+  const host =
+    (req.headers['x-forwarded-host'] as string) ?? process.env.VERCEL_URL ?? 'localhost';
   const proto = (req.headers['x-forwarded-proto'] as string) ?? 'https';
   const baseUrl = `${proto}://${host}`;
   fetch(`${baseUrl}/api/atlas/events`, {
@@ -174,8 +183,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     citizen: {
       citizenId,
       handle: handleValue,
-      authenticatedAt: new Date().toISOString(),
+      authenticatedAt: timestamp,
       onboarded: true,
+      covenantsAcceptedAt: timestamp,
+      covenantHash,
     },
   });
 }

@@ -29,6 +29,16 @@ export interface CitizenIdentity {
   authenticatedAt: string;
   /** Whether this citizen has completed onboarding */
   onboarded: boolean;
+  /** ISO timestamp when covenants were accepted (set on onboarding complete) */
+  covenantsAcceptedAt?: string;
+  /** SHA256 hash of consents+timestamp for audit trail */
+  covenantHash?: string;
+  /** Future: blockchain anchor for covenant proof (deferred) */
+  covenantAnchor?: {
+    chain: 'celestia' | 'solana' | 'ethereum';
+    txHash: string;
+    height: number;
+  };
 }
 
 export interface AuthContextValue {
@@ -40,6 +50,12 @@ export interface AuthContextValue {
   authenticate: () => Promise<void>;
   /** Restore session from IdentityCache (requires WebAuthn assertion) */
   restoreFromCache: () => Promise<void>;
+  /** Complete onboarding (covenants + optional handle) */
+  completeOnboarding: (payload: {
+    citizenId: string;
+    consents: { integrity: boolean; ecology: boolean; custodianship: boolean };
+    handle: string | null;
+  }) => Promise<CitizenIdentity>;
   /** Clear session */
   signOut: () => void;
   /** True when IdentityCache has a stored identity (device has saved session) */
@@ -103,8 +119,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const logAuthEvent = useCallback(
-    (type: 'REGISTER' | 'AUTHENTICATE' | 'SIGN_OUT' | 'CACHE_RESTORE', id?: string) => {
-      const citizenId = id ?? citizen?.citizenId ?? null;
+    (
+      type:
+        | 'REGISTER'
+        | 'AUTHENTICATE'
+        | 'SIGN_OUT'
+        | 'CACHE_RESTORE'
+        | 'ONBOARDING_COMPLETE',
+      payload?: { citizenId?: string; handle?: string | null; covenantHash?: string }
+    ) => {
+      const citizenId = payload?.citizenId ?? citizen?.citizenId ?? null;
       fetch(ATLAS_EVENTS_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -113,6 +137,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           type: 'AUTH_LIFECYCLE',
           event: type,
           citizenId,
+          handle: payload?.handle,
+          covenantHash: payload?.covenantHash,
           timestamp: new Date().toISOString(),
         }),
       }).catch(() => {});
@@ -130,7 +156,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         await identityCache.store(identity, credentialId, credential);
         setHasIdentityCache(true);
       }
-      logAuthEvent('REGISTER', identity.citizenId);
+      logAuthEvent('REGISTER', { citizenId: identity.citizenId });
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Registration failed');
     }
@@ -141,7 +167,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       const identity = await PasskeyService.authenticate();
       persistSession(identity);
-      logAuthEvent('AUTHENTICATE', identity.citizenId);
+      logAuthEvent('AUTHENTICATE', { citizenId: identity.citizenId });
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Authentication failed');
     }
@@ -168,7 +194,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       );
       persistSession(identity);
       setHasIdentityCache(true);
-      logAuthEvent('CACHE_RESTORE', identity.citizenId);
+      logAuthEvent('CACHE_RESTORE', { citizenId: identity.citizenId });
     } catch (err) {
       await identityCache.clear();
       setHasIdentityCache(false);
@@ -179,8 +205,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const completeOnboarding = useCallback(
     async (payload: {
       citizenId: string;
+      consents: { integrity: boolean; ecology: boolean; custodianship: boolean };
       handle: string | null;
-      consents: { integrity: boolean; data: boolean };
     }) => {
       const res = await fetch('/api/onboarding/complete', {
         method: 'POST',
@@ -196,20 +222,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const { citizen: updatedCitizen } = await res.json();
       persistSession(updatedCitizen);
 
-      // ATLAS audit event
-      fetch('/api/atlas/events', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        keepalive: true,
-        body: JSON.stringify({
-          type: 'AUTH_LIFECYCLE',
-          event: 'ONBOARDING_COMPLETE',
-          citizenId: payload.citizenId,
-          timestamp: new Date().toISOString(),
-        }),
-      }).catch(() => {});
+      logAuthEvent('ONBOARDING_COMPLETE', {
+        citizenId: payload.citizenId,
+        handle: payload.handle,
+        covenantHash: updatedCitizen.covenantHash,
+      });
+
+      return updatedCitizen;
     },
-    [persistSession],
+    [persistSession, logAuthEvent]
   );
 
   const signOut = useCallback(() => {
@@ -219,7 +240,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setCitizen(null);
     setHasIdentityCache(false);
     setStatus('unauthenticated');
-    logAuthEvent('SIGN_OUT', id ?? undefined);
+    logAuthEvent('SIGN_OUT', { citizenId: id ?? undefined });
   }, [citizen, logAuthEvent]);
 
   const clearError = useCallback(() => setError(null), []);
@@ -238,6 +259,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         register,
         authenticate,
         restoreFromCache,
+        completeOnboarding,
         signOut,
         hasIdentityCache,
         error,

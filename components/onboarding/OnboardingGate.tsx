@@ -1,11 +1,3 @@
-import { useState, useEffect, useCallback, type ReactNode } from 'react';
-import { useAuth } from '../../contexts/AuthContext';
-import { OnboardingStep } from './OnboardingStep';
-import { ONBOARDING_STEPS } from './onboardingSteps';
-
-const ONBOARDING_STEP_KEY = 'mobius:onboarding:step';
-const ONBOARDING_PENDING_KEY = 'mobius:onboarding:pending';
-
 /**
  * OnboardingGate
  *
@@ -20,15 +12,31 @@ const ONBOARDING_PENDING_KEY = 'mobius:onboarding:pending';
  *                 └─ App        ← the shell
  *
  * Design principles:
+ * - 3 steps: Covenants → Handle → Enter
  * - Progressive: one step at a time, no overwhelm
  * - Skippable steps are clearly marked — citizens own their data
- * - Minimum viable: handle + covenant consent is enough to start
- * - State is kept locally until final submit — one API call at the end
+ * - No intermediate persistence — single POST at end
+ */
+
+import { useState, useEffect, useCallback, type ReactNode } from 'react';
+import { useAuth } from '../../contexts/AuthContext';
+import { ONBOARDING_STEPS } from './onboardingSteps';
+import { CovenantsStep } from './steps/CovenantsStep';
+import { HandleStep } from './steps/HandleStep';
+import { EnterStep } from './steps/EnterStep';
+import type { CovenantsConsents } from './steps/CovenantsStep';
+
+const ONBOARDING_STEP_KEY = 'mobius:onboarding:step';
+const ONBOARDING_PENDING_KEY = 'mobius:onboarding:pending';
+
+/**
+ * OnboardingGate
+ *
+ * Pure pass-through for citizen.onboarded === true. Zero overhead for returning citizens.
  */
 export function OnboardingGate({ children }: { children: ReactNode }) {
   const { citizen } = useAuth();
 
-  // Pass through authenticated + already onboarded citizens immediately
   if (!citizen || citizen.onboarded) return <>{children}</>;
 
   return <OnboardingFlow />;
@@ -36,16 +44,20 @@ export function OnboardingGate({ children }: { children: ReactNode }) {
 
 // ── Flow controller ───────────────────────────────────────────────────────────
 
-interface OnboardingState {
-  handle: string;
-  consentIntegrity: boolean;
-  consentData: boolean;
+interface OnboardingFormState {
+  consents: CovenantsConsents;
+  handle: string | null;
 }
 
-const INITIAL_STATE: OnboardingState = {
-  handle: '',
-  consentIntegrity: false,
-  consentData: false,
+const INITIAL_CONSENTS: CovenantsConsents = {
+  integrity: false,
+  ecology: false,
+  custodianship: false,
+};
+
+const INITIAL_FORM_STATE: OnboardingFormState = {
+  consents: INITIAL_CONSENTS,
+  handle: null,
 };
 
 function OnboardingFlow() {
@@ -62,7 +74,7 @@ function OnboardingFlow() {
     }
     return 0;
   });
-  const [formState, setFormState] = useState<OnboardingState>(INITIAL_STATE);
+  const [formState, setFormState] = useState<OnboardingFormState>(INITIAL_FORM_STATE);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showOfflineQueue, setShowOfflineQueue] = useState(false);
@@ -72,9 +84,15 @@ function OnboardingFlow() {
   const progress = ((currentStepIndex + 1) / ONBOARDING_STEPS.length) * 100;
 
   const submitPayload = useCallback(
-    (payload: { citizenId: string; handle: string | null; consents: { integrity: boolean; data: boolean } }) =>
-      completeOnboarding(payload),
-    [completeOnboarding],
+    async (payload: {
+      citizenId: string;
+      consents: CovenantsConsents;
+      handle: string | null;
+    }) => {
+      const updated = await completeOnboarding(payload);
+      return updated;
+    },
+    [completeOnboarding]
   );
 
   // Retry pending onboarding when back online
@@ -85,16 +103,18 @@ function OnboardingFlow() {
       if (!raw) return;
       const payload = JSON.parse(raw) as {
         citizenId: string;
+        consents: CovenantsConsents;
         handle: string | null;
-        consents: { integrity: boolean; data: boolean };
       };
       localStorage.removeItem(ONBOARDING_PENDING_KEY);
       setShowOfflineQueue(false);
-      submitPayload(payload).then(() => {
-        sessionStorage.removeItem(ONBOARDING_STEP_KEY);
-      }).catch(() => {
-        localStorage.setItem(ONBOARDING_PENDING_KEY, raw);
-      });
+      submitPayload(payload)
+        .then(() => {
+          sessionStorage.removeItem(ONBOARDING_STEP_KEY);
+        })
+        .catch(() => {
+          localStorage.setItem(ONBOARDING_PENDING_KEY, raw);
+        });
     } catch {
       localStorage.removeItem(ONBOARDING_PENDING_KEY);
     }
@@ -107,16 +127,18 @@ function OnboardingFlow() {
         if (raw && navigator.onLine) {
           const payload = JSON.parse(raw) as {
             citizenId: string;
+            consents: CovenantsConsents;
             handle: string | null;
-            consents: { integrity: boolean; data: boolean };
           };
           localStorage.removeItem(ONBOARDING_PENDING_KEY);
           setShowOfflineQueue(false);
-          submitPayload(payload).then(() => {
-            sessionStorage.removeItem(ONBOARDING_STEP_KEY);
-          }).catch(() => {
-            localStorage.setItem(ONBOARDING_PENDING_KEY, raw);
-          });
+          submitPayload(payload)
+            .then(() => {
+              sessionStorage.removeItem(ONBOARDING_STEP_KEY);
+            })
+            .catch(() => {
+              localStorage.setItem(ONBOARDING_PENDING_KEY, raw);
+            });
         }
       } catch {
         localStorage.removeItem(ONBOARDING_PENDING_KEY);
@@ -126,8 +148,15 @@ function OnboardingFlow() {
     return () => window.removeEventListener('online', onOnline);
   }, [submitPayload]);
 
-  const handleNext = async (stepData: Partial<OnboardingState>) => {
-    const updated = { ...formState, ...stepData };
+  const handleNext = async (
+    stepData:
+      | { consents: CovenantsConsents }
+      | { handle: string | null }
+      | Record<string, never>
+  ) => {
+    const updated = { ...formState };
+    if ('consents' in stepData) updated.consents = stepData.consents;
+    if ('handle' in stepData) updated.handle = stepData.handle;
     setFormState(updated);
 
     if (isLastStep) {
@@ -135,14 +164,11 @@ function OnboardingFlow() {
       setError(null);
       const payload = {
         citizenId: citizen!.citizenId,
-        handle: updated.handle || null,
-        consents: {
-          integrity: updated.consentIntegrity,
-          data: updated.consentData,
-        },
+        consents: updated.consents,
+        handle: updated.handle,
       };
       try {
-        await completeOnboarding(payload);
+        await submitPayload(payload);
         sessionStorage.removeItem(ONBOARDING_STEP_KEY);
         try {
           localStorage.removeItem(ONBOARDING_PENDING_KEY);
@@ -193,7 +219,8 @@ function OnboardingFlow() {
           <span className="text-4xl font-retro text-stone-500 select-none">⬡</span>
           <h2 className="text-lg font-semibold text-stone-200">You&apos;re offline</h2>
           <p className="text-stone-500 text-sm">
-            We&apos;ll complete your onboarding when you&apos;re back online. No need to start over.
+            We&apos;ll complete your onboarding when you&apos;re back online. No
+            need to start over.
           </p>
         </div>
       </div>
@@ -221,16 +248,49 @@ function OnboardingFlow() {
       {/* Step content */}
       <div className="flex-1 flex items-center justify-center p-6 overflow-y-auto">
         <div className="w-full max-w-sm animate-stepIn" key={currentStep.id}>
-          <OnboardingStep
-            step={currentStep}
-            formState={formState}
-            onNext={handleNext}
-            onBack={currentStepIndex > 0 ? handleBack : undefined}
-            isSubmitting={isSubmitting}
-            isLastStep={isLastStep}
-            error={error}
-            citizenId={citizen?.citizenId}
-          />
+          <div className="flex flex-col gap-8">
+            {/* Header */}
+            <div className="flex flex-col gap-2">
+              <h1 className="text-2xl font-semibold tracking-tight text-stone-100 leading-tight">
+                {currentStep.title}
+              </h1>
+              <p className="text-stone-400 text-sm leading-relaxed">
+                {currentStep.subtitle}
+              </p>
+            </div>
+
+            {/* Step-specific content */}
+            {currentStep.id === 'covenants' && (
+              <CovenantsStep
+                initial={formState.consents}
+                onNext={(consents) => handleNext({ consents })}
+              />
+            )}
+            {currentStep.id === 'handle' && (
+              <HandleStep
+                initial={formState.handle}
+                onNext={(handle) => handleNext({ handle })}
+              />
+            )}
+            {currentStep.id === 'enter' && (
+              <EnterStep
+                handle={formState.handle}
+                isSubmitting={isSubmitting}
+                onEnter={() => handleNext({})}
+                error={error}
+              />
+            )}
+
+            {/* Back */}
+            {currentStepIndex > 0 && currentStep.id !== 'enter' && (
+              <button
+                onClick={handleBack}
+                className="text-xs text-stone-600 hover:text-stone-400 transition-colors self-start"
+              >
+                ← Back
+              </button>
+            )}
+          </div>
         </div>
       </div>
     </div>
