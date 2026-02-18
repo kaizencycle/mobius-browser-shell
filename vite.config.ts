@@ -17,8 +17,12 @@ export default defineConfig(({ mode }) => {
       port: 3000,
       host: '0.0.0.0',
       proxy: {
-        // In dev, proxy /api/ai to Vercel dev server (run vercel dev) or target
+        // In dev, proxy /api/* to Vercel dev server (run vercel dev) or target
         '/api/ai': {
+          target: env.VITE_AI_PROXY_TARGET ?? 'http://localhost:3000',
+          changeOrigin: true,
+        },
+        '/api/auth': {
           target: env.VITE_AI_PROXY_TARGET ?? 'http://localhost:3000',
           changeOrigin: true,
         },
