@@ -18,6 +18,13 @@ import { createHash } from 'crypto';
 const IDENTITY_API_URL = process.env.MOBIUS_IDENTITY_API_URL ?? '';
 const IDENTITY_API_KEY = process.env.MOBIUS_IDENTITY_API_KEY ?? '';
 
+// Reserved handles — must match check-handle.ts
+const RESERVED = new Set([
+  'admin', 'administrator', 'mobius', 'atlas', 'aurea', 'echo', 'zeus',
+  'hermes', 'jade', 'eve', 'system', 'root', 'api', 'null', 'undefined',
+  'citizen', 'anonymous', 'moderator', 'support',
+]);
+
 // Per-IP rate limit: 5 completions per hour (prevents handle-squatting)
 const ipRateLimitMap = new Map<string, { count: number; resetAt: number }>();
 const RATE_LIMIT_WINDOW_MS = 60 * 60 * 1000;
@@ -79,27 +86,26 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const handleValue =
     handle && typeof handle === 'string' ? handle.trim() || null : null;
 
+  if (handleValue && RESERVED.has(handleValue.toLowerCase())) {
+    return res.status(409).json({ error: 'Handle reserved', field: 'handle' });
+  }
+
   // ── Handle uniqueness (if identity API available) ───────────────────────────
   if (handleValue && IDENTITY_API_URL && IDENTITY_API_KEY) {
     try {
       const availRes = await fetch(
-        `${IDENTITY_API_URL}/handles/${encodeURIComponent(handleValue)}/available`,
+        `${IDENTITY_API_URL}/handles/${encodeURIComponent(handleValue)}`,
         {
           method: 'GET',
           headers: { Authorization: `Bearer ${IDENTITY_API_KEY}` },
           signal: AbortSignal.timeout(3_000),
         }
       );
-      if (availRes.status === 409) {
+      if (availRes.status === 200) {
         return res.status(409).json({ error: 'Handle taken', field: 'handle' });
       }
-      if (availRes.ok) {
-        const availData = (await availRes.json().catch(() => ({}))) as {
-          available?: boolean;
-        };
-        if (availData.available === false) {
-          return res.status(409).json({ error: 'Handle taken', field: 'handle' });
-        }
+      if (availRes.status !== 404) {
+        console.error('[onboarding] Unexpected handle check status', availRes.status);
       }
     } catch {
       // Fail open — don't block onboarding if identity API is flaky

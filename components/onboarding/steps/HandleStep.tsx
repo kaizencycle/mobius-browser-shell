@@ -63,17 +63,20 @@ export function HandleStep({ initial, onNext }: HandleStepProps) {
   const [value, setValue] = useState(initial ?? '');
   const [validationError, setValidationError] = useState<string | null>(null);
   const [availability, setAvailability] = useState<boolean | null>(null);
+  const [unavailableReason, setUnavailableReason] = useState<'taken' | 'reserved' | null>(null);
   const [isChecking, setIsChecking] = useState(false);
 
-  // Debounced handle availability check
+  // Debounced handle availability check (400ms)
   useEffect(() => {
     const trimmed = value.trim();
     if (!trimmed || trimmed.length < 2 || !HANDLE_REGEX.test(trimmed)) {
       setAvailability(null);
+      setUnavailableReason(null);
       return;
     }
     setIsChecking(true);
     setAvailability(null);
+    setUnavailableReason(null);
     const timer = setTimeout(async () => {
       try {
         const res = await fetch(
@@ -81,18 +84,32 @@ export function HandleStep({ initial, onNext }: HandleStepProps) {
         );
         if (res.status === 409) {
           setAvailability(false);
+          const data = (await res.json().catch(() => ({}))) as { error?: string };
+          setUnavailableReason(
+            data.error?.toLowerCase().includes('reserved') ? 'reserved' : 'taken'
+          );
         } else if (res.ok) {
-          const data = (await res.json().catch(() => ({}))) as { available?: boolean };
+          const data = (await res.json().catch(() => ({}))) as {
+            available?: boolean;
+            degraded?: boolean;
+          };
           setAvailability(data.available !== false);
+          setUnavailableReason(null);
+        } else if (res.status === 503) {
+          // Identity API unreachable — degrade gracefully, allow proceed
+          setAvailability(true);
+          setUnavailableReason(null);
         } else {
           setAvailability(null); // Fail open
+          setUnavailableReason(null);
         }
       } catch {
         setAvailability(null);
+        setUnavailableReason(null);
       } finally {
         setIsChecking(false);
       }
-    }, 300);
+    }, 400);
     return () => clearTimeout(timer);
   }, [value]);
 
@@ -108,7 +125,9 @@ export function HandleStep({ initial, onNext }: HandleStepProps) {
       return;
     }
     if (availability === false) {
-      setValidationError('Handle is already taken');
+      setValidationError(
+        unavailableReason === 'reserved' ? 'Handle reserved' : 'Handle is already taken'
+      );
       return;
     }
     onNext(trimmed);
@@ -163,7 +182,9 @@ export function HandleStep({ initial, onNext }: HandleStepProps) {
               <span className="text-emerald-500">● Available</span>
             )}
             {!isChecking && availability === false && (
-              <span className="text-red-400">● Taken</span>
+              <span className="text-red-400">
+                ● {unavailableReason === 'reserved' ? 'Reserved' : 'Taken'}
+              </span>
             )}
             <span>
               You&apos;ll appear as{' '}

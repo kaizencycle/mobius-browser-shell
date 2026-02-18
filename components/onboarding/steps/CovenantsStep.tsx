@@ -112,6 +112,7 @@ export function CovenantsStep({ initial, onNext }: CovenantsStepProps) {
   const [custodianship, setCustodianship] = useState(initial.custodianship);
 
   const canProceed = integrity && ecology && custodianship;
+  const acceptedCount = [integrity, ecology, custodianship].filter(Boolean).length;
 
   const handleContinue = () => {
     onNext({ integrity, ecology, custodianship });
@@ -119,6 +120,9 @@ export function CovenantsStep({ initial, onNext }: CovenantsStepProps) {
 
   return (
     <div className="flex flex-col gap-5">
+      <p className="text-stone-500 text-xs">
+        {acceptedCount} of 3 accepted
+      </p>
       <div className="flex flex-col gap-3">
         <ConsentToggle
           checked={integrity}
