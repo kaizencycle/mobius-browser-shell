@@ -26,6 +26,10 @@ export default defineConfig(({ mode }) => {
           target: env.VITE_AI_PROXY_TARGET ?? 'http://localhost:3000',
           changeOrigin: true,
         },
+        '/api/atlas': {
+          target: env.VITE_AI_PROXY_TARGET ?? 'http://localhost:3000',
+          changeOrigin: true,
+        },
       },
     },
     preview: {
