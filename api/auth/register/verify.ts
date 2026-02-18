@@ -121,6 +121,18 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     onboarded: false,
   };
 
+  // When identity API is not configured, return credential for client-side cache
+  if (!IDENTITY_API_URL || !IDENTITY_API_KEY) {
+    return res.status(200).json({
+      ...identity,
+      credentialForCache: {
+        credentialId: credentialIdB64,
+        publicKey: Buffer.from(credential.publicKey).toString('base64url'),
+        counter: credential.counter,
+      },
+    });
+  }
+
   return res.status(200).json(identity);
 }
 

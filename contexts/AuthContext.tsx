@@ -14,6 +14,7 @@ import {
   ReactNode,
 } from 'react';
 import { PasskeyService } from '../services/PasskeyService';
+import { IdentityCache } from '../services/IdentityCache';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -37,6 +38,10 @@ export interface AuthContextValue {
   register: () => Promise<void>;
   /** Initiate passkey authentication (returning citizen) */
   authenticate: () => Promise<void>;
+  /** Restore session from localStorage cache (when identity API unset) */
+  restoreFromCache: () => Promise<void>;
+  /** Whether a cached identity exists for restore */
+  hasIdentityCache: boolean;
   /** Clear session */
   signOut: () => void;
   error: string | null;
@@ -65,6 +70,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [status, setStatus] = useState<AuthStatus>('loading');
   const [citizen, setCitizen] = useState<CitizenIdentity | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [hasIdentityCache, setHasIdentityCache] = useState(false);
+
+  // Check for identity cache on mount
+  useEffect(() => {
+    setHasIdentityCache(IdentityCache.hasCache());
+  }, []);
 
   // Rehydrate session from sessionStorage on mount
   useEffect(() => {
@@ -95,8 +106,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const register = useCallback(async () => {
     setError(null);
     try {
-      const identity = await PasskeyService.register();
-      persistSession(identity);
+      const result = await PasskeyService.register();
+      persistSession(result.identity);
+      if (result.credentialForCache) {
+        await IdentityCache.store(result.identity, result.credentialForCache);
+        setHasIdentityCache(true);
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Registration failed');
     }
@@ -112,10 +127,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [persistSession]);
 
+  const restoreFromCache = useCallback(async () => {
+    setError(null);
+    try {
+      const cached = await IdentityCache.retrieve();
+      if (!cached) {
+        setHasIdentityCache(false);
+        setError('Cache expired or invalid');
+        return;
+      }
+      const identity = await PasskeyService.authenticateFromCache(cached.credential);
+      persistSession(identity);
+    } catch (err) {
+      IdentityCache.clear();
+      setHasIdentityCache(false);
+      setError(err instanceof Error ? err.message : 'Cache restore failed');
+    }
+  }, [persistSession]);
+
   const signOut = useCallback(() => {
     sessionStorage.removeItem(SESSION_KEY);
     setCitizen(null);
     setStatus('unauthenticated');
+    // Note: we do NOT clear IdentityCache on signOut — citizen may want to restore later
   }, []);
 
   const clearError = useCallback(() => setError(null), []);
@@ -128,7 +162,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   return (
     <AuthContext.Provider
-      value={{ status, citizen, register, authenticate, signOut, error, clearError, token, user }}
+      value={{
+        status,
+        citizen,
+        register,
+        authenticate,
+        restoreFromCache,
+        hasIdentityCache,
+        signOut,
+        error,
+        clearError,
+        token,
+        user,
+      }}
     >
       {children}
     </AuthContext.Provider>

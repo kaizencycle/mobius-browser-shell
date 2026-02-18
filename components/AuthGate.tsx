@@ -14,10 +14,10 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { PasskeyService } from '../services/PasskeyService';
 
-type GateView = 'landing' | 'registering' | 'authenticating';
+type GateView = 'landing' | 'registering' | 'authenticating' | 'restoring';
 
 export function AuthGate({ children }: { children: React.ReactNode }) {
-  const { status, register, authenticate, error, clearError } = useAuth();
+  const { status, register, authenticate, restoreFromCache, hasIdentityCache, error, clearError } = useAuth();
   const [view, setView] = useState<GateView>('landing');
   const [isPlatformAvailable, setIsPlatformAvailable] = useState(true);
   const [isWorking, setIsWorking] = useState(false);
@@ -49,6 +49,14 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
     setIsWorking(false);
   };
 
+  const handleCacheRestore = async () => {
+    clearError();
+    setView('restoring');
+    setIsWorking(true);
+    await restoreFromCache();
+    setIsWorking(false);
+  };
+
   return (
     <div className="fixed inset-0 flex flex-col items-center justify-center bg-stone-950 text-stone-100 p-6 overflow-hidden">
       <div className="absolute inset-0 opacity-[0.03] bg-[radial-gradient(circle_at_50%_50%,_#d6d3d1_1px,_transparent_1px)] bg-[size:32px_32px] pointer-events-none" />
@@ -72,7 +80,9 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
             <p className="text-xs text-stone-400">
               {view === 'registering'
                 ? 'Creating your citizen passkey…'
-                : 'Verifying your passkey…'}
+                : view === 'restoring'
+                  ? 'Restoring your session…'
+                  : 'Verifying your passkey…'}
             </p>
           </div>
         )}
@@ -119,6 +129,21 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
             >
               Register as citizen
             </button>
+
+            {hasIdentityCache && (
+              <div className="mt-4 p-4 bg-stone-800/50 border border-stone-700 rounded-lg">
+                <p className="text-stone-300 text-sm">
+                  🔐 This device remembers you.{' '}
+                  <button
+                    onClick={handleCacheRestore}
+                    disabled={!isPlatformAvailable}
+                    className="text-amber-400 hover:text-amber-300 underline disabled:opacity-40 disabled:cursor-not-allowed"
+                  >
+                    Restore session
+                  </button>
+                </p>
+              </div>
+            )}
           </div>
         )}
 

@@ -18,6 +18,12 @@
  */
 
 import type { CitizenIdentity } from '../contexts/AuthContext';
+import type { CachedCredential } from './IdentityCache';
+
+export interface RegisterResult {
+  identity: CitizenIdentity;
+  credentialForCache?: CachedCredential;
+}
 
 export const PasskeyService = {
   /**
@@ -43,7 +49,7 @@ export const PasskeyService = {
 
   // ── Registration ────────────────────────────────────────────────────────────
 
-  async register(): Promise<CitizenIdentity> {
+  async register(): Promise<RegisterResult> {
     const challengeRes = await fetch('/api/auth/register/challenge', {
       method: 'GET',
       credentials: 'include',
@@ -95,6 +101,73 @@ export const PasskeyService = {
     if (!verifyRes.ok) {
       const err = await verifyRes.json().catch(() => ({}));
       throw new Error(err.error ?? 'Registration verification failed');
+    }
+
+    const data = await verifyRes.json();
+    return {
+      identity: {
+        citizenId: data.citizenId,
+        handle: data.handle ?? null,
+        authenticatedAt: data.authenticatedAt,
+        onboarded: data.onboarded ?? false,
+      },
+      credentialForCache: data.credentialForCache,
+    };
+  },
+
+  /**
+   * Authenticate using a cached credential (when identity API is unset).
+   * Prompts for biometric/PIN, then verifies via cache/verify endpoint.
+   */
+  async authenticateFromCache(credential: CachedCredential): Promise<CitizenIdentity> {
+    const challengeRes = await fetch('/api/auth/login/challenge', {
+      method: 'GET',
+      credentials: 'include',
+    });
+    if (!challengeRes.ok) throw new Error('Could not start authentication');
+
+    const { challenge, rpId } = await challengeRes.json();
+
+    const assertion = await navigator.credentials.get({
+      publicKey: {
+        challenge: base64urlDecode(challenge),
+        rpId,
+        allowCredentials: [{ id: base64urlDecode(credential.credentialId), type: 'public-key' }],
+        userVerification: 'required',
+        timeout: 60_000,
+      },
+    }) as PublicKeyCredential | null;
+
+    if (!assertion) throw new Error('Authentication cancelled');
+
+    const response = assertion.response as AuthenticatorAssertionResponse;
+    const verifyRes = await fetch('/api/auth/cache/verify', {
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        assertion: {
+          id: assertion.id,
+          rawId: base64urlEncode(assertion.rawId),
+          type: assertion.type,
+          response: {
+            clientDataJSON: base64urlEncode(response.clientDataJSON),
+            authenticatorData: base64urlEncode(response.authenticatorData),
+            signature: base64urlEncode(response.signature),
+            userHandle: response.userHandle ? base64urlEncode(response.userHandle) : null,
+          },
+        },
+        credential: {
+          credentialId: credential.credentialId,
+          publicKey: credential.publicKey,
+          counter: credential.counter,
+        },
+      }),
+    });
+
+    if (!verifyRes.ok) {
+      const err = await verifyRes.json().catch(() => ({}));
+      throw new Error(err.error ?? 'Cache verification failed');
     }
 
     return verifyRes.json() as Promise<CitizenIdentity>;
