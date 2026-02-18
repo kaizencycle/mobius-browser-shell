@@ -37,6 +37,12 @@ export interface AuthContextValue {
   register: () => Promise<void>;
   /** Initiate passkey authentication (returning citizen) */
   authenticate: () => Promise<void>;
+  /** Complete onboarding flow — persists handle + consents, flips onboarded */
+  completeOnboarding: (payload: {
+    citizenId: string;
+    handle: string | null;
+    consents: { integrity: boolean; data: boolean };
+  }) => Promise<void>;
   /** Clear session */
   signOut: () => void;
   error: string | null;
@@ -112,8 +118,45 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [persistSession]);
 
+  const completeOnboarding = useCallback(
+    async (payload: {
+      citizenId: string;
+      handle: string | null;
+      consents: { integrity: boolean; data: boolean };
+    }) => {
+      const res = await fetch('/api/onboarding/complete', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error((err as { error?: string }).error ?? 'Onboarding failed');
+      }
+
+      const { citizen: updatedCitizen } = await res.json();
+      persistSession(updatedCitizen);
+
+      // ATLAS audit event
+      fetch('/api/atlas/events', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        keepalive: true,
+        body: JSON.stringify({
+          type: 'AUTH_LIFECYCLE',
+          event: 'ONBOARDING_COMPLETE',
+          citizenId: payload.citizenId,
+          timestamp: new Date().toISOString(),
+        }),
+      }).catch(() => {});
+    },
+    [persistSession],
+  );
+
   const signOut = useCallback(() => {
     sessionStorage.removeItem(SESSION_KEY);
+    sessionStorage.removeItem('mobius:onboarding:step');
     setCitizen(null);
     setStatus('unauthenticated');
   }, []);
@@ -128,7 +171,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   return (
     <AuthContext.Provider
-      value={{ status, citizen, register, authenticate, signOut, error, clearError, token, user }}
+      value={{ status, citizen, register, authenticate, completeOnboarding, signOut, error, clearError, token, user }}
     >
       {children}
     </AuthContext.Provider>
