@@ -18,6 +18,7 @@ import { Tornado, Coffee, CheckCircle, Menu, X, User, LogOut } from 'lucide-reac
 import { wakeAllServices, env } from './config/env';
 import { useAuth } from './contexts/AuthContext';
 import { useWallet } from './contexts/WalletContext';
+import { useSessionHeartbeat } from './hooks/useSessionHeartbeat';
 import { InquiryChatModal } from './components/InquiryChatModal';
 
 const App: React.FC = () => {
@@ -29,6 +30,9 @@ const App: React.FC = () => {
   // Auth & Wallet hooks (citizen from passkey; always authenticated when App renders)
   const { citizen, signOut } = useAuth();
   const { wallet } = useWallet();
+
+  // Session heartbeat — polls for revocation, forces sign-out if citizen revoked
+  useSessionHeartbeat();
 
   // ATLAS error logging — shared across all panel boundaries
   const logToAtlas = useAtlasErrorLog();

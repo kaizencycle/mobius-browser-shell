@@ -14,6 +14,7 @@ import {
   ReactNode,
 } from 'react';
 import { PasskeyService } from '../services/PasskeyService';
+import { identityCache } from '../services/IdentityCache';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -37,14 +38,12 @@ export interface AuthContextValue {
   register: () => Promise<void>;
   /** Initiate passkey authentication (returning citizen) */
   authenticate: () => Promise<void>;
-  /** Complete onboarding flow — persists handle + consents, flips onboarded */
-  completeOnboarding: (payload: {
-    citizenId: string;
-    handle: string | null;
-    consents: { integrity: boolean; data: boolean };
-  }) => Promise<void>;
+  /** Restore session from IdentityCache (requires WebAuthn assertion) */
+  restoreFromCache: () => Promise<void>;
   /** Clear session */
   signOut: () => void;
+  /** True when IdentityCache has a stored identity (device has saved session) */
+  hasIdentityCache: boolean;
   error: string | null;
   clearError: () => void;
   /** @deprecated Use citizen. JWT follow-up will add token. */
@@ -67,10 +66,13 @@ export function useAuth(): AuthContextValue {
 
 const SESSION_KEY = 'mobius_session';
 
+const ATLAS_EVENTS_URL = (import.meta.env.VITE_ATLAS_URL as string) || '/api/atlas/events';
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [status, setStatus] = useState<AuthStatus>('loading');
   const [citizen, setCitizen] = useState<CitizenIdentity | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [hasIdentityCache, setHasIdentityCache] = useState(false);
 
   // Rehydrate session from sessionStorage on mount
   useEffect(() => {
@@ -83,12 +85,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (age < 24 * 60 * 60 * 1000) {
           setCitizen(parsed);
           setStatus('authenticated');
+          setHasIdentityCache(identityCache.hasCache());
           return;
         }
       }
     } catch {
       sessionStorage.removeItem(SESSION_KEY);
     }
+    setHasIdentityCache(identityCache.hasCache());
     setStatus('unauthenticated');
   }, []);
 
@@ -98,25 +102,79 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setStatus('authenticated');
   }, []);
 
+  const logAuthEvent = useCallback(
+    (type: 'REGISTER' | 'AUTHENTICATE' | 'SIGN_OUT' | 'CACHE_RESTORE', id?: string) => {
+      const citizenId = id ?? citizen?.citizenId ?? null;
+      fetch(ATLAS_EVENTS_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        keepalive: true,
+        body: JSON.stringify({
+          type: 'AUTH_LIFECYCLE',
+          event: type,
+          citizenId,
+          timestamp: new Date().toISOString(),
+        }),
+      }).catch(() => {});
+    },
+    [citizen]
+  );
+
   const register = useCallback(async () => {
     setError(null);
     try {
-      const identity = await PasskeyService.register();
+      const { identity, credentialId, credential } = await PasskeyService.register();
       persistSession(identity);
+      // Store in cache when we have credential (session-only mode)
+      if (credential) {
+        await identityCache.store(identity, credentialId, credential);
+        setHasIdentityCache(true);
+      }
+      logAuthEvent('REGISTER', identity.citizenId);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Registration failed');
     }
-  }, [persistSession]);
+  }, [persistSession, logAuthEvent]);
 
   const authenticate = useCallback(async () => {
     setError(null);
     try {
       const identity = await PasskeyService.authenticate();
       persistSession(identity);
+      logAuthEvent('AUTHENTICATE', identity.citizenId);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Authentication failed');
     }
-  }, [persistSession]);
+  }, [persistSession, logAuthEvent]);
+
+  const restoreFromCache = useCallback(async () => {
+    setError(null);
+    const cached = await identityCache.retrieve();
+    if (!cached) {
+      setHasIdentityCache(false);
+      return;
+    }
+    if (!cached.credential) {
+      // Old cache format without credential — clear and require fresh auth
+      await identityCache.clear();
+      setHasIdentityCache(false);
+      setError('Saved session expired. Please register or sign in again.');
+      return;
+    }
+    try {
+      const identity = await PasskeyService.authenticateFromCache(
+        cached.credentialId,
+        cached.credential
+      );
+      persistSession(identity);
+      setHasIdentityCache(true);
+      logAuthEvent('CACHE_RESTORE', identity.citizenId);
+    } catch (err) {
+      await identityCache.clear();
+      setHasIdentityCache(false);
+      setError(err instanceof Error ? err.message : 'Restore failed');
+    }
+  }, [persistSession, logAuthEvent]);
 
   const completeOnboarding = useCallback(
     async (payload: {
@@ -155,16 +213,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   );
 
   const signOut = useCallback(() => {
+    const id = citizen?.citizenId ?? null;
     sessionStorage.removeItem(SESSION_KEY);
-    sessionStorage.removeItem('mobius:onboarding:step');
-    try {
-      localStorage.removeItem('mobius:onboarding:pending');
-    } catch {
-      /* ignore */
-    }
+    identityCache.clear();
     setCitizen(null);
+    setHasIdentityCache(false);
     setStatus('unauthenticated');
-  }, []);
+    logAuthEvent('SIGN_OUT', id ?? undefined);
+  }, [citizen, logAuthEvent]);
 
   const clearError = useCallback(() => setError(null), []);
 
@@ -176,7 +232,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   return (
     <AuthContext.Provider
-      value={{ status, citizen, register, authenticate, completeOnboarding, signOut, error, clearError, token, user }}
+      value={{
+        status,
+        citizen,
+        register,
+        authenticate,
+        restoreFromCache,
+        signOut,
+        hasIdentityCache,
+        error,
+        clearError,
+        token,
+        user,
+      }}
     >
       {children}
     </AuthContext.Provider>

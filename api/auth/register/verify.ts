@@ -121,7 +121,18 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     onboarded: false,
   };
 
-  return res.status(200).json(identity);
+  // When identity API is not configured, return credential for client-side cache
+  // so session-only restore can verify assertions without the identity store
+  const response: Record<string, unknown> = { ...identity };
+  if (!IDENTITY_API_URL || !IDENTITY_API_KEY) {
+    response.credential = {
+      id: credentialIdB64,
+      publicKey: Buffer.from(credential.publicKey).toString('base64url'),
+      counter: credential.counter,
+    };
+  }
+
+  return res.status(200).json(response);
 }
 
 function parseCookie(header: string, name: string): string | null {
