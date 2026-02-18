@@ -56,6 +56,14 @@
     {
       "source": "/api/ai/:path*",
       "destination": "/api/ai"
+    },
+    {
+      "source": "/api/onboarding/check-handle",
+      "destination": "/api/onboarding/check-handle"
+    },
+    {
+      "source": "/api/onboarding/complete",
+      "destination": "/api/onboarding/complete"
     }
   ]
 }
