@@ -1,116 +1,136 @@
-// contexts/AuthContext.tsx
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { env } from '../config/env';
+/**
+ * AuthContext — Passkey / WebAuthn Identity Layer
+ *
+ * Owns CitizenIdentity session state. No passwords. Identity anchored to
+ * device biometrics via WebAuthn. Session in sessionStorage, 24h TTL.
+ */
 
-interface User {
-  id: string;
-  email: string;
-  name?: string;
+import {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  useCallback,
+  ReactNode,
+} from 'react';
+import { PasskeyService } from '../services/PasskeyService';
+
+// ── Types ─────────────────────────────────────────────────────────────────────
+
+export type AuthStatus = 'loading' | 'unauthenticated' | 'authenticated';
+
+export interface CitizenIdentity {
+  /** Stable citizen ID derived from passkey credential ID (hashed) */
+  citizenId: string;
+  /** Display handle — set during registration, mutable */
+  handle: string | null;
+  /** ISO timestamp of this session's authentication */
+  authenticatedAt: string;
+  /** Whether this citizen has completed onboarding */
+  onboarded: boolean;
 }
 
-interface AuthContextType {
-  user: User | null;
-  loading: boolean;
+export interface AuthContextValue {
+  status: AuthStatus;
+  citizen: CitizenIdentity | null;
+  /** Initiate passkey registration (new citizen) */
+  register: () => Promise<void>;
+  /** Initiate passkey authentication (returning citizen) */
+  authenticate: () => Promise<void>;
+  /** Clear session */
+  signOut: () => void;
+  error: string | null;
+  clearError: () => void;
+  /** @deprecated Use citizen. JWT follow-up will add token. */
   token: string | null;
-  login: (email: string, password: string) => Promise<void>;
-  signup: (email: string, password: string, name?: string) => Promise<void>;
-  logout: () => void;
+  /** @deprecated Use citizen. Legacy shape for WalletContext, InquiryChat, etc. */
+  user: { id: string; email: string; name?: string } | null;
 }
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+// ── Context ───────────────────────────────────────────────────────────────────
+
+const AuthContext = createContext<AuthContextValue | null>(null);
+
+export function useAuth(): AuthContextValue {
+  const ctx = useContext(AuthContext);
+  if (!ctx) throw new Error('useAuth must be used within AuthProvider');
+  return ctx;
+}
+
+// ── Provider ──────────────────────────────────────────────────────────────────
+
+const SESSION_KEY = 'mobius_session';
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [token, setToken] = useState<string | null>(null);
+  const [status, setStatus] = useState<AuthStatus>('loading');
+  const [citizen, setCitizen] = useState<CitizenIdentity | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
-  const API_BASE = env.api.identity;
-
+  // Rehydrate session from sessionStorage on mount
   useEffect(() => {
-    const storedToken = localStorage.getItem('auth_token');
-    if (storedToken) {
-      verifyToken(storedToken);
-    } else {
-      setLoading(false);
+    try {
+      const raw = sessionStorage.getItem(SESSION_KEY);
+      if (raw) {
+        const parsed: CitizenIdentity = JSON.parse(raw);
+        // Validate session is not stale (24h max)
+        const age = Date.now() - new Date(parsed.authenticatedAt).getTime();
+        if (age < 24 * 60 * 60 * 1000) {
+          setCitizen(parsed);
+          setStatus('authenticated');
+          return;
+        }
+      }
+    } catch {
+      sessionStorage.removeItem(SESSION_KEY);
     }
+    setStatus('unauthenticated');
   }, []);
 
-  const verifyToken = async (authToken: string) => {
+  const persistSession = useCallback((identity: CitizenIdentity) => {
+    sessionStorage.setItem(SESSION_KEY, JSON.stringify(identity));
+    setCitizen(identity);
+    setStatus('authenticated');
+  }, []);
+
+  const register = useCallback(async () => {
+    setError(null);
     try {
-      const response = await fetch(`${API_BASE}/auth/me`, {
-        headers: {
-          'Authorization': `Bearer ${authToken}`,
-        },
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        setUser(data);
-        setToken(authToken);
-      } else {
-        localStorage.removeItem('auth_token');
-      }
-    } catch (error) {
-      console.error('Token verification failed:', error);
-      localStorage.removeItem('auth_token');
-    } finally {
-      setLoading(false);
+      const identity = await PasskeyService.register();
+      persistSession(identity);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Registration failed');
     }
-  };
+  }, [persistSession]);
 
-  const login = async (email: string, password: string) => {
-    const response = await fetch(`${API_BASE}/auth/login`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password }),
-    });
-
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.detail || 'Login failed');
+  const authenticate = useCallback(async () => {
+    setError(null);
+    try {
+      const identity = await PasskeyService.authenticate();
+      persistSession(identity);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Authentication failed');
     }
+  }, [persistSession]);
 
-    const data = await response.json();
-    setUser(data.user);
-    setToken(data.access_token);
-    localStorage.setItem('auth_token', data.access_token);
-  };
+  const signOut = useCallback(() => {
+    sessionStorage.removeItem(SESSION_KEY);
+    setCitizen(null);
+    setStatus('unauthenticated');
+  }, []);
 
-  const signup = async (email: string, password: string, name?: string) => {
-    const response = await fetch(`${API_BASE}/auth/signup`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password, name }),
-    });
+  const clearError = useCallback(() => setError(null), []);
 
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.detail || 'Signup failed');
-    }
-
-    const data = await response.json();
-    setUser(data.user);
-    setToken(data.access_token);
-    localStorage.setItem('auth_token', data.access_token);
-  };
-
-  const logout = () => {
-    setUser(null);
-    setToken(null);
-    localStorage.removeItem('auth_token');
-  };
+  // Legacy compat: token (null until JWT PR), user shape for WalletContext/InquiryChat
+  const token: string | null = null;
+  const user = citizen
+    ? { id: citizen.citizenId, email: '', name: citizen.handle ?? undefined }
+    : null;
 
   return (
-    <AuthContext.Provider value={{ user, loading, token, login, signup, logout }}>
+    <AuthContext.Provider
+      value={{ status, citizen, register, authenticate, signOut, error, clearError, token, user }}
+    >
       {children}
     </AuthContext.Provider>
   );
-}
-
-export function useAuth() {
-  const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error('useAuth must be used within AuthProvider');
-  }
-  return context;
 }

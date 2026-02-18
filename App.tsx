@@ -18,7 +18,6 @@ import { Tornado, Coffee, CheckCircle, Menu, X, User, LogOut } from 'lucide-reac
 import { wakeAllServices, env } from './config/env';
 import { useAuth } from './contexts/AuthContext';
 import { useWallet } from './contexts/WalletContext';
-import { AuthModal } from './components/AuthModal';
 import { InquiryChatModal } from './components/InquiryChatModal';
 
 const App: React.FC = () => {
@@ -26,10 +25,9 @@ const App: React.FC = () => {
   const [isWaking, setIsWaking] = useState(false);
   const [wakeComplete, setWakeComplete] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [showAuthModal, setShowAuthModal] = useState(false);
 
-  // Auth & Wallet hooks
-  const { user, loading: authLoading, logout } = useAuth();
+  // Auth & Wallet hooks (citizen from passkey; always authenticated when App renders)
+  const { citizen, signOut } = useAuth();
   const { wallet } = useWallet();
 
   // ATLAS error logging — shared across all panel boundaries
@@ -220,32 +218,23 @@ const App: React.FC = () => {
                 </div>
               </div>
               
-              {/* User Auth Status */}
-              {!authLoading && (
-                user ? (
-                  <div className="flex items-center space-x-2">
-                    <div className="flex items-center space-x-1.5 px-2 py-1 bg-stone-100 rounded text-xs">
-                      <User className="w-3 h-3 text-stone-500" />
-                      <span className="text-stone-600 font-medium max-w-[100px] truncate">
-                        {user.name || user.email.split('@')[0]}
-                      </span>
-                    </div>
-                    <button
-                      onClick={logout}
-                      className="p-1.5 text-stone-400 hover:text-stone-600 hover:bg-stone-100 rounded transition-colors"
-                      title="Logout"
-                    >
-                      <LogOut className="w-3.5 h-3.5" />
-                    </button>
+              {/* Citizen identity (passkey-authenticated) */}
+              {citizen && (
+                <div className="flex items-center space-x-2">
+                  <div className="flex items-center space-x-1.5 px-2 py-1 bg-stone-100 rounded text-xs">
+                    <User className="w-3 h-3 text-stone-500" />
+                    <span className="text-stone-600 font-medium max-w-[100px] truncate font-mono">
+                      {citizen.handle ?? citizen.citizenId.slice(0, 8)}
+                    </span>
                   </div>
-                ) : (
                   <button
-                    onClick={() => setShowAuthModal(true)}
-                    className="px-3 py-1.5 bg-stone-900 text-white text-xs font-medium rounded hover:bg-stone-800 transition-colors"
+                    onClick={signOut}
+                    className="p-1.5 text-stone-400 hover:text-stone-600 hover:bg-stone-100 rounded transition-colors"
+                    title="Sign out"
                   >
-                    Login
+                    <LogOut className="w-3.5 h-3.5" />
                   </button>
-                )
+                </div>
               )}
 
               <SentinelStatus sentinels={SENTINELS} />
@@ -319,38 +308,26 @@ const App: React.FC = () => {
               <SentinelStatus sentinels={SENTINELS} />
             </div>
             
-            {/* User Auth - Mobile */}
-            {!authLoading && (
+            {/* Citizen identity - Mobile */}
+            {citizen && (
               <div className="flex items-center justify-center pt-2">
-                {user ? (
-                  <div className="flex items-center space-x-2">
-                    <div className="flex items-center space-x-1.5 px-3 py-1.5 bg-stone-100 rounded text-xs">
-                      <User className="w-3 h-3 text-stone-500" />
-                      <span className="text-stone-600 font-medium">
-                        {user.name || user.email.split('@')[0]}
-                      </span>
-                    </div>
-                    <button
-                      onClick={() => {
-                        logout();
-                        setIsMobileMenuOpen(false);
-                      }}
-                      className="px-3 py-1.5 text-stone-500 hover:text-stone-700 text-xs font-medium"
-                    >
-                      Logout
-                    </button>
+                <div className="flex items-center space-x-2">
+                  <div className="flex items-center space-x-1.5 px-3 py-1.5 bg-stone-100 rounded text-xs">
+                    <User className="w-3 h-3 text-stone-500" />
+                    <span className="text-stone-600 font-medium font-mono">
+                      {citizen.handle ?? citizen.citizenId.slice(0, 8)}
+                    </span>
                   </div>
-                ) : (
                   <button
                     onClick={() => {
-                      setShowAuthModal(true);
+                      signOut();
                       setIsMobileMenuOpen(false);
                     }}
-                    className="px-4 py-2 bg-stone-900 text-white text-sm font-medium rounded-lg hover:bg-stone-800 transition-colors"
+                    className="px-3 py-1.5 text-stone-500 hover:text-stone-700 text-xs font-medium"
                   >
-                    Login / Sign Up
+                    Sign out
                   </button>
-                )}
+                </div>
               </div>
             )}
           </div>
@@ -371,9 +348,6 @@ const App: React.FC = () => {
       <main className="flex-1 overflow-hidden relative shadow-inner">
         {renderContent()}
       </main>
-
-      {/* Auth Modal */}
-      {showAuthModal && <AuthModal onClose={() => setShowAuthModal(false)} />}
 
       {/* Inquiry Chat Modal - Floating button */}
       <InquiryChatModal />

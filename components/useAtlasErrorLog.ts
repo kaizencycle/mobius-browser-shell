@@ -6,6 +6,7 @@ import {
   generateErrorId,
   inferErrorCode,
 } from '../errors/errorCodes';
+import { useCitizenId } from '../hooks/useCitizenId';
 
 const ATLAS_ENDPOINT =
   (import.meta.env.VITE_ATLAS_URL as string | undefined) || '/api/atlas/events';
@@ -52,6 +53,7 @@ function sanitizeComponentStack(stack?: string | null): string | undefined {
  *   <ShellErrorBoundary appName="Citizen Shield" onError={logToAtlas} />
  */
 export function useAtlasErrorLog() {
+  const citizenId = useCitizenId();
   const recentErrors = useRef<Set<string>>(new Set());
 
   const queueError = useCallback((event: AtlasErrorEvent) => {
@@ -154,11 +156,12 @@ export function useAtlasErrorLog() {
         timestamp: new Date().toISOString(),
         userAgent: navigator.userAgent,
         url: window.location.href,
+        citizenId: citizenId ?? undefined,
       };
 
       // Dev mode: log to console
       if (import.meta.env.DEV) {
-        console.group(`🚨 [${errorId}] ${appName}`);
+        console.group(`🚨 [${errorId}] ${appName} (citizen: ${citizenId ?? 'anon'})`);
         console.error(error);
         console.log('Component stack:', info.componentStack);
         console.groupEnd();
@@ -168,6 +171,6 @@ export function useAtlasErrorLog() {
       // Prod mode: send to ATLAS
       sendToAtlas(event);
     },
-    [sendToAtlas]
+    [sendToAtlas, citizenId]
   );
 }
