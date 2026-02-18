@@ -1,20 +1,13 @@
-# Mobius Browser - Robots.txt
-# Constitutional Principle: Transparency about what we want indexed
+# Mobius Browser Shell — robots.txt
+# EPICON PR: Switching from noindex meta tag to proper robots.txt
+#
+# Currently in pre-public phase. Update to "Allow: /" when going live.
 
-# Default: Allow indexing of public pages
 User-agent: *
-Allow: /
-
-# Disallow indexing of development/staging labs until ready
-Disallow: /citizen-shield
-Disallow: /hive
-Disallow: /wallet
-
-# Disallow API endpoints (these shouldn't be indexed)
 Disallow: /api/
+Disallow: /
 
-# Allow search engines to find the sitemap (when we create one)
-# Sitemap: https://mobius.systems/sitemap.xml
-
-# Crawl-delay to be nice to servers (optional, not all crawlers respect this)
-Crawl-delay: 1
+# Allow well-known bots access to public pages once live:
+# User-agent: *
+# Allow: /
+# Disallow: /api/
