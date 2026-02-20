@@ -283,7 +283,7 @@ const LEARNING_MODULES: LearningModule[] = [
   {
     id: 'three-covenants',
     title: 'The Three Covenants in Practice',
-    description: 'Integrity, Ecology, Custodianship — the philosophical foundation of Mobius Systems.',
+    description: 'Integrity, Ecology, Custodianship — the philosophical foundation of Mobius Substrate.',
     difficulty: 'beginner',
     estimatedMinutes: 25,
     micReward: 40,

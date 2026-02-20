@@ -4,7 +4,7 @@
  * Uses the Web Speech API (SpeechRecognition) for browser-native
  * speech-to-text. Works in Chrome, Edge, Safari.
  * 
- * Mobius Systems - Jade Pattern Oracle
+ * Mobius Substrate - Jade Pattern Oracle
  */
 import { useState, useCallback, useRef } from 'react';
 

@@ -151,7 +151,7 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
             For your security, Mobius requires authentication on each new browser session. Your session lasts 24 hours once started.
           </p>
           <p className="text-[10px] text-stone-800 mt-2">
-            Mobius Systems · CC0 Public Domain
+            Mobius Substrate · CC0 Public Domain
           </p>
         </div>
       </div>

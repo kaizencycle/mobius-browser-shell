@@ -2,7 +2,7 @@
  * EnterStep — Confirmation
  *
  * Summary: handle (or "Anonymous"), covenants accepted.
- * Primary CTA: "Enter Mobius Systems"
+ * Primary CTA: "Enter Mobius Substrate"
  */
 
 import type { ReactNode } from 'react';
@@ -71,7 +71,7 @@ export function EnterStep({
             Establishing identity…
           </span>
         ) : (
-          'Enter Mobius Systems'
+          'Enter Mobius Substrate'
         )}
       </PrimaryButton>
     </div>

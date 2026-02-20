@@ -1,6 +1,6 @@
 // components/InquiryChat.tsx
 // Conversational chat interface for New Inquiry
-// Part of Mobius Systems - Integrity-First AI Infrastructure
+// Part of Mobius Substrate - Integrity-First AI Infrastructure
 
 import { useState, useRef, useEffect } from 'react';
 import { Send, Sparkles, User, Bot } from 'lucide-react';

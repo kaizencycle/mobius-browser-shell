@@ -14,12 +14,15 @@ import { CitizenShieldLab } from './components/Labs/CitizenShieldLab';
 import { WalletLab } from './components/Labs/WalletLab';
 import { UnderConstructionLab } from './components/Labs/UnderConstructionLab';
 import { KnowledgeGraphLab } from './components/KnowledgeGraph';
-import { Tornado, Coffee, CheckCircle, Menu, X, User, LogOut } from 'lucide-react';
+import { Tornado, Coffee, CheckCircle, Menu, X } from 'lucide-react';
 import { wakeAllServices, env } from './config/env';
 import { useAuth } from './contexts/AuthContext';
 import { useWallet } from './contexts/WalletContext';
 import { useSessionHeartbeat } from './hooks/useSessionHeartbeat';
 import { InquiryChatModal } from './components/InquiryChatModal';
+import { CitizenProfile } from './components/CitizenProfile/CitizenProfile';
+import { CitizenProfileButton } from './components/CitizenProfile/CitizenProfileButton';
+import { useCitizenProfile } from './hooks/useCitizenProfile';
 
 const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<TabId>(TabId.OAA);
@@ -28,8 +31,9 @@ const App: React.FC = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   // Auth & Wallet hooks (citizen from passkey; always authenticated when App renders)
-  const { citizen, signOut } = useAuth();
+  const { citizen } = useAuth();
   const { wallet } = useWallet();
+  const profile = useCitizenProfile();
 
   // Session heartbeat — polls for revocation, forces sign-out if citizen revoked
   useSessionHeartbeat();
@@ -156,7 +160,7 @@ const App: React.FC = () => {
               <div className="p-1 bg-stone-900 rounded-md text-white">
                 <Tornado className="w-4 h-4" /> 
               </div>
-              <span className="font-serif font-bold tracking-tight text-sm sm:text-base">Mobius Systems</span>
+              <span className="font-serif font-bold tracking-tight text-sm sm:text-base">Mobius Substrate</span>
               <span className="text-[10px] sm:text-xs text-emerald-600 font-mono px-1.5 sm:px-2 py-0.5 bg-emerald-50 border border-emerald-200 rounded hidden sm:inline">Beta v1.0.0</span>
            </div>
            
@@ -222,23 +226,9 @@ const App: React.FC = () => {
                 </div>
               </div>
               
-              {/* Citizen identity (passkey-authenticated) */}
+              {/* Citizen profile (passkey-authenticated) */}
               {citizen && (
-                <div className="flex items-center space-x-2">
-                  <div className="flex items-center space-x-1.5 px-2 py-1 bg-stone-100 rounded text-xs">
-                    <User className="w-3 h-3 text-stone-500" />
-                    <span className="text-stone-600 font-medium max-w-[100px] truncate font-mono">
-                      {citizen.handle ?? citizen.citizenId.slice(0, 8)}
-                    </span>
-                  </div>
-                  <button
-                    onClick={signOut}
-                    className="p-1.5 text-stone-400 hover:text-stone-600 hover:bg-stone-100 rounded transition-colors"
-                    title="Sign out"
-                  >
-                    <LogOut className="w-3.5 h-3.5" />
-                  </button>
-                </div>
+                <CitizenProfileButton onClick={profile.open} />
               )}
 
               <SentinelStatus sentinels={SENTINELS} />
@@ -312,26 +302,15 @@ const App: React.FC = () => {
               <SentinelStatus sentinels={SENTINELS} />
             </div>
             
-            {/* Citizen identity - Mobile */}
+            {/* Citizen profile - Mobile */}
             {citizen && (
               <div className="flex items-center justify-center pt-2">
-                <div className="flex items-center space-x-2">
-                  <div className="flex items-center space-x-1.5 px-3 py-1.5 bg-stone-100 rounded text-xs">
-                    <User className="w-3 h-3 text-stone-500" />
-                    <span className="text-stone-600 font-medium font-mono">
-                      {citizen.handle ?? citizen.citizenId.slice(0, 8)}
-                    </span>
-                  </div>
-                  <button
-                    onClick={() => {
-                      signOut();
-                      setIsMobileMenuOpen(false);
-                    }}
-                    className="px-3 py-1.5 text-stone-500 hover:text-stone-700 text-xs font-medium"
-                  >
-                    Sign out
-                  </button>
-                </div>
+                <CitizenProfileButton
+                  onClick={() => {
+                    profile.open();
+                    setIsMobileMenuOpen(false);
+                  }}
+                />
               </div>
             )}
           </div>
@@ -356,6 +335,8 @@ const App: React.FC = () => {
       {/* Inquiry Chat Modal - Floating button */}
       <InquiryChatModal />
 
+      {/* Citizen Profile drawer */}
+      <CitizenProfile isOpen={profile.isOpen} onClose={profile.close} />
     </div>
   );
 };

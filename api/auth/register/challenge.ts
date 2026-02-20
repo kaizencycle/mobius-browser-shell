@@ -10,7 +10,7 @@ import { createHmac, randomBytes } from 'crypto';
 import { checkChallengeRateLimit } from '../_rateLimit';
 
 const RP_ID = process.env.WEBAUTHN_RP_ID ?? 'mobius-browser-shell.vercel.app';
-const RP_NAME = process.env.WEBAUTHN_RP_NAME ?? 'Mobius Systems';
+const RP_NAME = process.env.WEBAUTHN_RP_NAME ?? 'Mobius Substrate';
 const CHALLENGE_SECRET = process.env.CHALLENGE_SECRET ?? '';
 
 function getClientIp(req: VercelRequest): string {

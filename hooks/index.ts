@@ -1,5 +1,5 @@
 /**
- * Mobius Systems - React Hooks
+ * Mobius Substrate - React Hooks
  */
 export { useSpeechRecognition, useSpeechSynthesis } from './useSpeechRecognition';
 export { useUserDisplayName } from './useUserDisplayName';
