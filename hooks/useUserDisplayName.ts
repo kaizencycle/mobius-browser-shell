@@ -1,5 +1,5 @@
 /**
- * Mobius Systems - User Display Name Hook
+ * Mobius Substrate - User Display Name Hook
  * 
  * Extracts a friendly display name from user data.
  * Prefers name, falls back to first part of email.

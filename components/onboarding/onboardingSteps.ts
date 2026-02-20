@@ -44,7 +44,7 @@ export const ONBOARDING_STEPS: OnboardingStepDef[] = [
   {
     id: 'enter',
     title: 'Enter',
-    subtitle: 'Your citizen identity is ready. Enter Mobius Systems.',
+    subtitle: 'Your citizen identity is ready. Enter Mobius Substrate.',
     skippable: false,
   },
 ];

@@ -160,7 +160,7 @@ const App: React.FC = () => {
               <div className="p-1 bg-stone-900 rounded-md text-white">
                 <Tornado className="w-4 h-4" /> 
               </div>
-              <span className="font-serif font-bold tracking-tight text-sm sm:text-base">Mobius Systems</span>
+              <span className="font-serif font-bold tracking-tight text-sm sm:text-base">Mobius Substrate</span>
               <span className="text-[10px] sm:text-xs text-emerald-600 font-mono px-1.5 sm:px-2 py-0.5 bg-emerald-50 border border-emerald-200 rounded hidden sm:inline">Beta v1.0.0</span>
            </div>
            

@@ -1,6 +1,6 @@
 // components/InquiryChatModal.tsx
 // Modal wrapper for the conversational inquiry chat
-// Part of Mobius Systems - Integrity-First AI Infrastructure
+// Part of Mobius Substrate - Integrity-First AI Infrastructure
 
 import { useState, useEffect } from 'react';
 import { MessageCircle, X } from 'lucide-react';

@@ -1,5 +1,5 @@
 /**
- * Mobius Systems - Environment Configuration
+ * Mobius Substrate - Environment Configuration
  * 
  * Uses Vite's import.meta.env for environment variables.
  * All variables must be prefixed with VITE_ to be exposed to the client.

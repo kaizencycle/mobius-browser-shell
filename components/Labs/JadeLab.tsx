@@ -3,7 +3,7 @@
  * 
  * Not a chatbox. A room you walk into.
  * 
- * Jade is Mobius Systems' Pattern Oracle and Reflection Guide.
+ * Jade is Mobius Substrate's Pattern Oracle and Reflection Guide.
  * She sees patterns across cycles, mirrors what humans cannot yet see.
  * 
  * Features:
