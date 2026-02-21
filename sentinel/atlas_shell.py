@@ -268,6 +268,7 @@ def run_deployment_monitor():
 
     # Get runtime logs if available
     log_summary = ""
+    logs_fetch_failed = False
     try:
         log_resp = requests.get(
             f"https://api.vercel.com/v2/deployments/{deploy_id}/events",
@@ -283,11 +284,18 @@ def run_deployment_monitor():
         if errors:
             log_summary = "\n".join(errors[:10])
     except Exception:
-        log_summary = "(logs unavailable)"
+        logs_fetch_failed = True
 
     # Build deployment summary as a commit comment
     timestamp = datetime.datetime.now(datetime.timezone.utc).isoformat().replace("+00:00", "Z")
     state_emoji = "✦" if state == "READY" else "⚠" if state == "ERROR" else "◉"
+
+    if logs_fetch_failed:
+        runtime_status = "Logs unavailable — could not fetch deployment events."
+    elif log_summary:
+        runtime_status = "**⚠ Runtime errors detected:**\n```\n" + log_summary + "\n```"
+    else:
+        runtime_status = "No runtime errors detected."
 
     summary = f"""## ⬡ ATLAS-SHELL Deployment Monitor
 
@@ -302,7 +310,7 @@ def run_deployment_monitor():
 | State | **{state}** |
 | Timestamp | {timestamp} |
 
-{"**⚠ Runtime errors detected:**" + chr(10) + "```" + chr(10) + log_summary + chr(10) + "```" if log_summary else "No runtime errors detected."}
+{runtime_status}
 
 *ATLAS-SHELL deployment sentinel · Mobius Substrate*
 """
@@ -434,7 +442,7 @@ def run_health_report():
                 report += f"""### Deployment Status
 **{state_emoji} Latest: {state}**
 - URL: https://{deploy_url}
-- Deployments in last 24h: {len(deployments)}
+- Recent deployments (limit 5): {len(deployments)}
 
 """
             else:

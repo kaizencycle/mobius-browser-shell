@@ -54,7 +54,7 @@ jobs:
           git diff main...HEAD > /tmp/pr.diff || git diff main > /tmp/pr.diff || echo "" > /tmp/pr.diff
           echo "Branch diff captured: $(wc -l < /tmp/pr.diff) lines"
 
-      - name: Run ATLAS-SHELL Review
+      - name: Run ATLAS-SHELL
         id: atlas_review
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
@@ -66,7 +66,10 @@ jobs:
           SHA: ${{ github.sha }}
           MOBIUS_ATLAS_REPO: "kaizencycle/Mobius-Systems"
           SENTINEL_ID: "atlas-shell"
-        run: python sentinel/atlas_shell.py review
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_TEAM_ID: ${{ secrets.VERCEL_TEAM_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+        run: python sentinel/atlas_shell.py ${{ github.event.inputs.mode || 'review' }}
 
       - name: Post Review Comment
         if: github.event_name == 'pull_request'
