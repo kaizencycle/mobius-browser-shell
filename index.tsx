@@ -16,7 +16,7 @@ import { RootErrorBoundary } from './components/RootErrorBoundary';
 function RootGate({ children }: { children: React.ReactNode }) {
   const [mode, setMode] = useState<'landing' | 'guest' | 'auth'>(() => {
     if (sessionStorage.getItem('mobius_has_entered') === 'true') return 'auth';
-    return 'landing';
+    return 'guest'; // Default: launch guest shell first, not auth gate
   });
 
   const isGuest = mode === 'guest';
