@@ -46,7 +46,7 @@ export function GuestLanding({ onEnter }: GuestLandingProps) {
 
   return (
     <div className="min-h-screen bg-stone-950 flex flex-col items-center justify-center px-4 py-16">
-
+      <main className="flex flex-col items-center w-full max-w-sm" role="main" aria-label="Mobius Substrate introduction">
       {/* Mark */}
       <div className="flex flex-col items-center gap-6 mb-16">
         <div className="relative">
@@ -86,6 +86,9 @@ export function GuestLanding({ onEnter }: GuestLandingProps) {
           <button
             key={c.id}
             onClick={() => setExpanded(expanded === c.id ? null : c.id)}
+            aria-expanded={expanded === c.id}
+            aria-controls={`covenant-${c.id}-full`}
+            id={`covenant-${c.id}-toggle`}
             className="flex flex-col gap-1.5 py-3 px-4 rounded-xl bg-stone-900/40 border border-stone-800/50 hover:border-stone-700/60 transition-colors text-left focus:outline-none focus-visible:ring-1 focus-visible:ring-stone-500"
           >
             <div className="flex items-center gap-2.5">
@@ -97,9 +100,14 @@ export function GuestLanding({ onEnter }: GuestLandingProps) {
                 {expanded === c.id ? '−' : '+'}
               </span>
             </div>
-            <p className={`text-stone-600 text-xs leading-relaxed pl-6 transition-all duration-200 ${
-              expanded === c.id ? 'opacity-100 max-h-20' : 'opacity-0 max-h-0 overflow-hidden'
-            }`}>
+            <p
+              id={`covenant-${c.id}-full`}
+              role="region"
+              aria-labelledby={`covenant-${c.id}-toggle`}
+              className={`text-stone-600 text-xs leading-relaxed pl-6 transition-all duration-200 ${
+                expanded === c.id ? 'opacity-100 max-h-20' : 'opacity-0 max-h-0 overflow-hidden'
+              }`}
+            >
               &quot;{c.full}&quot;
             </p>
             {expanded !== c.id && (
@@ -129,6 +137,7 @@ export function GuestLanding({ onEnter }: GuestLandingProps) {
       <div className="max-w-sm w-full flex flex-col gap-3">
         <button
           onClick={onEnter}
+          aria-label="Become a Citizen — continue to passkey registration"
           className="w-full py-3.5 px-6 bg-stone-800 hover:bg-stone-700 border border-stone-700 hover:border-stone-600 text-stone-200 text-sm rounded-2xl transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-stone-500 focus-visible:ring-offset-2 focus-visible:ring-offset-stone-950"
         >
           Become a Citizen →
@@ -148,7 +157,7 @@ export function GuestLanding({ onEnter }: GuestLandingProps) {
           Beta · No guarantees · Everything is a covenant
         </p>
       </div>
-
+      </main>
     </div>
   );
 }

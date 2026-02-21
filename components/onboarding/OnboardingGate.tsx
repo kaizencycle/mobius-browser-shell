@@ -133,6 +133,7 @@ function OnboardingFlow({ onOnboardingComplete }: { onOnboardingComplete?: () =>
       submitPayload(payload)
         .then(() => {
           sessionStorage.removeItem(ONBOARDING_STEP_KEY);
+          onOnboardingComplete?.();
         })
         .catch(() => {
           localStorage.setItem(ONBOARDING_PENDING_KEY, raw);
@@ -140,7 +141,7 @@ function OnboardingFlow({ onOnboardingComplete }: { onOnboardingComplete?: () =>
     } catch {
       localStorage.removeItem(ONBOARDING_PENDING_KEY);
     }
-  }, [submitPayload]);
+  }, [submitPayload, onOnboardingComplete]);
 
   useEffect(() => {
     const onOnline = () => {
@@ -157,6 +158,7 @@ function OnboardingFlow({ onOnboardingComplete }: { onOnboardingComplete?: () =>
           submitPayload(payload)
             .then(() => {
               sessionStorage.removeItem(ONBOARDING_STEP_KEY);
+              onOnboardingComplete?.();
             })
             .catch(() => {
               localStorage.setItem(ONBOARDING_PENDING_KEY, raw);
@@ -168,7 +170,7 @@ function OnboardingFlow({ onOnboardingComplete }: { onOnboardingComplete?: () =>
     };
     window.addEventListener('online', onOnline);
     return () => window.removeEventListener('online', onOnline);
-  }, [submitPayload]);
+  }, [submitPayload, onOnboardingComplete]);
 
   const handleNext = async (
     stepData:

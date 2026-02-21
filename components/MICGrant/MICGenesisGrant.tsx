@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 /**
  * MICGenesisGrant
@@ -20,6 +20,8 @@ interface MICGenesisGrantProps {
 
 export function MICGenesisGrant({ handle, onComplete }: MICGenesisGrantProps) {
   const [phase, setPhase] = useState<'enter' | 'reveal' | 'exit'>('enter');
+  const onCompleteRef = useRef(onComplete);
+  onCompleteRef.current = onComplete;
 
   useEffect(() => {
     // enter → reveal after 600ms
@@ -27,9 +29,9 @@ export function MICGenesisGrant({ handle, onComplete }: MICGenesisGrantProps) {
     // reveal → exit after 4s
     const t2 = setTimeout(() => setPhase('exit'), 4000);
     // exit → onComplete after 4.8s
-    const t3 = setTimeout(() => onComplete(), 4800);
+    const t3 = setTimeout(() => onCompleteRef.current(), 4800);
     return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3); };
-  }, [onComplete]);
+  }, []);
 
   const displayName = handle ? `@${handle}` : 'Citizen';
 

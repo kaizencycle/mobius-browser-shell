@@ -240,7 +240,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   );
 
   const claimGenesisGrant = useCallback(async (): Promise<number> => {
-    if (!citizen || citizen.genesisGrantClaimed) return 0;
+    if (!citizen || citizen.genesisGrantClaimed || !citizen.covenantHash) return 0;
 
     const res = await fetch('/api/mic/genesis-grant', {
       method: 'POST',
@@ -252,18 +252,34 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }),
     });
 
+    const data = await res.json().catch(() => ({}));
+
     if (res.status === 201) {
-      const { grant } = await res.json();
+      const { grant } = data;
       setCitizen((prev) =>
         prev
           ? {
               ...prev,
-              micBalance: (prev.micBalance ?? 0) + grant.amount,
+              micBalance: (prev.micBalance ?? 0) + (grant?.amount ?? 50),
               genesisGrantClaimed: true,
             }
           : prev
       );
-      return grant.amount;
+      return grant?.amount ?? 50;
+    }
+
+    if (res.status === 409) {
+      const { grant } = data;
+      setCitizen((prev) =>
+        prev
+          ? {
+              ...prev,
+              micBalance: prev.micBalance ?? (grant?.amount ?? 50),
+              genesisGrantClaimed: true,
+            }
+          : prev
+      );
+      return grant?.amount ?? 50;
     }
     return 0;
   }, [citizen]);
