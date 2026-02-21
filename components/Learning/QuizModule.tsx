@@ -11,6 +11,7 @@ import {
   getAtlasAssistMessage,
   ATLAS_ASSIST_BONUS 
 } from './AtlasIntervention';
+import { GuestLock } from '../GuestMode/GuestLock';
 
 // ═══ MIC Reward Constants (must match LearningProgressTracker) ═══
 const MIN_ACCURACY_THRESHOLD = 0.50;
@@ -292,13 +293,15 @@ export const QuizModule: React.FC<QuizModuleProps> = ({
 
           {/* Action Buttons */}
           <div className="flex flex-col sm:flex-row gap-3">
-            <button
-              onClick={handleCompleteQuiz}
-              className="flex-1 px-6 py-3 bg-gradient-to-r from-amber-500 to-yellow-500 text-white rounded-xl font-bold hover:from-amber-600 hover:to-yellow-600 transition-all flex items-center justify-center gap-2 shadow-lg shadow-amber-200"
-            >
-              <Award className="w-5 h-5" />
-              Claim {totalMic} MIC
-            </button>
+            <GuestLock action="earn_mic">
+              <button
+                onClick={handleCompleteQuiz}
+                className="flex-1 px-6 py-3 bg-gradient-to-r from-amber-500 to-yellow-500 text-white rounded-xl font-bold hover:from-amber-600 hover:to-yellow-600 transition-all flex items-center justify-center gap-2 shadow-lg shadow-amber-200"
+              >
+                <Award className="w-5 h-5" />
+                Claim {totalMic} MIC
+              </button>
+            </GuestLock>
             <button
               onClick={onCancel}
               className="flex-1 px-6 py-3 bg-stone-200 text-stone-700 rounded-xl font-semibold hover:bg-stone-300 transition-colors"

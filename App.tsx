@@ -23,6 +23,7 @@ import { InquiryChatModal } from './components/InquiryChatModal';
 import { CitizenProfile } from './components/CitizenProfile/CitizenProfile';
 import { CitizenProfileButton } from './components/CitizenProfile/CitizenProfileButton';
 import { useCitizenProfile } from './hooks/useCitizenProfile';
+import { useGuest } from './contexts/GuestContext';
 
 const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<TabId>(TabId.OAA);
@@ -30,10 +31,11 @@ const App: React.FC = () => {
   const [wakeComplete, setWakeComplete] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
-  // Auth & Wallet hooks (citizen from passkey; always authenticated when App renders)
+  // Auth & Wallet hooks (citizen from passkey; always authenticated when App renders in auth flow)
   const { citizen } = useAuth();
   const { wallet } = useWallet();
   const profile = useCitizenProfile();
+  const { isGuest, triggerBecomeCitizen } = useGuest();
 
   // Session heartbeat — polls for revocation, forces sign-out if citizen revoked
   useSessionHeartbeat();
@@ -226,9 +228,19 @@ const App: React.FC = () => {
                 </div>
               </div>
               
-              {/* Citizen profile (passkey-authenticated) */}
-              {citizen && (
-                <CitizenProfileButton onClick={profile.open} />
+              {/* Citizen profile or Guest CTA */}
+              {isGuest ? (
+                <button
+                  onClick={triggerBecomeCitizen}
+                  className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg hover:bg-stone-800/60 transition-colors text-stone-600 hover:text-stone-400 text-xs"
+                >
+                  <span className="text-stone-700">⬡</span>
+                  Guest
+                </button>
+              ) : (
+                citizen && (
+                  <CitizenProfileButton onClick={profile.open} />
+                )
               )}
 
               <SentinelStatus sentinels={SENTINELS} />
@@ -302,16 +314,31 @@ const App: React.FC = () => {
               <SentinelStatus sentinels={SENTINELS} />
             </div>
             
-            {/* Citizen profile - Mobile */}
-            {citizen && (
+            {/* Citizen profile or Guest CTA - Mobile */}
+            {isGuest ? (
               <div className="flex items-center justify-center pt-2">
-                <CitizenProfileButton
+                <button
                   onClick={() => {
-                    profile.open();
+                    triggerBecomeCitizen();
                     setIsMobileMenuOpen(false);
                   }}
-                />
+                  className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg hover:bg-stone-800/60 transition-colors text-stone-600 hover:text-stone-400 text-xs"
+                >
+                  <span className="text-stone-700">⬡</span>
+                  Guest
+                </button>
               </div>
+            ) : (
+              citizen && (
+                <div className="flex items-center justify-center pt-2">
+                  <CitizenProfileButton
+                    onClick={() => {
+                      profile.open();
+                      setIsMobileMenuOpen(false);
+                    }}
+                  />
+                </div>
+              )
             )}
           </div>
         )}
