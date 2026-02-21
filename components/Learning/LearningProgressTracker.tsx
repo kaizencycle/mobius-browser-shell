@@ -6,6 +6,7 @@ import {
 } from 'lucide-react';
 import { useWallet } from '../../contexts/WalletContext';
 import { useAuth } from '../../contexts/AuthContext';
+import { useGuest } from '../../contexts/GuestContext';
 import { useKnowledgeGraph } from '../../contexts/KnowledgeGraphContext';
 import { 
   LearningModule, 
@@ -1972,6 +1973,7 @@ const INITIAL_PROGRESS: UserLearningProgress = {
 export const LearningProgressTracker: React.FC = () => {
   const { user } = useAuth();
   const { earnMIC, refreshWallet } = useWallet();
+  const { isGuest } = useGuest();
   const { addNode, addEdge, extractAndAddConcepts } = useKnowledgeGraph();
   
   const [modules, setModules] = useState<LearningModule[]>(LEARNING_MODULES);
@@ -2208,6 +2210,14 @@ export const LearningProgressTracker: React.FC = () => {
             </span>
           </div>
         </div>
+
+        {/* Guest session indicator */}
+        {isGuest && (
+          <div className="mb-4 flex items-center gap-1.5 text-stone-700 text-xs px-3 py-2 bg-stone-100 rounded-lg border border-stone-200">
+            <span className="w-1 h-1 rounded-full bg-stone-700 animate-pulse" />
+            Guest session — progress not saved
+          </div>
+        )}
 
         {/* MIC Hero Stat */}
         <div className="bg-white rounded-xl p-4 sm:p-5 border-2 border-amber-300 mb-4">

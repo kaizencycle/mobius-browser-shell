@@ -15,9 +15,10 @@ import { useState } from 'react';
 
 interface GuestLandingProps {
   onEnter: () => void; // triggers passkey registration flow
+  onExplore?: () => void; // explore as guest without auth
 }
 
-export function GuestLanding({ onEnter }: GuestLandingProps) {
+export function GuestLanding({ onEnter, onExplore }: GuestLandingProps) {
   const [expanded, setExpanded] = useState<string | null>(null);
 
   const covenants = [
@@ -142,6 +143,14 @@ export function GuestLanding({ onEnter }: GuestLandingProps) {
         >
           Become a Citizen →
         </button>
+        {onExplore && (
+          <button
+            onClick={onExplore}
+            className="w-full py-2.5 px-6 text-stone-600 hover:text-stone-400 text-xs transition-colors focus:outline-none"
+          >
+            Explore as guest first →
+          </button>
+        )}
         <p className="text-stone-700 text-[10px] text-center leading-relaxed">
           Passkey registration. No password. No email required.
           Your identity is yours — held in trust by Mobius Substrate.

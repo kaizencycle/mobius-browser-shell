@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { Wallet, ShieldCheck, Activity, Zap, Hexagon, TrendingUp, History, Lock, ChevronRight, Fingerprint, AlertTriangle, ExternalLink, Link2, Layers } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useWallet } from '../../contexts/WalletContext';
+import { useGuest } from '../../contexts/GuestContext';
 import { env } from '../../config/env';
 import { MICBlockchainExplorer } from './MICBlockchainExplorer';
 
@@ -131,10 +132,11 @@ type WalletView = 'wallet' | 'blockchain';
 export const WalletLab: React.FC = () => {
   const { user } = useAuth();
   const { wallet, events, loading, refreshWallet, chainStats } = useWallet();
+  const { isGuest } = useGuest();
   const [activeView, setActiveView] = useState<WalletView>('wallet');
 
-  // Use real balance if available, otherwise show demo
-  const displayBalance = wallet?.balance ?? 1240.50;
+  // Use real balance if available; guests see ◎ 0
+  const displayBalance = isGuest ? 0 : (wallet?.balance ?? 1240.50);
   const displayTotalEarned = wallet?.total_earned ?? 1240.50;
   const displayEventCount = wallet?.event_count ?? 47;
   const hasRealData = !!wallet;
@@ -193,11 +195,17 @@ export const WalletLab: React.FC = () => {
                 <p className="text-stone-500 mt-1 sm:mt-2 text-sm sm:text-base">Cycle 157 • <span className="text-emerald-600 font-medium">Canonical</span></p>
             </div>
             
+            {/* Guest note — shown when exploring as guest */}
+            {isGuest && (
+              <div className="w-full lg:w-auto text-stone-700 text-xs text-center py-4 px-3 bg-stone-50 rounded-xl border border-stone-200 mb-4">
+                Sign the covenants to establish your MIC balance.
+                <br />Genesis grant: ◎ 50 MIC on registration.
+              </div>
+            )}
             {/* Balance Card with Testnet Badge */}
             <div className="bg-white p-4 sm:p-6 rounded-xl sm:rounded-2xl border border-stone-200 shadow-sm w-full lg:w-auto lg:min-w-[280px] flex flex-col items-start sm:items-end relative">
                 {/* Testnet Badge - Absolute positioned */}
                 <TestnetBadge className="absolute top-3 right-3" />
-                
                 <span className="text-[10px] sm:text-xs font-bold text-stone-400 uppercase tracking-widest mb-1">Available Balance</span>
                 <div className="text-2xl sm:text-3xl lg:text-4xl font-mono font-medium text-stone-900 flex items-center">
                     <span className="text-lg sm:text-xl lg:text-2xl mr-1 text-stone-400">▣</span> 

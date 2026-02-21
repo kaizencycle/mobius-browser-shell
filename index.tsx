@@ -2,8 +2,11 @@ import './index.css';
 import React, { useState } from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App';
-import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { AuthProvider } from './contexts/AuthContext';
+import { GuestProvider } from './contexts/GuestContext';
 import { GuestLanding } from './components/GuestLanding/GuestLanding';
+import { GuestBadge } from './components/GuestMode/GuestBadge';
+import { GuestNudge } from './components/GuestMode/GuestNudge';
 import { AuthGate } from './components/AuthGate';
 import { OnboardingGate } from './components/onboarding/OnboardingGate';
 import { WalletProvider } from './contexts/WalletContext';
@@ -11,21 +14,57 @@ import { KnowledgeGraphProvider } from './contexts/KnowledgeGraphContext';
 import { RootErrorBoundary } from './components/RootErrorBoundary';
 
 function RootGate({ children }: { children: React.ReactNode }) {
-  const { status } = useAuth();
-  const [hasClickedEnter, setHasClickedEnter] = useState(() =>
-    sessionStorage.getItem('mobius_has_entered') === 'true'
-  );
+  const [mode, setMode] = useState<'landing' | 'guest' | 'auth'>(() => {
+    if (sessionStorage.getItem('mobius_has_entered') === 'true') return 'auth';
+    return 'landing';
+  });
 
-  const handleEnter = () => {
+  const isGuest = mode === 'guest';
+  const isAuthenticated = false; // AuthGate handles auth; guest shell has no citizen
+
+  const handleBecomeCitizen = () => {
     sessionStorage.setItem('mobius_has_entered', 'true');
-    setHasClickedEnter(true);
+    setMode('auth');
   };
 
-  if (status === 'unauthenticated' && !hasClickedEnter) {
-    return <GuestLanding onEnter={handleEnter} />;
+  const handleExploreAsGuest = () => {
+    setMode('guest');
+  };
+
+  if (mode === 'landing') {
+    return (
+      <GuestLanding
+        onEnter={handleBecomeCitizen}
+        onExplore={handleExploreAsGuest}
+      />
+    );
   }
 
-  return <>{children}</>;
+  return (
+    <GuestProvider isGuest={isGuest} onBecomeCitizen={handleBecomeCitizen}>
+      {isGuest ? (
+        <>
+          <WalletProvider>
+            <KnowledgeGraphProvider>
+              <App />
+            </KnowledgeGraphProvider>
+          </WalletProvider>
+          <GuestBadge />
+          <GuestNudge />
+        </>
+      ) : (
+        <AuthGate>
+          <OnboardingGate>
+            <WalletProvider>
+              <KnowledgeGraphProvider>
+                {children}
+              </KnowledgeGraphProvider>
+            </WalletProvider>
+          </OnboardingGate>
+        </AuthGate>
+      )}
+    </GuestProvider>
+  );
 }
 
 const rootElement = document.getElementById('root');
@@ -39,15 +78,7 @@ root.render(
     <RootErrorBoundary>
       <AuthProvider>
         <RootGate>
-          <AuthGate>
-            <OnboardingGate>
-              <WalletProvider>
-                <KnowledgeGraphProvider>
-                  <App />
-                </KnowledgeGraphProvider>
-              </WalletProvider>
-            </OnboardingGate>
-          </AuthGate>
+          <App />
         </RootGate>
       </AuthProvider>
     </RootErrorBoundary>

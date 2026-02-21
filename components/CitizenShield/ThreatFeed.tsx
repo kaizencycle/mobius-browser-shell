@@ -21,7 +21,9 @@ import {
   Crosshair,
   Heart,
   Fingerprint,
+  Flag,
 } from 'lucide-react';
+import { GuestLock } from '../GuestMode/GuestLock';
 
 // ============================================
 // Helpers
@@ -206,23 +208,34 @@ const ThreatCard: React.FC<ThreatCardProps> = ({ entry }) => {
           </div>
         )}
 
-        {/* Expand/Collapse Button */}
-        <button
-          onClick={() => setExpanded(!expanded)}
-          className={`mt-2 flex items-center gap-1 text-[10px] font-medium ${severity.text} opacity-60 hover:opacity-100 transition-opacity`}
-        >
-          {expanded ? (
-            <>
-              <ChevronUp className="w-3 h-3" />
-              Show less
-            </>
-          ) : (
-            <>
-              <ChevronDown className="w-3 h-3" />
-              Show details & {entry.recommendations.length - 2 > 0 ? `${entry.recommendations.length - 2} more actions` : 'sources'}
-            </>
-          )}
-        </button>
+        {/* Actions Row */}
+        <div className="mt-2 flex items-center gap-2">
+          <GuestLock action="flag_threat">
+            <button
+              onClick={() => {}}
+              className="flex items-center gap-1 text-[10px] font-medium text-slate-600 hover:text-slate-800 transition-colors"
+            >
+              <Flag className="w-3 h-3" />
+              Flag threat
+            </button>
+          </GuestLock>
+          <button
+            onClick={() => setExpanded(!expanded)}
+            className={`flex items-center gap-1 text-[10px] font-medium ${severity.text} opacity-60 hover:opacity-100 transition-opacity`}
+          >
+            {expanded ? (
+              <>
+                <ChevronUp className="w-3 h-3" />
+                Show less
+              </>
+            ) : (
+              <>
+                <ChevronDown className="w-3 h-3" />
+                Show details & {entry.recommendations.length - 2 > 0 ? `${entry.recommendations.length - 2} more actions` : 'sources'}
+              </>
+            )}
+          </button>
+        </div>
       </div>
     </div>
   );
