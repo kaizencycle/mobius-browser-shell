@@ -91,7 +91,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   // Degraded mode — return grant record without persisting
   // Client stores in CitizenIdentity; real balance reconciled when API is available
-  console.log(`[genesis-grant] Degraded — grant computed client-side for ${citizenId.slice(0, 8)}`);
+  // No console.log — EPICON flags citizenId in logs; observability via response degraded:true + ATLAS event
 
   // Emit ATLAS event via local events endpoint
   const host =
