@@ -24,6 +24,7 @@ import { ONBOARDING_STEPS } from './onboardingSteps';
 import { CovenantsStep } from './steps/CovenantsStep';
 import { HandleStep } from './steps/HandleStep';
 import { EnterStep } from './steps/EnterStep';
+import { MICGenesisGrant } from '../MICGrant/MICGenesisGrant';
 import type { CovenantsConsents } from './steps/CovenantsStep';
 
 const ONBOARDING_STEP_KEY = 'mobius:onboarding:step';
@@ -33,13 +34,34 @@ const ONBOARDING_PENDING_KEY = 'mobius:onboarding:pending';
  * OnboardingGate
  *
  * Pure pass-through for citizen.onboarded === true. Zero overhead for returning citizens.
+ * Shows MICGenesisGrant once after covenants signed, before shell.
  */
 export function OnboardingGate({ children }: { children: ReactNode }) {
-  const { citizen } = useAuth();
+  const { citizen, claimGenesisGrant } = useAuth();
+  const [showGenesisGrant, setShowGenesisGrant] = useState(false);
 
-  if (!citizen || citizen.onboarded) return <>{children}</>;
+  if (!citizen) return null;
+  if (citizen.onboarded && showGenesisGrant) {
+    return (
+      <>
+        {children}
+        <MICGenesisGrant
+          handle={citizen.handle}
+          onComplete={() => {
+            claimGenesisGrant();
+            setShowGenesisGrant(false);
+          }}
+        />
+      </>
+    );
+  }
+  if (citizen.onboarded) return <>{children}</>;
 
-  return <OnboardingFlow />;
+  return (
+    <OnboardingFlow
+      onOnboardingComplete={() => setShowGenesisGrant(true)}
+    />
+  );
 }
 
 // ── Flow controller ───────────────────────────────────────────────────────────
@@ -60,7 +82,7 @@ const INITIAL_FORM_STATE: OnboardingFormState = {
   handle: null,
 };
 
-function OnboardingFlow() {
+function OnboardingFlow({ onOnboardingComplete }: { onOnboardingComplete?: () => void }) {
   const { citizen, completeOnboarding } = useAuth();
   const [currentStepIndex, setCurrentStepIndex] = useState(() => {
     try {
@@ -111,6 +133,7 @@ function OnboardingFlow() {
       submitPayload(payload)
         .then(() => {
           sessionStorage.removeItem(ONBOARDING_STEP_KEY);
+          onOnboardingComplete?.();
         })
         .catch(() => {
           localStorage.setItem(ONBOARDING_PENDING_KEY, raw);
@@ -118,7 +141,7 @@ function OnboardingFlow() {
     } catch {
       localStorage.removeItem(ONBOARDING_PENDING_KEY);
     }
-  }, [submitPayload]);
+  }, [submitPayload, onOnboardingComplete]);
 
   useEffect(() => {
     const onOnline = () => {
@@ -135,6 +158,7 @@ function OnboardingFlow() {
           submitPayload(payload)
             .then(() => {
               sessionStorage.removeItem(ONBOARDING_STEP_KEY);
+              onOnboardingComplete?.();
             })
             .catch(() => {
               localStorage.setItem(ONBOARDING_PENDING_KEY, raw);
@@ -146,7 +170,7 @@ function OnboardingFlow() {
     };
     window.addEventListener('online', onOnline);
     return () => window.removeEventListener('online', onOnline);
-  }, [submitPayload]);
+  }, [submitPayload, onOnboardingComplete]);
 
   const handleNext = async (
     stepData:
@@ -175,6 +199,7 @@ function OnboardingFlow() {
         } catch {
           /* ignore */
         }
+        onOnboardingComplete?.();
       } catch (err) {
         if (!navigator.onLine) {
           try {

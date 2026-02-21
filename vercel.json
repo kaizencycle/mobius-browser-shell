@@ -64,6 +64,10 @@
     {
       "source": "/api/onboarding/complete",
       "destination": "/api/onboarding/complete"
+    },
+    {
+      "source": "/api/mic/genesis-grant",
+      "destination": "/api/mic/genesis-grant"
     }
   ]
 }

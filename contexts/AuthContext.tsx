@@ -39,6 +39,10 @@ export interface CitizenIdentity {
     txHash: string;
     height: number;
   };
+  /** Current MIC balance */
+  micBalance?: number;
+  /** Prevents double-claim of genesis grant */
+  genesisGrantClaimed?: boolean;
 }
 
 export interface AuthContextValue {
@@ -58,6 +62,8 @@ export interface AuthContextValue {
   }) => Promise<CitizenIdentity>;
   /** Clear session */
   signOut: () => void;
+  /** Claim genesis grant (50 MIC) after covenants signed. Idempotent. */
+  claimGenesisGrant: () => Promise<number>;
   /** True when IdentityCache has a stored identity (device has saved session) */
   hasIdentityCache: boolean;
   error: string | null;
@@ -233,9 +239,55 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     [persistSession, logAuthEvent]
   );
 
+  const claimGenesisGrant = useCallback(async (): Promise<number> => {
+    if (!citizen || citizen.genesisGrantClaimed || !citizen.covenantHash) return 0;
+
+    const res = await fetch('/api/mic/genesis-grant', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        citizenId: citizen.citizenId,
+        covenantHash: citizen.covenantHash,
+        handle: citizen.handle,
+      }),
+    });
+
+    const data = await res.json().catch(() => ({}));
+
+    if (res.status === 201) {
+      const { grant } = data;
+      setCitizen((prev) =>
+        prev
+          ? {
+              ...prev,
+              micBalance: (prev.micBalance ?? 0) + (grant?.amount ?? 50),
+              genesisGrantClaimed: true,
+            }
+          : prev
+      );
+      return grant?.amount ?? 50;
+    }
+
+    if (res.status === 409) {
+      const { grant } = data;
+      setCitizen((prev) =>
+        prev
+          ? {
+              ...prev,
+              micBalance: prev.micBalance ?? (grant?.amount ?? 50),
+              genesisGrantClaimed: true,
+            }
+          : prev
+      );
+      return grant?.amount ?? 50;
+    }
+    return 0;
+  }, [citizen]);
+
   const signOut = useCallback(() => {
     const id = citizen?.citizenId ?? null;
     sessionStorage.removeItem(SESSION_KEY);
+    sessionStorage.removeItem('mobius_has_entered');
     identityCache.clear();
     setCitizen(null);
     setHasIdentityCache(false);
@@ -261,6 +313,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         restoreFromCache,
         completeOnboarding,
         signOut,
+        claimGenesisGrant,
         hasIdentityCache,
         error,
         clearError,
