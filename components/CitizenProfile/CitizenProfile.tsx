@@ -150,11 +150,14 @@ export function CitizenProfile({ isOpen, onClose }: CitizenProfileProps) {
               tooltip={new Date(citizen.authenticatedAt).toLocaleString()}
             />
 
-            {/* MIC balance stub */}
+            {/* MIC balance */}
             <div className="flex items-center justify-between py-2.5 px-3 rounded-lg bg-stone-900/40 border border-stone-800/50">
               <span className="text-stone-600 text-xs">MIC balance</span>
-              <span className="text-stone-500 text-xs font-mono">
-                ◎ — <span className="text-stone-700 italic text-[10px]">wallet coming soon</span>
+              <span className="text-stone-400 text-xs font-mono font-medium">
+                ◎ {citizen.micBalance ?? 0} MIC
+                {!citizen.genesisGrantClaimed && citizen.onboarded && (
+                  <span className="text-stone-700 italic text-[10px] ml-1">· claim pending</span>
+                )}
               </span>
             </div>
           </div>
