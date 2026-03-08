@@ -2,7 +2,7 @@
 // Conversational chat interface for New Inquiry
 // Part of Mobius Substrate - Integrity-First AI Infrastructure
 
-import { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Send, Sparkles, User, Bot } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { env } from '../config/env';

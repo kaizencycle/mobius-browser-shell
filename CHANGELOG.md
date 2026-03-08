@@ -7,6 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.0.0] - 2026-03-08
+
+### Release: Stable Release
+
+The Mobius Browser Shell reaches v1.0.0 stable. All TypeScript errors resolved, type safety enforced across the full codebase, and production build verified.
+
+### Fixed
+- Added missing `@types/react` and `@types/react-dom` type declarations
+- Added `vite/client` types to tsconfig for proper `import.meta.env` support
+- Excluded `OAA-API-Library` from TypeScript compilation (separate project with its own dependencies)
+- Added `React` namespace imports where needed (`AuthGate`, `InquiryChat`)
+- Added force-graph runtime properties (`x`, `y`) to `GraphNode` type definition
+- Full `tsc --noEmit` now passes with zero errors
+
+### Changed
+- Promoted release stage from Beta to Stable
+- Version bump: `1.0.0-beta.1` → `1.0.0`
+
+---
+
 ## [1.0.0-beta.1] - 2026-01-31
 
 ### Release: ATLAS Beta Release

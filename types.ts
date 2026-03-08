@@ -308,6 +308,8 @@ export interface GraphNode {
   weight: number;
   val?: number;             // Node size for force-graph
   color?: string;
+  x?: number;               // Set by force-graph at runtime
+  y?: number;               // Set by force-graph at runtime
 }
 
 export interface GraphLink {

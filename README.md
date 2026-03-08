@@ -1,8 +1,8 @@
 <div align="center">
 <img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
 
-[![Version](https://img.shields.io/badge/version-1.0.0--beta.1-emerald)](https://github.com/kaizencycle/mobius-browser-shell/releases)
-[![Release Stage](https://img.shields.io/badge/stage-Beta-blue)](./CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-1.0.0-emerald)](https://github.com/kaizencycle/mobius-browser-shell/releases)
+[![Release Stage](https://img.shields.io/badge/stage-Stable-brightgreen)](./CHANGELOG.md)
 [![License](https://img.shields.io/badge/license-MIT-green)](./LICENSE)
 [![Sentinels](https://img.shields.io/badge/sentinels-ATLAS%20%7C%20AUREA%20%7C%20EVE%20%7C%20JADE-purple)](./.github/sentinels/)
 [![MII](https://img.shields.io/badge/MII-0.95-brightgreen)](./docs/SENTINEL_GUIDE.md)
@@ -13,13 +13,13 @@
 
 > *"The nervous system of civilization infrastructure."*
 
-## 🚀 Beta Release v1.0.0-beta.1
+## 🚀 Stable Release v1.0.0
 
-**Release Date:** January 31, 2026  
-**Codename:** ATLAS  
-**Status:** Production Ready (Beta)
+**Release Date:** March 8, 2026
+**Codename:** ATLAS
+**Status:** Stable
 
-This is the first official Beta release of the Mobius Browser Shell. All core features are complete and ready for early adopter testing.
+The Mobius Browser Shell v1.0.0 — all core features complete, type-safe, and production verified.
 
 The Mobius Browser Shell is the human-facing interface for Mobius Systems. It serves as a unified control room that embeds all Mobius Labs (OAA, Reflections, Citizen Shield, HIVE) and displays system integrity metrics (MIC, MII).
 
