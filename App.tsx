@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { SENTINELS } from './constants';
 import { TabId } from './types';
 import { SentinelStatus } from './components/SentinelStatus';
@@ -24,12 +24,35 @@ import { CitizenProfile } from './components/CitizenProfile/CitizenProfile';
 import { CitizenProfileButton } from './components/CitizenProfile/CitizenProfileButton';
 import { useCitizenProfile } from './hooks/useCitizenProfile';
 import { useGuest } from './contexts/GuestContext';
+import {
+  fetchTerminalState,
+  type TerminalState,
+} from './src/lib/terminal-bridge';
+import { WorldSignalStrip } from './components/WorldSignalStrip';
+
+const TERMINAL_APP_URL =
+  'https://mobius-civic-ai-terminal.vercel.app/terminal';
+
+function giChipClasses(mode: TerminalState['mode']): string {
+  switch (mode) {
+    case 'green':
+      return 'text-emerald-700 bg-emerald-50 border-emerald-200';
+    case 'red':
+      return 'text-rose-700 bg-rose-50 border-rose-200';
+    case 'yellow':
+    default:
+      return 'text-amber-700 bg-amber-50 border-amber-200';
+  }
+}
 
 const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<TabId>(TabId.OAA);
   const [isWaking, setIsWaking] = useState(false);
   const [wakeComplete, setWakeComplete] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [terminalState, setTerminalState] = useState<TerminalState | null>(
+    null
+  );
 
   // Auth & Wallet hooks (citizen from passkey; always authenticated when App renders in auth flow)
   const { citizen } = useAuth();
@@ -39,6 +62,14 @@ const App: React.FC = () => {
 
   // Session heartbeat — polls for revocation, forces sign-out if citizen revoked
   useSessionHeartbeat();
+
+  useEffect(() => {
+    void fetchTerminalState().then(setTerminalState);
+    const interval = setInterval(() => {
+      void fetchTerminalState().then(setTerminalState);
+    }, 60_000);
+    return () => clearInterval(interval);
+  }, []);
 
   // ATLAS error logging — shared across all panel boundaries
   const logToAtlas = useAtlasErrorLog();
@@ -163,6 +194,24 @@ const App: React.FC = () => {
                 <Tornado className="w-4 h-4" /> 
               </div>
               <span className="font-serif font-bold tracking-tight text-sm sm:text-base">Mobius Substrate</span>
+              {terminalState ? (
+                <a
+                  href={TERMINAL_APP_URL}
+                  target="_blank"
+                  rel="noreferrer"
+                  className={`text-[10px] sm:text-xs font-mono px-1.5 sm:px-2 py-0.5 rounded border transition-opacity hover:opacity-90 ${giChipClasses(terminalState.mode)}`}
+                  title="Open Mobius Terminal"
+                >
+                  GI {terminalState.gi.toFixed(2)} [{terminalState.mode}]
+                </a>
+              ) : (
+                <span
+                  className="text-[10px] sm:text-xs font-mono px-1.5 sm:px-2 py-0.5 rounded border border-stone-200 bg-stone-100 text-stone-500"
+                  title="Terminal snapshot loading or unavailable"
+                >
+                  GI …
+                </span>
+              )}
               <span className="text-[10px] sm:text-xs text-emerald-600 font-mono px-1.5 sm:px-2 py-0.5 bg-emerald-50 border border-emerald-200 rounded hidden sm:inline">Beta v1.0.0</span>
            </div>
            
@@ -294,6 +343,20 @@ const App: React.FC = () => {
             
             {/* Status Pills - Mobile */}
             <div className="flex flex-wrap items-center justify-center gap-2">
+              {terminalState ? (
+                <a
+                  href={TERMINAL_APP_URL}
+                  target="_blank"
+                  rel="noreferrer"
+                  className={`text-[10px] font-mono px-2 py-1 rounded border ${giChipClasses(terminalState.mode)}`}
+                >
+                  GI {terminalState.gi.toFixed(2)} [{terminalState.mode}]
+                </a>
+              ) : (
+                <span className="text-[10px] font-mono px-2 py-1 rounded border border-stone-200 bg-stone-100 text-stone-500">
+                  GI …
+                </span>
+              )}
               {/* Testnet Badge - Mobile */}
               {env.network.isTestnet && (
                 <span className="px-2 py-1 bg-yellow-400 text-yellow-900 text-[10px] font-bold rounded uppercase">
@@ -353,6 +416,8 @@ const App: React.FC = () => {
             <TabNavigation activeTab={activeTab} onTabChange={setActiveTab} />
         </div>
       </header>
+
+      <WorldSignalStrip terminalState={terminalState} />
 
       {/* 🧩 MAIN CONTENT AREA */}
       <main className="flex-1 overflow-hidden relative shadow-inner">
