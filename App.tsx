@@ -33,15 +33,15 @@ import { WorldSignalStrip } from './components/WorldSignalStrip';
 const TERMINAL_APP_URL =
   'https://mobius-civic-ai-terminal.vercel.app/terminal';
 
-function giChipClasses(mode: TerminalState['mode']): string {
+function giChipLinkClasses(mode: TerminalState['mode']): string {
   switch (mode) {
     case 'green':
-      return 'text-emerald-700 bg-emerald-50 border-emerald-200';
+      return 'text-emerald-400';
     case 'red':
-      return 'text-rose-700 bg-rose-50 border-rose-200';
+      return 'text-rose-400';
     case 'yellow':
     default:
-      return 'text-amber-700 bg-amber-50 border-amber-200';
+      return 'text-amber-400';
   }
 }
 
@@ -199,16 +199,14 @@ const App: React.FC = () => {
                   href={TERMINAL_APP_URL}
                   target="_blank"
                   rel="noreferrer"
-                  className={`text-[10px] sm:text-xs font-mono px-1.5 sm:px-2 py-0.5 rounded border transition-opacity hover:opacity-90 ${giChipClasses(terminalState.mode)}`}
+                  className={`font-mono text-xs max-w-[min(100%,14rem)] truncate sm:max-w-none sm:whitespace-normal ${giChipLinkClasses(terminalState.mode)} hover:underline`}
                   title="Open Mobius Terminal"
                 >
-                  GI {terminalState.gi.toFixed(2)} [{terminalState.mode}]
+                  GI {terminalState.gi.toFixed(2)} ·{' '}
+                  {terminalState.mode.toUpperCase()} · {terminalState.cycle}
                 </a>
               ) : (
-                <span
-                  className="text-[10px] sm:text-xs font-mono px-1.5 sm:px-2 py-0.5 rounded border border-stone-200 bg-stone-100 text-stone-500"
-                  title="Terminal snapshot loading or unavailable"
-                >
+                <span className="font-mono text-xs text-stone-400" title="Terminal snapshot loading or unavailable">
                   GI …
                 </span>
               )}
@@ -348,14 +346,13 @@ const App: React.FC = () => {
                   href={TERMINAL_APP_URL}
                   target="_blank"
                   rel="noreferrer"
-                  className={`text-[10px] font-mono px-2 py-1 rounded border ${giChipClasses(terminalState.mode)}`}
+                  className={`font-mono text-xs text-center ${giChipLinkClasses(terminalState.mode)} hover:underline`}
                 >
-                  GI {terminalState.gi.toFixed(2)} [{terminalState.mode}]
+                  GI {terminalState.gi.toFixed(2)} ·{' '}
+                  {terminalState.mode.toUpperCase()} · {terminalState.cycle}
                 </a>
               ) : (
-                <span className="text-[10px] font-mono px-2 py-1 rounded border border-stone-200 bg-stone-100 text-stone-500">
-                  GI …
-                </span>
+                <span className="font-mono text-xs text-stone-400">GI …</span>
               )}
               {/* Testnet Badge - Mobile */}
               {env.network.isTestnet && (

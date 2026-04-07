@@ -1,32 +1,34 @@
 const TERMINAL_SNAPSHOT =
   'https://mobius-civic-ai-terminal.vercel.app/api/terminal/snapshot';
 
-type TerminalMode = 'green' | 'yellow' | 'red';
+export type TerminalMode = 'green' | 'yellow' | 'red';
+
+export interface TerminalDomain {
+  key: string;
+  label: string;
+  score: number;
+  agent: string;
+}
+
+export interface TerminalAnomaly {
+  label: string;
+  severity: string;
+  agentName: string;
+}
 
 export interface TerminalState {
   gi: number;
   mode: TerminalMode;
   cycle: string;
-  sentiment: Record<string, { score: number; agent: string }>;
-  anomalies: Array<{ label: string; severity: string }>;
+  overall_sentiment: number;
+  domains: TerminalDomain[];
+  anomalies: TerminalAnomaly[];
   echo: {
     totalIngested: number;
     avgMii: number;
   };
   timestamp: string;
 }
-
-/** Display order for the Shell world signal strip (terminal sentiment domains). */
-export const WORLD_SIGNAL_DOMAIN_KEYS = [
-  'CIVIC',
-  'ENVIRON',
-  'FINANCIAL',
-  'NARRATIVE',
-  'INFRASTR',
-  'INSTITUTIONAL',
-] as const;
-
-export type WorldSignalDomainKey = (typeof WORLD_SIGNAL_DOMAIN_KEYS)[number];
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
@@ -56,28 +58,31 @@ function readNestedRecord(root: unknown, path: string[]): Record<string, unknown
   return isRecord(cur) ? cur : null;
 }
 
-function parseSentimentDomains(data: unknown): Record<string, { score: number; agent: string }> {
+function parseDomains(data: unknown): TerminalDomain[] {
   const sentimentRoot = readNestedRecord(data, ['sentiment']);
-  if (!sentimentRoot) return {};
+  if (!sentimentRoot) return [];
   const dataBlock = sentimentRoot['data'];
-  if (!isRecord(dataBlock)) return {};
-  const domains = dataBlock['domains'];
-  if (!Array.isArray(domains)) return {};
+  if (!isRecord(dataBlock)) return [];
+  const raw = dataBlock['domains'];
+  if (!Array.isArray(raw)) return [];
 
-  const out: Record<string, { score: number; agent: string }> = {};
-  for (const item of domains) {
+  const out: TerminalDomain[] = [];
+  for (const item of raw) {
     if (!isRecord(item)) continue;
     const key = readString(item['key'], '');
     if (!key) continue;
-    out[key] = {
+    const label = readString(item['label'], '') || key;
+    out.push({
+      key,
+      label,
       score: readNumber(item['score'], 0),
       agent: readString(item['agent'], ''),
-    };
+    });
   }
   return out;
 }
 
-function parseAnomalies(data: unknown): Array<{ label: string; severity: string }> {
+function parseAnomalies(data: unknown): TerminalAnomaly[] {
   const signalsRoot = readNestedRecord(data, ['signals']);
   if (!signalsRoot) return [];
   const dataBlock = signalsRoot['data'];
@@ -85,12 +90,16 @@ function parseAnomalies(data: unknown): Array<{ label: string; severity: string 
   const raw = dataBlock['anomalies'];
   if (!Array.isArray(raw)) return [];
 
-  const out: Array<{ label: string; severity: string }> = [];
+  const out: TerminalAnomaly[] = [];
   for (const item of raw) {
     if (!isRecord(item)) continue;
+    const agentName =
+      readString(item['agentName'], '') ||
+      readString(item['agent'], '');
     out.push({
       label: readString(item['label'], ''),
       severity: readString(item['severity'], ''),
+      agentName,
     });
   }
   return out;
@@ -133,13 +142,22 @@ function parseIntegritySlice(data: unknown): {
   };
 }
 
+function parseOverallSentiment(data: unknown): number {
+  const sentimentRoot = readNestedRecord(data, ['sentiment']);
+  if (!sentimentRoot) return 0;
+  const dataBlock = sentimentRoot['data'];
+  if (!isRecord(dataBlock)) return 0;
+  return readNumber(dataBlock['overall_sentiment'], 0);
+}
+
 function parseTerminalPayload(data: unknown): TerminalState | null {
   if (!isRecord(data)) return null;
 
   const { gi, mode, cycle } = parseIntegritySlice(data);
-  const sentiment = parseSentimentDomains(data);
+  const domains = parseDomains(data);
   const anomalies = parseAnomalies(data);
   const echo = parseEcho(data);
+  const overall_sentiment = parseOverallSentiment(data);
   const timestamp =
     readString(data['timestamp'], '') || new Date().toISOString();
 
@@ -147,7 +165,8 @@ function parseTerminalPayload(data: unknown): TerminalState | null {
     gi,
     mode,
     cycle,
-    sentiment,
+    overall_sentiment,
+    domains,
     anomalies,
     echo,
     timestamp,

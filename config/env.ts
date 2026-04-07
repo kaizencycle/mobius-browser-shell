@@ -17,6 +17,7 @@ export const env = {
   },
 
   // === BACKEND APIs ===
+  // VITE_LEDGER_API — Civic Protocol core ledger (human + agent attest); default below.
   api: {
     atlas: import.meta.env.VITE_ATLAS_URL as string || '/api/atlas/events',
     oaa: import.meta.env.VITE_OAA_API_BASE as string || 'https://oaa-api-library.onrender.com',
