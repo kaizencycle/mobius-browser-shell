@@ -1,13 +1,13 @@
-const LEDGER_URL = 'https://civic-protocol-core-ledger.onrender.com';
+import { env } from '../../config/env';
 
 export interface HumanAttestation {
-  civic_id: string; // GitHub username
+  civic_id: string;
   event_type: 'civic-observation' | 'governance-event' | 'community-action';
   title: string;
   summary: string;
   location?: string;
-  evidence?: string; // URL or description
-  confidence: number; // 0–1, self-reported
+  evidence?: string;
+  confidence: number;
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -19,25 +19,26 @@ function readString(value: unknown): string | undefined {
 }
 
 export async function submitAttestation(
-  attestation: HumanAttestation
+  a: HumanAttestation
 ): Promise<{ ok: boolean; entryId?: string; error?: string }> {
+  const base = env.api.ledger.replace(/\/$/, '');
   try {
-    const res = await fetch(`${LEDGER_URL}/ledger/attest`, {
+    const res = await fetch(`${base}/ledger/attest`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        agent_id: attestation.civic_id,
-        event_type: attestation.event_type,
+        agent_id: a.civic_id,
+        event_type: a.event_type,
         payload: {
-          title: attestation.title,
-          summary: attestation.summary,
-          location: attestation.location,
-          evidence: attestation.evidence,
-          confidence: attestation.confidence,
+          title: a.title,
+          summary: a.summary,
+          location: a.location,
+          evidence: a.evidence,
+          confidence: a.confidence,
           source: 'browser-shell-human',
         },
         timestamp: new Date().toISOString(),
-        civic_id: attestation.civic_id,
+        civic_id: a.civic_id,
       }),
       signal: AbortSignal.timeout(8000),
     });
@@ -47,8 +48,7 @@ export async function submitAttestation(
     if (!isRecord(data)) {
       return { ok: true };
     }
-    const entryId =
-      readString(data['event_id']) ?? readString(data['id']);
+    const entryId = readString(data['event_id']) ?? readString(data['id']);
     return { ok: true, entryId };
   } catch (err) {
     return { ok: false, error: String(err) };
