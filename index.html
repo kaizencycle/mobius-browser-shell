@@ -25,18 +25,33 @@
       'unsafe-eval' requirement that cdn.tailwindcss.com needs.
     -->
 
+    <!--
+      TLS handshake for the terminal bridge + primary lab origins during
+      HTML parse so the first snapshot fetch isn't paying for a cold
+      handshake on top of a Render cold-start. Fonts stay async.
+    -->
+    <link rel="preconnect" href="https://mobius-civic-ai-terminal.vercel.app" />
+    <link rel="preconnect" href="https://oaa-api-library.onrender.com" />
+    <link rel="preconnect" href="https://hive-api-2le8.onrender.com" />
+    <link rel="preconnect" href="https://lab6-proof-api.onrender.com" />
+
     <!-- Preload critical font only (Inter) — others load async -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <!--
+      Font diet: Playfair Display lost italics + one weight; JetBrains Mono
+      collapsed to a single weight; Press Start 2P kept (used by HiveLab + auth).
+      Inter anchors the shell at 400/600 only.
+    -->
     <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=Press+Start+2P&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&family=JetBrains+Mono:wght@500&family=Playfair+Display:wght@600&family=Press+Start+2P&display=swap"
       rel="stylesheet"
       media="print"
       onload="this.media='all'"
     />
     <noscript>
       <link
-        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=Press+Start+2P&display=swap"
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&family=JetBrains+Mono:wght@500&family=Playfair+Display:wght@600&family=Press+Start+2P&display=swap"
         rel="stylesheet"
       />
     </noscript>
