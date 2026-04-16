@@ -42,6 +42,16 @@ export function useSessionHeartbeat() {
     const citizenId = citizenIdRef.current;
     if (!citizenId) return;
 
+    // Skip polling while the tab is hidden — resumes on visibilitychange.
+    // Keeps identity backend compute + citizen battery out of background tabs.
+    if (
+      typeof document !== 'undefined' &&
+      document.visibilityState === 'hidden'
+    ) {
+      scheduleNext();
+      return;
+    }
+
     try {
       const res = await fetch(
         `/api/auth/heartbeat?citizenId=${citizenId}`,
@@ -100,8 +110,27 @@ export function useSessionHeartbeat() {
     // Short initial delay — let the shell settle before first check
     timeoutRef.current = setTimeout(() => checkRef.current(), INITIAL_DELAY_MS);
 
+    // Wake the heartbeat immediately when the tab becomes visible again;
+    // otherwise a backgrounded session sits on a single pending timer for up
+    // to 5 minutes before it discovers a revoked session.
+    const onVisibility = () => {
+      if (
+        typeof document !== 'undefined' &&
+        document.visibilityState === 'visible'
+      ) {
+        if (timeoutRef.current) clearTimeout(timeoutRef.current);
+        timeoutRef.current = setTimeout(() => checkRef.current(), 250);
+      }
+    };
+    if (typeof document !== 'undefined') {
+      document.addEventListener('visibilitychange', onVisibility);
+    }
+
     return () => {
       if (timeoutRef.current) clearTimeout(timeoutRef.current);
+      if (typeof document !== 'undefined') {
+        document.removeEventListener('visibilitychange', onVisibility);
+      }
     };
   }, [citizen]);
 }

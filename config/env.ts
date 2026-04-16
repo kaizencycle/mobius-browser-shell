@@ -98,15 +98,31 @@ export function getAllApiUrls(): string[] {
 }
 
 /**
- * Wake all Render services (ping to prevent cold starts)
+ * Wake all Render services (ping to prevent cold starts).
+ *
+ * Server-side fan-out: calls `/api/wake` once, which then pings every
+ * upstream lab from Vercel's edge. This keeps citizen bandwidth, CPU, and
+ * battery out of the warm-up path, and lets us enforce a single overall
+ * budget instead of N independent browser fetches.
+ *
+ * Falls back to the old browser fan-out only if the edge endpoint is
+ * unavailable (e.g. older preview deploys without `api/wake.ts`).
  */
 export async function wakeAllServices(): Promise<void> {
+  try {
+    const res = await fetch('/api/wake', {
+      method: 'GET',
+      cache: 'no-store',
+      signal: AbortSignal.timeout(12_000),
+    });
+    if (res.ok) return;
+  } catch {
+    // Fall through to legacy client fan-out.
+  }
+
   const urls = [...getAllLabUrls(), ...getAllApiUrls()];
-  
   await Promise.allSettled(
-    urls.map(url => 
-      fetch(url, { mode: 'no-cors' }).catch(() => {})
-    )
+    urls.map((url) => fetch(url, { mode: 'no-cors' }).catch(() => {})),
   );
 }
 
