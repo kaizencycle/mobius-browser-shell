@@ -11,6 +11,7 @@ import { AuthGate } from './components/AuthGate';
 import { OnboardingGate } from './components/onboarding/OnboardingGate';
 import { WalletProvider } from './contexts/WalletContext';
 import { KnowledgeGraphProvider } from './contexts/KnowledgeGraphContext';
+import { TerminalProvider } from './contexts/TerminalContext';
 import { RootErrorBoundary } from './components/RootErrorBoundary';
 
 function RootGate({ children }: { children: React.ReactNode }) {
@@ -42,27 +43,27 @@ function RootGate({ children }: { children: React.ReactNode }) {
 
   return (
     <GuestProvider isGuest={isGuest} onBecomeCitizen={handleBecomeCitizen}>
-      {isGuest ? (
-        <>
-          <WalletProvider>
-            <KnowledgeGraphProvider>
-              <App />
-            </KnowledgeGraphProvider>
-          </WalletProvider>
-          <GuestBadge />
-          <GuestNudge />
-        </>
-      ) : (
-        <AuthGate>
-          <OnboardingGate>
+      <TerminalProvider>
+        {isGuest ? (
+          <>
             <WalletProvider>
               <KnowledgeGraphProvider>
-                {children}
+                <App />
               </KnowledgeGraphProvider>
             </WalletProvider>
-          </OnboardingGate>
-        </AuthGate>
-      )}
+            <GuestBadge />
+            <GuestNudge />
+          </>
+        ) : (
+          <AuthGate>
+            <OnboardingGate>
+              <WalletProvider>
+                <KnowledgeGraphProvider>{children}</KnowledgeGraphProvider>
+              </WalletProvider>
+            </OnboardingGate>
+          </AuthGate>
+        )}
+      </TerminalProvider>
     </GuestProvider>
   );
 }

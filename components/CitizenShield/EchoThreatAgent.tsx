@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
   ThreatIntelligenceFeed,
   EchoAgentState,
@@ -6,6 +6,7 @@ import {
   ThreatDomain,
 } from '../../types';
 import { echoAgent } from '../../services/EchoThreatIntelligence';
+import { useTerminal } from '../../contexts/TerminalContext';
 import {
   Radio,
   Activity,
@@ -106,6 +107,8 @@ export const EchoThreatAgent: React.FC<EchoThreatAgentProps> = ({
   const [agentState, setAgentState] = useState<EchoAgentState | null>(null);
   const [isScanning, setIsScanning] = useState(false);
   const [initialized, setInitialized] = useState(false);
+  const { state: terminalState } = useTerminal();
+  const lastTerminalScanRef = useRef<string | null>(null);
 
   // Initialize ECHO agent
   useEffect(() => {
@@ -140,6 +143,22 @@ export const EchoThreatAgent: React.FC<EchoThreatAgentProps> = ({
     }, 30000);
     return () => clearInterval(interval);
   }, [initialized]);
+
+  // Terminal cross-wiring: when the terminal reports an elevated tripwire or
+  // any alert/critical signal we haven't seen yet, trigger an ECHO scan so
+  // Shield's threat feed reflects the new world posture on the same tick.
+  useEffect(() => {
+    if (!initialized || !terminalState) return;
+    const signature = `${terminalState.cycle}|${terminalState.tripwire.elevated}|${terminalState.tripwire.count}|${terminalState.signals.anomalies}`;
+    if (signature === lastTerminalScanRef.current) return;
+    lastTerminalScanRef.current = signature;
+    if (
+      terminalState.tripwire.elevated ||
+      terminalState.signals.anomalies > 0
+    ) {
+      void echoAgent.forceScan();
+    }
+  }, [initialized, terminalState]);
 
   const handleForceScan = useCallback(async () => {
     setIsScanning(true);
