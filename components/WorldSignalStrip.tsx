@@ -13,10 +13,35 @@ interface WorldSignalStripProps {
   terminalState: TerminalState | null;
 }
 
+/** Derive a light strip of domain scores from richer terminal state when the
+ * legacy `sentiment.data.domains` slice is absent. */
+function derivedDomainsFromIntegrity(state: TerminalState): Array<{
+  key: string;
+  label: string;
+  score: number;
+  agent: string;
+}> {
+  const s = state.integritySignals;
+  return [
+    { key: 'information', label: 'Info', score: s.information, agent: '' },
+    { key: 'system', label: 'Sys', score: s.system, agent: '' },
+    { key: 'stability', label: 'Stab', score: s.stability, agent: '' },
+    { key: 'freshness', label: 'Fresh', score: s.freshness, agent: '' },
+    { key: 'geopolitics', label: 'Geo', score: s.geopolitics, agent: '' },
+    { key: 'economy', label: 'Econ', score: s.economy, agent: '' },
+  ];
+}
+
 export const WorldSignalStrip: React.FC<WorldSignalStripProps> = ({
   terminalState,
 }) => {
-  const domains = terminalState?.domains ?? [];
+  const rawDomains = terminalState?.domains ?? [];
+  const domains =
+    rawDomains.length > 0
+      ? rawDomains
+      : terminalState
+        ? derivedDomainsFromIntegrity(terminalState)
+        : [];
 
   return (
     <div className="flex-none border-b border-stone-200/80 bg-white/90 px-3 sm:px-6 py-2">

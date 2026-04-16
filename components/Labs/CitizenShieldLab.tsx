@@ -4,11 +4,17 @@ import { TabId, ThreatIntelligenceFeed } from '../../types';
 import { shouldUseLiveMode } from '../../config/env';
 import { LabFrame } from '../LabFrame';
 import { Shield, CheckCircle, Wifi, Lock, Eye, AlertOctagon, Radio } from 'lucide-react';
-import { CivicRadar, EchoThreatAgent, ThreatFeed } from '../CitizenShield';
+import { CivicRadar, EchoThreatAgent, ThreatFeed, ShieldTerminalPanel } from '../CitizenShield';
+import { useTerminal } from '../../contexts/TerminalContext';
+import { computeDigitalHygieneScore } from '../../src/lib/terminal-bridge';
 
 export const CitizenShieldLab: React.FC = () => {
   const lab = getLabById(TabId.SHIELD);
   const [threatFeed, setThreatFeed] = useState<ThreatIntelligenceFeed | null>(null);
+  const { state: terminalState } = useTerminal();
+  const hygieneScore = computeDigitalHygieneScore(terminalState);
+  const resiliencePct = Math.round(hygieneScore * 100);
+  const tripwireElevated = !!terminalState?.tripwire.elevated;
   
   // If live mode is enabled and URL exists, show iframe
   if (lab && shouldUseLiveMode(lab.url)) {
@@ -40,13 +46,38 @@ export const CitizenShieldLab: React.FC = () => {
                                 <Radio className="w-3 h-3 text-cyan-500" />
                                 <span className="text-cyan-600 font-medium">RAG Monitoring</span>
                             </span>
+                            {terminalState && (
+                                <span className="inline-flex items-center gap-1 ml-2">
+                                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 inline-block" />
+                                    <span className="text-emerald-700 font-medium">
+                                        Terminal {terminalState.cycle}
+                                    </span>
+                                </span>
+                            )}
                         </p>
                     </div>
                 </div>
                 <div className="text-left sm:text-right flex sm:block items-center gap-2">
-                    <div className="text-2xl sm:text-3xl font-mono font-bold text-emerald-600">98%</div>
-                    <div className="text-[10px] sm:text-xs text-slate-400 uppercase tracking-wider font-semibold">Resilience Score</div>
+                    <div
+                        className={`text-2xl sm:text-3xl font-mono font-bold ${
+                            resiliencePct >= 65
+                                ? 'text-emerald-600'
+                                : resiliencePct >= 45
+                                  ? 'text-amber-600'
+                                  : 'text-red-600'
+                        }`}
+                    >
+                        {resiliencePct}%
+                    </div>
+                    <div className="text-[10px] sm:text-xs text-slate-400 uppercase tracking-wider font-semibold">
+                        Resilience Score
+                    </div>
                 </div>
+            </div>
+
+            {/* Terminal Heartbeat — Live telemetry from Mobius Civic AI Terminal */}
+            <div className="mb-6 sm:mb-8">
+                <ShieldTerminalPanel />
             </div>
 
             {/* ECHO Threat Intelligence Agent — Primary Feature */}
@@ -63,11 +94,17 @@ export const CitizenShieldLab: React.FC = () => {
                         <div className="p-1.5 sm:p-2 bg-blue-50 text-blue-600 rounded-md">
                             <Wifi className="w-4 h-4 sm:w-5 sm:h-5" />
                         </div>
-                        <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-500" />
+                        {hygieneScore >= 0.65 ? (
+                            <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-500" />
+                        ) : (
+                            <AlertOctagon className="w-4 h-4 sm:w-5 sm:h-5 text-amber-500" />
+                        )}
                     </div>
                     <div>
                         <h3 className="font-semibold text-slate-800 text-sm sm:text-base">Digital Hygiene</h3>
-                        <p className="text-[10px] sm:text-xs text-slate-500 mt-1">2FA active on all accounts. VPN active.</p>
+                        <p className="text-[10px] sm:text-xs text-slate-500 mt-1">
+                            Terminal-fed score {Math.round(hygieneScore * 100)}/100 · HTTPS &amp; passkey-capable.
+                        </p>
                     </div>
                 </div>
 
@@ -89,11 +126,21 @@ export const CitizenShieldLab: React.FC = () => {
                         <div className="p-1.5 sm:p-2 bg-orange-50 text-orange-600 rounded-md">
                             <Eye className="w-4 h-4 sm:w-5 sm:h-5" />
                         </div>
-                         <AlertOctagon className="w-4 h-4 sm:w-5 sm:h-5 text-orange-400" />
+                        {tripwireElevated ? (
+                            <AlertOctagon className="w-4 h-4 sm:w-5 sm:h-5 text-red-500" />
+                        ) : (
+                            <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-500" />
+                        )}
                     </div>
                     <div>
                         <h3 className="font-semibold text-slate-800 text-sm sm:text-base">Civic Resilience</h3>
-                        <p className="text-[10px] sm:text-xs text-slate-500 mt-1">Alert: Local mesh node offline.</p>
+                        <p className="text-[10px] sm:text-xs text-slate-500 mt-1">
+                            {tripwireElevated
+                                ? `Tripwire elevated · ${terminalState?.tripwire.count ?? 0} active.`
+                                : terminalState?.degraded
+                                  ? 'Terminal degraded · serving cached lanes.'
+                                  : 'Terminal nominal · lanes healthy.'}
+                        </p>
                     </div>
                 </div>
             </div>

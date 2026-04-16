@@ -1,4 +1,4 @@
-import React, { lazy, Suspense, useEffect, useState } from 'react';
+import React, { lazy, Suspense, useState } from 'react';
 import { SENTINELS } from './constants';
 import { TabId } from './types';
 import { SentinelStatus } from './components/SentinelStatus';
@@ -53,11 +53,10 @@ import { CitizenProfile } from './components/CitizenProfile/CitizenProfile';
 import { CitizenProfileButton } from './components/CitizenProfile/CitizenProfileButton';
 import { useCitizenProfile } from './hooks/useCitizenProfile';
 import { useGuest } from './contexts/GuestContext';
-import {
-  fetchTerminalState,
-  type TerminalState,
-} from './src/lib/terminal-bridge';
+import { useTerminal } from './contexts/TerminalContext';
+import { type TerminalState } from './src/lib/terminal-bridge';
 import { WorldSignalStrip } from './components/WorldSignalStrip';
+import { TerminalHeartbeat } from './components/TerminalHeartbeat';
 
 const TERMINAL_APP_URL =
   'https://mobius-civic-ai-terminal.vercel.app/terminal';
@@ -83,9 +82,6 @@ const App: React.FC = () => {
   const [isWaking, setIsWaking] = useState(false);
   const [wakeComplete, setWakeComplete] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [terminalState, setTerminalState] = useState<TerminalState | null>(
-    null
-  );
 
   // Auth & Wallet hooks (citizen from passkey; always authenticated when App renders in auth flow)
   const { citizen } = useAuth();
@@ -96,46 +92,8 @@ const App: React.FC = () => {
   // Session heartbeat — polls for revocation, forces sign-out if citizen revoked
   useSessionHeartbeat();
 
-  useEffect(() => {
-    let cancelled = false;
-    let interval: ReturnType<typeof setInterval> | null = null;
-
-    const refresh = () => {
-      void fetchTerminalState().then((state) => {
-        if (!cancelled) setTerminalState(state);
-      });
-    };
-
-    const start = () => {
-      if (interval !== null) return;
-      refresh();
-      interval = setInterval(refresh, 60_000);
-    };
-
-    const stop = () => {
-      if (interval !== null) {
-        clearInterval(interval);
-        interval = null;
-      }
-    };
-
-    const onVisibility = () => {
-      if (document.visibilityState === 'visible') {
-        start();
-      } else {
-        stop();
-      }
-    };
-
-    if (document.visibilityState === 'visible') start();
-    document.addEventListener('visibilitychange', onVisibility);
-
-    return () => {
-      cancelled = true;
-      stop();
-      document.removeEventListener('visibilitychange', onVisibility);
-    };
-  }, []);
+  // Single shell-wide terminal subscription (see contexts/TerminalContext).
+  const { state: terminalState } = useTerminal();
 
   // ATLAS error logging — shared across all panel boundaries
   const logToAtlas = useAtlasErrorLog();
@@ -285,6 +243,7 @@ const App: React.FC = () => {
                   GI …
                 </span>
               )}
+              <TerminalHeartbeat compact className="hidden sm:inline-flex" />
               <span className="text-[10px] sm:text-xs text-emerald-600 font-mono px-1.5 sm:px-2 py-0.5 bg-emerald-50 border border-emerald-200 rounded hidden sm:inline">Beta v1.0.0</span>
            </div>
            

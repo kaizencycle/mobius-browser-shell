@@ -9,3 +9,4 @@
 export { CivicRadar } from './CivicRadar';
 export { EchoThreatAgent } from './EchoThreatAgent';
 export { ThreatFeed } from './ThreatFeed';
+export { ShieldTerminalPanel } from './ShieldTerminalPanel';
