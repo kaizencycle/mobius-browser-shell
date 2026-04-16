@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { lazy, Suspense, useEffect, useState } from 'react';
 import { SENTINELS } from './constants';
 import { TabId } from './types';
 import { SentinelStatus } from './components/SentinelStatus';
@@ -7,14 +7,43 @@ import { useAtlasErrorLog } from './components/useAtlasErrorLog';
 import { ErrorCodes } from './errors/errorCodes';
 import { Omnibar } from './components/Omnibar';
 import { TabNavigation } from './components/TabNavigation';
-import { OAALab } from './components/Labs/OAALab';
-import { HiveLab } from './components/Labs/HiveLab';
-import { ReflectionsLab } from './components/Labs/ReflectionsLab';
-import { CitizenShieldLab } from './components/Labs/CitizenShieldLab';
-import { WalletLab } from './components/Labs/WalletLab';
-import { UnderConstructionLab } from './components/Labs/UnderConstructionLab';
-import { KnowledgeGraphLab } from './components/KnowledgeGraph';
+import { LabSkeleton } from './components/Labs/LabSkeleton';
 import { Tornado, Coffee, CheckCircle, Menu, X } from 'lucide-react';
+
+// Route-split labs. Each lab becomes its own chunk so users who only open
+// OAA no longer download HiveLab/ReflectionsLab/JadeLab/etc. on first paint.
+// Reflections (1,062 LOC) + Hive (656) + Jade (582) were the long tail.
+const OAALab = lazy(() =>
+  import('./components/Labs/OAALab').then((m) => ({ default: m.OAALab })),
+);
+const HiveLab = lazy(() =>
+  import('./components/Labs/HiveLab').then((m) => ({ default: m.HiveLab })),
+);
+const ReflectionsLab = lazy(() =>
+  import('./components/Labs/ReflectionsLab').then((m) => ({
+    default: m.ReflectionsLab,
+  })),
+);
+const CitizenShieldLab = lazy(() =>
+  import('./components/Labs/CitizenShieldLab').then((m) => ({
+    default: m.CitizenShieldLab,
+  })),
+);
+const WalletLab = lazy(() =>
+  import('./components/Labs/WalletLab').then((m) => ({ default: m.WalletLab })),
+);
+const UnderConstructionLab = lazy(() =>
+  import('./components/Labs/UnderConstructionLab').then((m) => ({
+    default: m.UnderConstructionLab,
+  })),
+);
+// KnowledgeGraph pulls react-force-graph-2d (graph-vendor chunk). Keep it
+// deferred so the chunk only downloads when the tab is actually opened.
+const KnowledgeGraphLab = lazy(() =>
+  import('./components/KnowledgeGraph').then((m) => ({
+    default: m.KnowledgeGraphLab,
+  })),
+);
 import { wakeAllServices, env } from './config/env';
 import { useAuth } from './contexts/AuthContext';
 import { useWallet } from './contexts/WalletContext';
@@ -33,7 +62,11 @@ import { WorldSignalStrip } from './components/WorldSignalStrip';
 const TERMINAL_APP_URL =
   'https://mobius-civic-ai-terminal.vercel.app/terminal';
 
-function giChipLinkClasses(mode: TerminalState['mode']): string {
+function giChipLinkClasses(
+  mode: TerminalState['mode'],
+  stale: boolean,
+): string {
+  if (stale) return 'text-stone-400';
   switch (mode) {
     case 'green':
       return 'text-emerald-400';
@@ -64,11 +97,44 @@ const App: React.FC = () => {
   useSessionHeartbeat();
 
   useEffect(() => {
-    void fetchTerminalState().then(setTerminalState);
-    const interval = setInterval(() => {
-      void fetchTerminalState().then(setTerminalState);
-    }, 60_000);
-    return () => clearInterval(interval);
+    let cancelled = false;
+    let interval: ReturnType<typeof setInterval> | null = null;
+
+    const refresh = () => {
+      void fetchTerminalState().then((state) => {
+        if (!cancelled) setTerminalState(state);
+      });
+    };
+
+    const start = () => {
+      if (interval !== null) return;
+      refresh();
+      interval = setInterval(refresh, 60_000);
+    };
+
+    const stop = () => {
+      if (interval !== null) {
+        clearInterval(interval);
+        interval = null;
+      }
+    };
+
+    const onVisibility = () => {
+      if (document.visibilityState === 'visible') {
+        start();
+      } else {
+        stop();
+      }
+    };
+
+    if (document.visibilityState === 'visible') start();
+    document.addEventListener('visibilitychange', onVisibility);
+
+    return () => {
+      cancelled = true;
+      stop();
+      document.removeEventListener('visibilitychange', onVisibility);
+    };
   }, []);
 
   // ATLAS error logging — shared across all panel boundaries
@@ -199,11 +265,20 @@ const App: React.FC = () => {
                   href={TERMINAL_APP_URL}
                   target="_blank"
                   rel="noreferrer"
-                  className={`font-mono text-xs max-w-[min(100%,14rem)] truncate sm:max-w-none sm:whitespace-normal ${giChipLinkClasses(terminalState.mode)} hover:underline`}
-                  title="Open Mobius Terminal"
+                  className={`font-mono text-xs max-w-[min(100%,14rem)] truncate sm:max-w-none sm:whitespace-normal ${giChipLinkClasses(terminalState.mode, terminalState.stale)} hover:underline`}
+                  title={
+                    terminalState.stale
+                      ? 'Terminal snapshot is stale — showing last-known-good'
+                      : 'Open Mobius Terminal'
+                  }
                 >
                   GI {terminalState.gi.toFixed(2)} ·{' '}
                   {terminalState.mode.toUpperCase()} · {terminalState.cycle}
+                  {terminalState.stale && (
+                    <span className="ml-1 text-[10px] text-stone-400">
+                      (cached)
+                    </span>
+                  )}
                 </a>
               ) : (
                 <span className="font-mono text-xs text-stone-400" title="Terminal snapshot loading or unavailable">
@@ -346,10 +421,15 @@ const App: React.FC = () => {
                   href={TERMINAL_APP_URL}
                   target="_blank"
                   rel="noreferrer"
-                  className={`font-mono text-xs text-center ${giChipLinkClasses(terminalState.mode)} hover:underline`}
+                  className={`font-mono text-xs text-center ${giChipLinkClasses(terminalState.mode, terminalState.stale)} hover:underline`}
                 >
                   GI {terminalState.gi.toFixed(2)} ·{' '}
                   {terminalState.mode.toUpperCase()} · {terminalState.cycle}
+                  {terminalState.stale && (
+                    <span className="ml-1 text-[10px] text-stone-400">
+                      (cached)
+                    </span>
+                  )}
                 </a>
               ) : (
                 <span className="font-mono text-xs text-stone-400">GI …</span>
@@ -418,7 +498,7 @@ const App: React.FC = () => {
 
       {/* 🧩 MAIN CONTENT AREA */}
       <main className="flex-1 overflow-hidden relative shadow-inner">
-        {renderContent()}
+        <Suspense fallback={<LabSkeleton />}>{renderContent()}</Suspense>
       </main>
 
       {/* Inquiry Chat Modal - Floating button */}
