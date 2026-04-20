@@ -21,6 +21,7 @@ import {
   Dices, User, BookOpen, RotateCcw, Download, Upload,
   Clipboard, Check
 } from 'lucide-react';
+import { MeshWorldPanel } from '../Hive/MeshWorldPanel';
 
 // ============================================
 // HIVE Lab - DnD Style Civic RPG
@@ -493,10 +494,16 @@ export const HiveLab: React.FC = () => {
 
   // Render the appropriate view
   return (
-    <div className="h-full flex flex-col">
+    <div className="h-full flex flex-col min-h-0">
       <ViewModeNav />
+
+      <div className="shrink-0 border-b border-stone-200 bg-stone-50 max-h-[min(40vh,320px)] overflow-y-auto">
+        <div className="p-2 sm:p-3">
+          <MeshWorldPanel />
+        </div>
+      </div>
       
-      <div className="flex-1 overflow-hidden">
+      <div className="flex-1 min-h-0 overflow-hidden">
         {viewMode === 'city' && <CityView />}
         
         {viewMode === 'character' && character && (

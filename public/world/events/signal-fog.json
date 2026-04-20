@@ -1,0 +1,6 @@
+{
+  "id": "signal-fog",
+  "title": "Signal Fog",
+  "summary": "Operator KV is degraded; mesh visibility drops until the beacon is restored.",
+  "sentinel_id": "zeus"
+}

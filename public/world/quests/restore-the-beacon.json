@@ -1,0 +1,7 @@
+{
+  "id": "restore-the-beacon",
+  "title": "Restore the Beacon",
+  "objective": "Clear the fog by stabilizing terminal snapshot continuity and OAA read paths.",
+  "sentinel_id": "zeus",
+  "event_id": "signal-fog"
+}
