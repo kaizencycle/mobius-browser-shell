@@ -1,13 +1,8 @@
 {
   "id": "restore-the-beacon",
   "title": "Restore the Beacon",
-  "objective": "Clear the fog by stabilizing terminal snapshot continuity and OAA read paths.",
-  "sentinel_id": "zeus",
-  "event_id": "signal-fog",
-  "status": "active",
-  "progress": 0,
-  "steps": [
-    { "id": "inspect", "completed": false },
-    { "id": "fallback", "completed": false }
-  ]
+  "summary": "Re-stabilize KV paths and confirm OAA fallbacks are healthy.",
+  "cycle_id": "C-287",
+  "updated_at": "2026-04-20T17:52:28.202Z",
+  "sentinel_id": "zeus"
 }

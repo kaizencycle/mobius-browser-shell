@@ -1,22 +1,20 @@
 {
-  "version": "mobius-hive-world.v1",
-  "cycle": {
-    "id": "C-289",
-    "label": "First Playable HIVE Loop",
-    "mesh_freshness_sla_seconds": 1800
-  },
+  "cycle_id": "C-287",
+  "updated_at": "2026-04-20T17:52:28.202Z",
+  "rules_fired": [
+    "kv_degraded"
+  ],
   "active_event_id": "signal-fog",
   "active_quest_id": "restore-the-beacon",
-  "assigned_sentinel_id": "zeus",
-  "vault": {
-    "label": "Fountain",
-    "progress": 0.42
+  "active_sentinel_id": "zeus",
+  "signals": {
+    "kv_status": "degraded",
+    "gi": 0.77,
+    "vault_progress": 0.676
   },
-  "integrity": {
-    "gi": 0.95,
-    "mic_readiness": "ready"
-  },
-  "kv_status": "degraded",
-  "source": "bundled-fallback",
-  "updated_at": "2026-04-20T00:00:00.000Z"
+  "ingest_health": {
+    "terminal_snapshot": true,
+    "mobius_pulse": true,
+    "oaa_kv_latest": false
+  }
 }

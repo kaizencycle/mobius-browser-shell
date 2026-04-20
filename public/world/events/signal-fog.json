@@ -1,6 +1,8 @@
 {
   "id": "signal-fog",
   "title": "Signal Fog",
-  "summary": "Operator KV is degraded; mesh visibility drops until the beacon is restored.",
-  "sentinel_id": "zeus"
+  "tone": "warning",
+  "summary": "Operator memory lanes are noisy; continuity is at risk.",
+  "cycle_id": "C-287",
+  "updated_at": "2026-04-20T17:52:28.202Z"
 }
