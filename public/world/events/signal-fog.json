@@ -1,8 +1,21 @@
 {
   "id": "signal-fog",
+  "type": "integrity_event",
+  "severity": "medium",
   "title": "Signal Fog",
+  "description": "The lattice is visible, but unstable. Memory remains, live sight fades.",
+  "trigger": {
+    "kv_status": "degraded",
+    "gi_below": 0.8
+  },
+  "sentinel_owner": "zeus",
+  "ui": {
+    "overlay": "fog",
+    "color": "dim",
+    "priority": 1
+  },
   "tone": "warning",
   "summary": "Operator memory lanes are noisy; continuity is at risk.",
   "cycle_id": "C-287",
-  "updated_at": "2026-04-20T20:07:52.402Z"
+  "updated_at": "2026-04-20T21:02:47.490Z"
 }

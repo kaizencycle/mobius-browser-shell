@@ -1,8 +1,33 @@
 {
   "id": "restore-the-beacon",
+  "type": "stability_quest",
   "title": "Restore the Beacon",
-  "summary": "Re-stabilize KV paths and confirm OAA fallbacks are healthy.",
+  "description": "Re-establish live signal continuity across the Castle.",
+  "assigned_by": "zeus",
+  "status": "active",
+  "progress": 0,
+  "steps": [
+    {
+      "id": "inspect",
+      "label": "Inspect Beacon",
+      "completed": false
+    },
+    {
+      "id": "fallback",
+      "label": "Verify Fallback Path",
+      "completed": false
+    },
+    {
+      "id": "ack",
+      "label": "Acknowledge Sentinel",
+      "completed": false
+    }
+  ],
+  "reward_preview": {
+    "vault_effect": "stability_credit",
+    "mic_effect": "none_until_eligible"
+  },
   "cycle_id": "C-287",
-  "updated_at": "2026-04-20T20:07:52.402Z",
+  "updated_at": "2026-04-20T21:02:47.490Z",
   "sentinel_id": "zeus"
 }
