@@ -1,0 +1,59 @@
+# Mobius Mesh declaration contract (v1) — mobius-browser-shell
+# Execution: declared jobs in `jobs.workflows` map to `.github/workflows/*`.
+
+version: "1.0"
+
+mesh:
+  enabled: true
+  node_id: "mobius-browser-shell"
+  node_name: "Mobius Browser Shell"
+  tier: "client"
+  role: "human_shell"
+
+repository:
+  full_name: "kaizencycle/mobius-browser-shell"
+  default_branch: "main"
+
+pulse:
+  enabled: true
+  # Canonical pulse is produced by Mobius-Substrate; shell reads for HUD / labs.
+  feed_url: "https://raw.githubusercontent.com/kaizencycle/Mobius-Substrate/main/ledger/mobius-pulse.json"
+  freshness_sla_seconds: 1800
+  lanes:
+    - world
+    - lore
+    - quests
+    - sentinel_state
+
+ingest:
+  enabled: true
+  mode: "client_of_other_node"
+  sources:
+    terminal_snapshot:
+      node_id: "mobius-terminal"
+      read_url: "https://mobius-civic-ai-terminal.vercel.app/api/terminal/snapshot-lite"
+    cycle_state:
+      node_id: "mobius-substrate"
+      read_url: "https://raw.githubusercontent.com/kaizencycle/Mobius-Substrate/main/ledger/mobius-pulse.json"
+    sovereign_memory:
+      node_id: "oaa-api-library"
+      # Replace host when OAA exposes latest-by-key; shell uses VITE_OAA_API_BASE + path at runtime where applicable.
+      read_url: "https://oaa-api-library.onrender.com/api/oaa/kv/latest"
+
+jobs:
+  enabled: true
+  workflows:
+    - id: "fetch-hive-world"
+      file: ".github/workflows/fetch-hive-world.yml"
+      trigger: "schedule"
+      cron: "*/15 * * * *"
+    - id: "fetch-hive-world-manual"
+      file: ".github/workflows/fetch-hive-world.yml"
+      trigger: "workflow_dispatch"
+
+governance:
+  agent_prs_allowed: true
+  auto_merge_allowed: false
+  required_reviewers:
+    - "ZEUS"
+    - "ATLAS"

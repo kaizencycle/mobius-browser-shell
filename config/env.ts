@@ -14,6 +14,8 @@ export const env = {
     reflections: import.meta.env.VITE_REFLECTIONS_URL as string || 'https://hive-api-2le8.onrender.com',
     citizenShield: import.meta.env.VITE_CITIZEN_SHIELD_URL as string || 'https://lab6-proof-api.onrender.com',
     hive: import.meta.env.VITE_HIVE_URL as string | undefined,
+    /** Raw GitHub (or static host) base for HIVE /world/*.json; see mobius.yaml ingest. */
+    hiveWorldBaseUrl: import.meta.env.VITE_HIVE_WORLD_BASE_URL as string | undefined,
   },
 
   // === BACKEND APIs ===

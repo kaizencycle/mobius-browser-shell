@@ -1,0 +1,31 @@
+name: Fetch HIVE world snapshot
+
+on:
+  schedule:
+    - cron: '*/15 * * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: fetch-hive-world
+  cancel-in-progress: true
+
+jobs:
+  fetch-hive-world:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Pull world JSON from mobius-hive
+        # Optional: set MOBIUS_HIVE_REPO / MOBIUS_HIVE_BRANCH in repo Variables to override defaults.
+        run: bash scripts/mesh/fetch-hive-world.sh
+
+      - name: Commit snapshot (if changed)
+        run: |
+          git config user.name "mobius-bot"
+          git config user.email "bot@mobius.systems"
+          git add public/world
+          git diff --staged --quiet || git commit -m "chore(mesh): sync HIVE world snapshot"
+          git push

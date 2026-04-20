@@ -1,0 +1,22 @@
+{
+  "version": "mobius-hive-world.v1",
+  "cycle": {
+    "id": "C-288",
+    "label": "Mobius Mesh Workflow v1",
+    "mesh_freshness_sla_seconds": 1800
+  },
+  "active_event_id": "signal-fog",
+  "active_quest_id": "restore-the-beacon",
+  "assigned_sentinel_id": "zeus",
+  "vault": {
+    "label": "Fountain",
+    "progress": 0.42
+  },
+  "integrity": {
+    "gi": 0.95,
+    "mic_readiness": "ready"
+  },
+  "kv_status": "degraded",
+  "source": "bundled-fallback",
+  "updated_at": "2026-04-20T00:00:00.000Z"
+}
