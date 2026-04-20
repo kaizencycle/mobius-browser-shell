@@ -50,6 +50,10 @@ jobs:
     - id: "fetch-hive-world-manual"
       file: ".github/workflows/fetch-hive-world.yml"
       trigger: "workflow_dispatch"
+    - id: "hive-player-action"
+      file: "api/hive/action.ts"
+      trigger: "on_demand"
+      note: "Vercel serverless — POST /api/hive/action (C-289 playable loop)"
 
 governance:
   agent_prs_allowed: true

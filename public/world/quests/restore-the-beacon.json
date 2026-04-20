@@ -3,5 +3,11 @@
   "title": "Restore the Beacon",
   "objective": "Clear the fog by stabilizing terminal snapshot continuity and OAA read paths.",
   "sentinel_id": "zeus",
-  "event_id": "signal-fog"
+  "event_id": "signal-fog",
+  "status": "active",
+  "progress": 0,
+  "steps": [
+    { "id": "inspect", "completed": false },
+    { "id": "fallback", "completed": false }
+  ]
 }

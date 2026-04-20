@@ -35,12 +35,20 @@ export interface HiveEvent {
   sentinel_id?: string;
 }
 
+export interface HiveQuestStep {
+  id: string;
+  completed: boolean;
+}
+
 export interface HiveQuest {
   id: string;
   title: string;
   objective?: string;
   sentinel_id?: string;
   event_id?: string;
+  status?: 'active' | 'completed';
+  progress?: number;
+  steps?: HiveQuestStep[];
 }
 
 export interface HiveSentinel {
