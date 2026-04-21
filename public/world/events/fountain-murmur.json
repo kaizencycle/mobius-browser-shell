@@ -1,0 +1,17 @@
+{
+  "id": "fountain-murmur",
+  "type": "integrity_event",
+  "severity": "low",
+  "title": "Fountain Murmur",
+  "description": "The vault deepens and integrity rises; the city hears water again.",
+  "sentinel_owner": "hermes",
+  "ui": {
+    "overlay": "shimmer",
+    "color": "warm",
+    "priority": 2
+  },
+  "tone": "hope",
+  "summary": "The vault deepens and integrity rises; the city hears water again.",
+  "cycle_id": "C-288",
+  "updated_at": "2026-04-21T23:00:02.379Z"
+}
