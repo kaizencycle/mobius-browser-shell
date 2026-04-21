@@ -56,7 +56,8 @@ interface TerminalProviderProps {
 
 export function TerminalProvider({
   children,
-  intervalMs = 60_000,
+  /** Default 30s: Terminal is live — keep GI / lanes reasonably fresh without hammering. */
+  intervalMs = 30_000,
 }: TerminalProviderProps) {
   const [state, setState] = useState<TerminalState | null>(null);
   const [isInitialLoading, setIsInitialLoading] = useState(true);
@@ -71,7 +72,7 @@ export function TerminalProvider({
         setIsInitialLoading(false);
         if (next) setPulseTick((t) => t + 1);
       },
-      { intervalMs, immediate: true },
+      { intervalMs, immediate: true, full: true },
     );
     subRef.current = unsubscribe;
     return () => {

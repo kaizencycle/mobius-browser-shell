@@ -19,9 +19,19 @@
  * payloads (2026-04-16, cycle C-283).
  */
 
-const TERMINAL_ORIGIN = 'https://mobius-civic-ai-terminal.vercel.app';
-const TERMINAL_SNAPSHOT_LITE = `${TERMINAL_ORIGIN}/api/terminal/snapshot-lite`;
-const TERMINAL_SNAPSHOT_FULL = `${TERMINAL_ORIGIN}/api/terminal/snapshot`;
+import { env } from '../../config/env';
+
+function terminalOrigin(): string {
+  return env.terminalOrigin.replace(/\/+$/, '');
+}
+
+function terminalSnapshotLiteUrl(): string {
+  return `${terminalOrigin()}/api/terminal/snapshot-lite`;
+}
+
+function terminalSnapshotFullUrl(): string {
+  return `${terminalOrigin()}/api/terminal/snapshot`;
+}
 
 // Fetch budgets. The terminal's own internal lane timeout is 5s, so the
 // previous 5s hard abort raced it and silently returned null. We give lite
@@ -589,7 +599,7 @@ async function fetchSnapshotWithRetry(
  */
 export async function fetchTerminalState(): Promise<TerminalState | null> {
   const lite = await fetchSnapshotWithRetry(
-    TERMINAL_SNAPSHOT_LITE,
+    terminalSnapshotLiteUrl(),
     LITE_TIMEOUT_MS,
     'lite',
     LITE_RETRIES,
@@ -600,7 +610,7 @@ export async function fetchTerminalState(): Promise<TerminalState | null> {
   }
 
   const full = await fetchSnapshotWithRetry(
-    TERMINAL_SNAPSHOT_FULL,
+    terminalSnapshotFullUrl(),
     FULL_TIMEOUT_MS,
     'full',
     0,
@@ -624,7 +634,7 @@ export async function fetchTerminalState(): Promise<TerminalState | null> {
  */
 export async function fetchFullTerminalState(): Promise<TerminalState | null> {
   const full = await fetchSnapshotWithRetry(
-    TERMINAL_SNAPSHOT_FULL,
+    terminalSnapshotFullUrl(),
     FULL_TIMEOUT_MS,
     'full',
     0,

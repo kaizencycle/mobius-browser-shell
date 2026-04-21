@@ -120,6 +120,8 @@ export interface ThreatIntelligenceEntry {
   tags: string[];
   ttl: number;                   // Time-to-live in hours before re-scan
   echoConfidence: number;        // 0-1 ECHO's confidence in the finding
+  /** Provenance when merged from Mobius Terminal snapshot. */
+  source?: 'terminal' | 'echo_rag';
 }
 
 export interface ThreatRAGSource {
@@ -167,6 +169,10 @@ export interface ThreatIntelligenceFeed {
     criticalCount: number;
     highCount: number;
     domainBreakdown: Record<ThreatDomain, number>;
+    /** Rows synthesized from Mobius Terminal snapshot (live). */
+    liveTerminalSignalCount?: number;
+    /** True when OAA ECHO RAG returned at least one row this cycle. */
+    echoRagHydrated?: boolean;
   };
 }
 

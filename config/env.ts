@@ -9,6 +9,11 @@
 
 export const env = {
   // === FRONTEND LABS (iframe targets) ===
+  /** Mobius Civic AI Terminal (snapshots, signals). Override for previews / forks. */
+  terminalOrigin:
+    (import.meta.env.VITE_TERMINAL_ORIGIN as string | undefined)?.replace(/\/+$/, '') ||
+    'https://mobius-civic-ai-terminal.vercel.app',
+
   labs: {
     oaa: import.meta.env.VITE_OAA_URL as string || 'https://lab7-proof.onrender.com',
     reflections: import.meta.env.VITE_REFLECTIONS_URL as string || 'https://hive-api-2le8.onrender.com',

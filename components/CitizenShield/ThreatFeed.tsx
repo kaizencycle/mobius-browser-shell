@@ -108,6 +108,16 @@ const ThreatCard: React.FC<ThreatCardProps> = ({ entry }) => {
             {domain.icon}
             {domain.label}
           </span>
+          {entry.source === 'terminal' && (
+            <span className="px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wide bg-indigo-100 text-indigo-800 border border-indigo-200">
+              Terminal
+            </span>
+          )}
+          {entry.source === 'echo_rag' && (
+            <span className="px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wide bg-violet-100 text-violet-800 border border-violet-200">
+              ECHO RAG
+            </span>
+          )}
           <span className="flex items-center gap-1 text-[10px] text-slate-400">
             <Clock className="w-3 h-3" />
             {formatTimeAgo(entry.timestamp)}
