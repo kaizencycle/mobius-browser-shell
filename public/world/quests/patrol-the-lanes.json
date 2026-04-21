@@ -1,0 +1,28 @@
+{
+  "id": "patrol-the-lanes",
+  "type": "vigil_quest",
+  "title": "Patrol the Lanes",
+  "description": "Keep watch: terminal heartbeat, pulse freshness, OAA seals.",
+  "assigned_by": "atlas",
+  "status": "active",
+  "progress": 0,
+  "steps": [
+    {
+      "id": "heartbeat",
+      "label": "Log heartbeat",
+      "completed": false
+    },
+    {
+      "id": "freshness",
+      "label": "Check pulse freshness",
+      "completed": false
+    }
+  ],
+  "reward_preview": {
+    "vault_effect": "none",
+    "mic_effect": "none_until_eligible"
+  },
+  "cycle_id": "C-288",
+  "updated_at": "2026-04-21T17:45:27.559Z",
+  "sentinel_id": "atlas"
+}

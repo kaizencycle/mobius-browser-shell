@@ -1,0 +1,17 @@
+{
+  "id": "quiet-grid",
+  "type": "calm_event",
+  "severity": "low",
+  "title": "Quiet Grid",
+  "description": "No mesh alarms fired on this tick.",
+  "sentinel_owner": "atlas",
+  "ui": {
+    "overlay": "clear",
+    "color": "neutral",
+    "priority": 0
+  },
+  "tone": "calm",
+  "summary": "No mesh alarms fired on this tick.",
+  "cycle_id": "C-288",
+  "updated_at": "2026-04-21T17:45:27.559Z"
+}
