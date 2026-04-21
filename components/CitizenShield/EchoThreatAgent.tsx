@@ -7,6 +7,7 @@ import {
 } from '../../types';
 import { echoAgent } from '../../services/EchoThreatIntelligence';
 import { useTerminal } from '../../contexts/TerminalContext';
+import { mergeThreatFeedWithTerminal } from '../../src/lib/echo-terminal-feed';
 import {
   Radio,
   Activity,
@@ -110,22 +111,27 @@ export const EchoThreatAgent: React.FC<EchoThreatAgentProps> = ({
   const { state: terminalState } = useTerminal();
   const lastTerminalScanRef = useRef<string | null>(null);
 
+  const emitMerged = useCallback(
+    (feed: ThreatIntelligenceFeed) => {
+      const merged = mergeThreatFeedWithTerminal(feed, terminalState);
+      setAgentState(merged.agentState);
+      onFeedUpdate?.(merged);
+    },
+    [onFeedUpdate, terminalState],
+  );
+
   // Initialize ECHO agent
   useEffect(() => {
     let unsubscribe: (() => void) | null = null;
 
     const init = async () => {
       unsubscribe = echoAgent.subscribe((feed) => {
-        setAgentState(feed.agentState);
-        onFeedUpdate?.(feed);
+        emitMerged(feed);
       });
 
       await echoAgent.initialize();
-      setAgentState(echoAgent.getAgentState());
       setInitialized(true);
-
-      // Deliver initial feed
-      onFeedUpdate?.(echoAgent.getFeed());
+      emitMerged(echoAgent.getFeed());
     };
 
     init();
@@ -133,7 +139,7 @@ export const EchoThreatAgent: React.FC<EchoThreatAgentProps> = ({
     return () => {
       unsubscribe?.();
     };
-  }, []);
+  }, [emitMerged]);
 
   // Refresh uptime every 30s
   useEffect(() => {
@@ -143,6 +149,11 @@ export const EchoThreatAgent: React.FC<EchoThreatAgentProps> = ({
     }, 30000);
     return () => clearInterval(interval);
   }, [initialized]);
+
+  useEffect(() => {
+    if (!initialized) return;
+    emitMerged(echoAgent.getFeed());
+  }, [initialized, terminalState, emitMerged]);
 
   // Terminal cross-wiring: when the terminal reports an elevated tripwire or
   // any alert/critical signal we haven't seen yet, trigger an ECHO scan so
@@ -164,12 +175,11 @@ export const EchoThreatAgent: React.FC<EchoThreatAgentProps> = ({
     setIsScanning(true);
     try {
       const feed = await echoAgent.forceScan();
-      setAgentState(feed.agentState);
-      onFeedUpdate?.(feed);
+      emitMerged(feed);
     } finally {
       setIsScanning(false);
     }
-  }, [onFeedUpdate]);
+  }, [emitMerged]);
 
   // Loading
   if (!agentState) {

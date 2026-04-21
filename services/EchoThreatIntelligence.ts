@@ -60,183 +60,6 @@ const RAG_SOURCE_REGISTRY: Record<ThreatDomain, ThreatRAGSource[]> = {
 };
 
 // ============================================
-// Mock Threat Intelligence Data
-// In production, these come from live RAG queries
-// ============================================
-
-const MOCK_THREAT_ENTRIES: ThreatIntelligenceEntry[] = [
-  // === CYBER THREATS ===
-  {
-    id: 'echo-ct-001',
-    timestamp: new Date(Date.now() - 25 * 60 * 1000).toISOString(),
-    domain: 'cyber_threats',
-    severity: 'critical',
-    status: 'active',
-    title: 'CVE-2026-0217: Remote Code Execution in libwebp',
-    summary: 'A critical heap buffer overflow in libwebp allows remote attackers to execute arbitrary code via a crafted WebP image. This library is used in Chrome, Firefox, and hundreds of applications.',
-    details: 'The vulnerability exists in the Huffman coding algorithm used during WebP lossless compression. An attacker can craft a malicious WebP image that, when processed by any application using libwebp, triggers a heap buffer overflow leading to arbitrary code execution. CVSS Score: 9.8. Exploitation in the wild has been confirmed by Google TAG.',
-    indicators: ['CVE-2026-0217', 'libwebp < 1.4.1', 'WebP heap overflow'],
-    recommendations: [
-      'Update all browsers to latest version immediately',
-      'Update any applications that process WebP images',
-      'Consider blocking WebP files at email gateway temporarily',
-      'Scan systems for indicators of compromise',
-    ],
-    ragSources: [
-      { name: 'NVD (NIST)', url: 'https://nvd.nist.gov/vuln/detail/CVE-2026-0217', type: 'cve_db', retrievedAt: new Date(Date.now() - 20 * 60 * 1000).toISOString(), relevanceScore: 0.99 },
-      { name: 'CISA KEV', url: 'https://www.cisa.gov/known-exploited-vulnerabilities', type: 'cve_db', retrievedAt: new Date(Date.now() - 20 * 60 * 1000).toISOString(), relevanceScore: 0.97 },
-    ],
-    tags: ['rce', 'browser', 'zero-day', 'actively-exploited'],
-    ttl: 4,
-    echoConfidence: 0.98,
-  },
-  {
-    id: 'echo-ct-002',
-    timestamp: new Date(Date.now() - 3 * 60 * 60 * 1000).toISOString(),
-    domain: 'cyber_threats',
-    severity: 'high',
-    status: 'active',
-    title: 'LockBit 4.0 Ransomware Campaign Targeting SMBs',
-    summary: 'A new LockBit 4.0 variant has been observed targeting small and medium businesses through compromised RDP endpoints and phishing emails with malicious macro documents.',
-    details: 'The campaign uses a two-stage loader that first establishes persistence via scheduled tasks, then deploys the ransomware payload. Initial access vectors include brute-forced RDP credentials and spear-phishing emails with .xlsm attachments. The ransomware uses AES-256 + RSA-2048 encryption.',
-    indicators: ['LockBit 4.0', 'SHA256: a3f2...d8e1', 'C2: 185.220.101.x', '.lockbit4 extension'],
-    recommendations: [
-      'Enforce MFA on all RDP endpoints',
-      'Block macro execution in Office documents',
-      'Ensure offline backups are current',
-      'Monitor for unusual scheduled task creation',
-    ],
-    ragSources: [
-      { name: 'AlienVault OTX', url: 'https://otx.alienvault.com/', type: 'threat_feed', retrievedAt: new Date(Date.now() - 2.5 * 60 * 60 * 1000).toISOString(), relevanceScore: 0.94 },
-      { name: 'MITRE ATT&CK', url: 'https://attack.mitre.org/', type: 'threat_feed', retrievedAt: new Date(Date.now() - 2.5 * 60 * 60 * 1000).toISOString(), relevanceScore: 0.91 },
-    ],
-    tags: ['ransomware', 'lockbit', 'smb', 'rdp', 'phishing'],
-    ttl: 8,
-    echoConfidence: 0.93,
-  },
-
-  // === CYBER SECURITY ===
-  {
-    id: 'echo-cs-001',
-    timestamp: new Date(Date.now() - 1 * 60 * 60 * 1000).toISOString(),
-    domain: 'cyber_security',
-    severity: 'high',
-    status: 'monitoring',
-    title: 'OWASP Warns: AI Prompt Injection Now Top Web Risk',
-    summary: 'OWASP has added AI Prompt Injection to its Top 10 Web Application Security Risks list, warning that LLM-integrated applications are vulnerable to manipulation through crafted inputs.',
-    details: 'As organizations rapidly integrate LLMs into web applications, prompt injection attacks allow adversaries to bypass content filters, extract training data, and execute unintended actions. OWASP recommends input sanitization, output validation, and privilege separation for LLM integrations.',
-    indicators: ['OWASP LLM Top 10', 'Prompt injection', 'LLM manipulation'],
-    recommendations: [
-      'Audit all LLM-integrated endpoints for prompt injection',
-      'Implement input sanitization layers before LLM calls',
-      'Use privilege separation — never give LLMs direct DB access',
-      'Add output validation and content safety filters',
-    ],
-    ragSources: [
-      { name: 'OWASP Top 10', url: 'https://owasp.org/Top10/', type: 'advisory', retrievedAt: new Date(Date.now() - 50 * 60 * 1000).toISOString(), relevanceScore: 0.96 },
-      { name: 'Google Project Zero', url: 'https://googleprojectzero.blogspot.com/', type: 'research', retrievedAt: new Date(Date.now() - 50 * 60 * 1000).toISOString(), relevanceScore: 0.88 },
-    ],
-    tags: ['ai-security', 'prompt-injection', 'owasp', 'llm', 'web-security'],
-    ttl: 24,
-    echoConfidence: 0.95,
-  },
-  {
-    id: 'echo-cs-002',
-    timestamp: new Date(Date.now() - 12 * 60 * 60 * 1000).toISOString(),
-    domain: 'cyber_security',
-    severity: 'medium',
-    status: 'active',
-    title: 'Supply Chain Attack via NPM Package "event-stream-next"',
-    summary: 'A malicious NPM package mimicking "event-stream" has been found exfiltrating environment variables and SSH keys from developer machines during install scripts.',
-    details: 'The package "event-stream-next" was published 72 hours ago and has accumulated 12,000 downloads. The postinstall script encodes .env files and ~/.ssh/ contents as base64 and exfiltrates them to a C2 server. NPM has removed the package, but developers who installed it should rotate all credentials.',
-    indicators: ['npm:event-stream-next', 'C2: cdn-analytics.xyz', 'postinstall exfiltration'],
-    recommendations: [
-      'Check if event-stream-next is in your dependencies',
-      'Rotate all secrets and SSH keys if installed',
-      'Use npm audit and lockfile-lint regularly',
-      'Enable 2FA on your npm account',
-    ],
-    ragSources: [
-      { name: 'SecurityWeek', url: 'https://www.securityweek.com/', type: 'news', retrievedAt: new Date(Date.now() - 11 * 60 * 60 * 1000).toISOString(), relevanceScore: 0.90 },
-    ],
-    tags: ['supply-chain', 'npm', 'developer-security', 'credential-theft'],
-    ttl: 12,
-    echoConfidence: 0.91,
-  },
-
-  // === DIGITAL HEALTH ===
-  {
-    id: 'echo-dh-001',
-    timestamp: new Date(Date.now() - 5 * 60 * 60 * 1000).toISOString(),
-    domain: 'digital_health',
-    severity: 'high',
-    status: 'active',
-    title: 'Healthcare Data Breach: 3.2M Patient Records Exposed',
-    summary: 'A major telehealth provider disclosed unauthorized access to systems containing 3.2 million patient records, including PII and Protected Health Information (PHI).',
-    details: 'The breach occurred through a misconfigured API endpoint that allowed unauthenticated access to patient data. Records include full names, dates of birth, SSN, insurance information, and medical diagnoses. The provider has begun HIPAA breach notification procedures.',
-    indicators: ['HIPAA breach', 'API misconfiguration', 'PHI exposure', 'Telehealth platform'],
-    recommendations: [
-      'If you use telehealth services, check breach notification letters',
-      'Consider placing a credit freeze with all three bureaus',
-      'Monitor your Explanation of Benefits for fraudulent claims',
-      'Enable health insurance fraud alerts with your provider',
-    ],
-    ragSources: [
-      { name: 'HHS HIPAA Breach Portal', url: 'https://ocrportal.hhs.gov/ocr/breach/breach_report.jsf', type: 'health_advisory', retrievedAt: new Date(Date.now() - 4.5 * 60 * 60 * 1000).toISOString(), relevanceScore: 0.94 },
-      { name: 'Health-ISAC', url: 'https://health-isac.org/', type: 'threat_feed', retrievedAt: new Date(Date.now() - 4.5 * 60 * 60 * 1000).toISOString(), relevanceScore: 0.92 },
-    ],
-    tags: ['healthcare', 'data-breach', 'hipaa', 'phi', 'telehealth'],
-    ttl: 12,
-    echoConfidence: 0.94,
-  },
-  {
-    id: 'echo-dh-002',
-    timestamp: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
-    domain: 'digital_health',
-    severity: 'medium',
-    status: 'monitoring',
-    title: 'FDA Warns: Bluetooth Vulnerabilities in Insulin Pumps',
-    summary: 'The FDA has issued a safety communication regarding Bluetooth Low Energy (BLE) vulnerabilities in certain insulin pump models that could allow unauthorized dosage changes.',
-    details: 'Research disclosed at a security conference demonstrated that BLE pairing flaws in three insulin pump models allow an attacker within radio range to intercept and modify dosage commands. Manufacturers are releasing firmware updates. The FDA classifies this as a Class I recall.',
-    indicators: ['FDA Safety Communication', 'BLE vulnerability', 'Insulin pump', 'Class I recall'],
-    recommendations: [
-      'Check the FDA recall list for your specific pump model',
-      'Apply firmware updates as soon as available',
-      'Keep your pump\'s Bluetooth off when not needed',
-      'Report any suspicious device behavior to your provider',
-    ],
-    ragSources: [
-      { name: 'FDA Cybersecurity Guidance', url: 'https://www.fda.gov/medical-devices/digital-health-center-excellence', type: 'health_advisory', retrievedAt: new Date(Date.now() - 1.5 * 24 * 60 * 60 * 1000).toISOString(), relevanceScore: 0.93 },
-    ],
-    tags: ['medical-device', 'iot', 'bluetooth', 'fda-recall', 'patient-safety'],
-    ttl: 48,
-    echoConfidence: 0.89,
-  },
-  {
-    id: 'echo-dh-003',
-    timestamp: new Date(Date.now() - 8 * 60 * 60 * 1000).toISOString(),
-    domain: 'digital_health',
-    severity: 'info',
-    status: 'resolved',
-    title: 'WHO Publishes New Digital Health Data Governance Framework',
-    summary: 'The World Health Organization released updated guidelines for digital health data governance, emphasizing patient consent, data minimization, and cross-border data protection.',
-    details: 'The framework provides a standardized approach for nations implementing digital health systems. Key principles include purpose limitation, data minimization, patient consent, interoperability standards, and cybersecurity requirements for health data.',
-    indicators: ['WHO framework', 'Digital health governance', 'Data minimization'],
-    recommendations: [
-      'Review the WHO framework for alignment with your health data practices',
-      'Understand your rights regarding digital health data',
-      'Advocate for data minimization in health apps you use',
-    ],
-    ragSources: [
-      { name: 'WHO Digital Health', url: 'https://www.who.int/health-topics/digital-health', type: 'health_advisory', retrievedAt: new Date(Date.now() - 7 * 60 * 60 * 1000).toISOString(), relevanceScore: 0.87 },
-    ],
-    tags: ['governance', 'who', 'patient-rights', 'data-protection'],
-    ttl: 72,
-    echoConfidence: 0.86,
-  },
-];
-
-// ============================================
 // ECHO Threat Intelligence Service (Singleton)
 // ============================================
 
@@ -252,6 +75,7 @@ class EchoThreatIntelligenceService {
   private totalScans: number = 0;
   private listeners: Set<EchoEventCallback> = new Set();
   private isInitialized: boolean = false;
+  private lastRagHydrated = false;
 
   constructor(cronIntervalMs: number = DEFAULT_CRON_INTERVAL_MS) {
     this.cronIntervalMs = cronIntervalMs;
@@ -325,6 +149,7 @@ class EchoThreatIntelligenceService {
    */
   async performFullScan(): Promise<void> {
     this.agentStatus = 'scanning';
+    this.lastRagHydrated = false;
     this.notifyListeners();
 
     for (const domain of ECHO_DOMAINS) {
@@ -354,13 +179,15 @@ class EchoThreatIntelligenceService {
     this.agentStatus = 'processing';
 
     try {
-      // Attempt live RAG query via API
       const results = await this.queryRAG(domain);
+      if (results.length > 0) {
+        this.lastRagHydrated = true;
+      }
 
       if (results.length > 0) {
-        // Merge new entries (de-duplicate by ID)
-        const existingIds = new Set(this.entries.map(e => e.id));
-        const newEntries = results.filter(e => !existingIds.has(e.id));
+        const existingIds = new Set(this.entries.map((e) => e.id));
+        const tagged = results.map((e) => ({ ...e, source: 'echo_rag' as const }));
+        const newEntries = tagged.filter((e) => !existingIds.has(e.id));
         this.entries = [...newEntries, ...this.entries];
         cycle.entriesFound = newEntries.length;
       }
@@ -368,14 +195,11 @@ class EchoThreatIntelligenceService {
       cycle.status = 'completed';
       cycle.completedAt = new Date().toISOString();
       cycle.ragQueriesPerformed = RAG_SOURCE_REGISTRY[domain].length;
-
     } catch {
-      // Fallback to mock data
-      console.log(`🔊 ECHO: RAG query failed for ${domain}, using cached intelligence`);
-      this.loadMockEntries(domain);
+      console.warn(`🔊 ECHO: RAG unavailable for ${domain} — feed uses live Terminal signals only`);
       cycle.status = 'completed';
       cycle.completedAt = new Date().toISOString();
-      cycle.entriesFound = this.entries.filter(e => e.domain === domain).length;
+      cycle.entriesFound = 0;
     }
 
     return this.entries.filter(e => e.domain === domain);
@@ -410,16 +234,6 @@ class EchoThreatIntelligenceService {
     return data.entries || [];
   }
 
-  /**
-   * Load mock entries for a domain (demo/fallback mode)
-   */
-  private loadMockEntries(domain: ThreatDomain): void {
-    const domainEntries = MOCK_THREAT_ENTRIES.filter(e => e.domain === domain);
-    const existingIds = new Set(this.entries.map(e => e.id));
-    const newEntries = domainEntries.filter(e => !existingIds.has(e.id));
-    this.entries = [...newEntries, ...this.entries];
-  }
-
   // ---- Data Access ----
 
   /**
@@ -449,6 +263,7 @@ class EchoThreatIntelligenceService {
         criticalCount: sortedEntries.filter(e => e.severity === 'critical').length,
         highCount: sortedEntries.filter(e => e.severity === 'high').length,
         domainBreakdown,
+        echoRagHydrated: this.lastRagHydrated,
       },
     };
   }

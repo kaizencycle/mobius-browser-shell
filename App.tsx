@@ -58,8 +58,7 @@ import { type TerminalState } from './src/lib/terminal-bridge';
 import { WorldSignalStrip } from './components/WorldSignalStrip';
 import { TerminalHeartbeat } from './components/TerminalHeartbeat';
 
-const TERMINAL_APP_URL =
-  'https://mobius-civic-ai-terminal.vercel.app/terminal';
+const TERMINAL_APP_URL = `${env.terminalOrigin.replace(/\/+$/, '')}/terminal`;
 
 function giChipLinkClasses(
   mode: TerminalState['mode'],

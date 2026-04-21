@@ -1,7 +1,8 @@
 import React from 'react';
+import { env } from '../config/env';
 import type { TerminalState } from '../src/lib/terminal-bridge';
 
-const TERMINAL_URL = 'https://mobius-civic-ai-terminal.vercel.app/terminal';
+const TERMINAL_URL = `${env.terminalOrigin.replace(/\/+$/, '')}/terminal`;
 
 function scoreTextClass(score: number): string {
   if (score >= 0.8) return 'text-emerald-600';
@@ -43,8 +44,42 @@ export const WorldSignalStrip: React.FC<WorldSignalStripProps> = ({
         ? derivedDomainsFromIntegrity(terminalState)
         : [];
 
+  const mode = terminalState?.mode;
+  const modeCls =
+    mode === 'green'
+      ? 'bg-emerald-100 text-emerald-900 border-emerald-200'
+      : mode === 'red'
+        ? 'bg-rose-100 text-rose-900 border-rose-200'
+        : 'bg-amber-100 text-amber-950 border-amber-200';
+
   return (
     <div className="flex-none border-b border-stone-200/80 bg-white/90 px-3 sm:px-6 py-2">
+      <div className="flex flex-wrap items-center gap-x-2 gap-y-1.5 mb-1.5">
+        {terminalState && (
+          <>
+            <span
+              className={`inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wide border ${modeCls}`}
+            >
+              {terminalState.mode}
+            </span>
+            <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wide border border-slate-200 bg-slate-100 text-slate-700">
+              {terminalState.cycle}
+            </span>
+            <span
+              className={`inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wide border ${
+                terminalState.stale
+                  ? 'border-stone-300 bg-stone-200 text-stone-800'
+                  : 'border-sky-200 bg-sky-50 text-sky-900'
+              }`}
+            >
+              {terminalState.stale ? 'Cached' : 'Live'}
+            </span>
+            <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wide border border-violet-200 bg-violet-50 text-violet-900">
+              {terminalState.source}
+            </span>
+          </>
+        )}
+      </div>
       <div className="flex flex-wrap items-center gap-x-2 gap-y-1 font-mono text-[10px] sm:text-xs text-stone-600">
         {domains.length === 0 ? (
           <span className="text-stone-400">World signal …</span>

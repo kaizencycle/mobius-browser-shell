@@ -6,7 +6,7 @@ import { LabFrame } from '../LabFrame';
 import { Shield, CheckCircle, Wifi, Lock, Eye, AlertOctagon, Radio } from 'lucide-react';
 import { CivicRadar, EchoThreatAgent, ThreatFeed, ShieldTerminalPanel } from '../CitizenShield';
 import { useTerminal } from '../../contexts/TerminalContext';
-import { computeDigitalHygieneScore } from '../../src/lib/terminal-bridge';
+import { computeDigitalHygieneScore, isCyberRelevantSignal } from '../../src/lib/terminal-bridge';
 
 export interface CitizenShieldLabProps {
   onNavigateToHive?: () => void;
@@ -19,6 +19,8 @@ export const CitizenShieldLab: React.FC<CitizenShieldLabProps> = ({ onNavigateTo
   const hygieneScore = computeDigitalHygieneScore(terminalState);
   const resiliencePct = Math.round(hygieneScore * 100);
   const tripwireElevated = !!terminalState?.tripwire.elevated;
+  const liveSignalCount =
+    terminalState?.signals.all.filter(isCyberRelevantSignal).length ?? 0;
   
   // If live mode is enabled and URL exists, show iframe
   if (lab && shouldUseLiveMode(lab.url)) {
@@ -150,8 +152,12 @@ export const CitizenShieldLab: React.FC<CitizenShieldLabProps> = ({ onNavigateTo
                         <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-500" />
                     </div>
                     <div>
-                        <h3 className="font-semibold text-slate-800 text-sm sm:text-base">Privacy Literacy</h3>
-                        <p className="text-[10px] sm:text-xs text-slate-500 mt-1">3 trackers blocked today.</p>
+                        <h3 className="font-semibold text-slate-800 text-sm sm:text-base">Signal coverage</h3>
+                        <p className="text-[10px] sm:text-xs text-slate-500 mt-1">
+                          {terminalState
+                            ? `${liveSignalCount} cyber-scoped micro-signals in the latest terminal sweep.`
+                            : 'Connect to the terminal to see live signal coverage.'}
+                        </p>
                     </div>
                 </div>
 
