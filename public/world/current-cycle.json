@@ -1,6 +1,6 @@
 {
-  "cycle_id": "C-287",
-  "updated_at": "2026-04-21T15:44:17.710Z",
+  "cycle_id": "C-288",
+  "updated_at": "2026-04-21T16:43:37.993Z",
   "rules_fired": [
     "kv_degraded"
   ],
@@ -10,12 +10,12 @@
   "signals": {
     "kv_status": "degraded",
     "gi": 0.78,
-    "vault_progress": 0.72
+    "vault_progress": 0.657
   },
   "ingest_health": {
     "terminal_snapshot": true,
     "cycle_state": true,
     "mobius_pulse": true,
-    "oaa_kv_latest": true
+    "oaa_kv_latest": false
   }
 }
