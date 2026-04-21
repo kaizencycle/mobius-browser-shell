@@ -494,7 +494,13 @@ export const HiveLab: React.FC = () => {
 
   // Render the appropriate view
   return (
-    <div className="h-full flex flex-col min-h-0">
+    <div className="h-full flex flex-col min-h-0 relative">
+      <a
+        href="#hive-city-viewport"
+        className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-28 focus:z-50 focus:px-3 focus:py-2 focus:rounded-md focus:bg-stone-900 focus:text-white focus:text-xs"
+      >
+        Skip to HIVE city viewport
+      </a>
       <ViewModeNav />
 
       <div className="shrink-0 border-b border-stone-200 bg-stone-50 max-h-[min(40vh,320px)] overflow-y-auto">
@@ -503,7 +509,7 @@ export const HiveLab: React.FC = () => {
         </div>
       </div>
       
-      <div className="flex-1 min-h-0 overflow-hidden">
+      <div id="hive-city-viewport" className="flex-1 min-h-0 overflow-hidden scroll-mt-4">
         {viewMode === 'city' && <CityView />}
         
         {viewMode === 'character' && character && (

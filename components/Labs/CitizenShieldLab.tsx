@@ -8,7 +8,11 @@ import { CivicRadar, EchoThreatAgent, ThreatFeed, ShieldTerminalPanel } from '..
 import { useTerminal } from '../../contexts/TerminalContext';
 import { computeDigitalHygieneScore } from '../../src/lib/terminal-bridge';
 
-export const CitizenShieldLab: React.FC = () => {
+export interface CitizenShieldLabProps {
+  onNavigateToHive?: () => void;
+}
+
+export const CitizenShieldLab: React.FC<CitizenShieldLabProps> = ({ onNavigateToHive }) => {
   const lab = getLabById(TabId.SHIELD);
   const [threatFeed, setThreatFeed] = useState<ThreatIntelligenceFeed | null>(null);
   const { state: terminalState } = useTerminal();
@@ -31,6 +35,12 @@ export const CitizenShieldLab: React.FC = () => {
   return (
     <div className="h-full overflow-y-auto bg-slate-50 p-4 sm:p-6 lg:p-8 text-slate-900">
         <div className="max-w-5xl mx-auto">
+            <a
+              href="#shield-terminal"
+              className="sr-only focus:not-sr-only focus:block focus:w-fit focus:mb-3 focus:px-3 focus:py-2 focus:rounded-md focus:bg-slate-900 focus:text-white focus:text-sm"
+            >
+              Skip to terminal telemetry
+            </a>
             
             {/* Dashboard Header */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 sm:mb-10 gap-4 sm:gap-0">
@@ -59,13 +69,18 @@ export const CitizenShieldLab: React.FC = () => {
                 </div>
                 <div className="text-left sm:text-right flex sm:block items-center gap-2">
                     <div
-                        className={`text-2xl sm:text-3xl font-mono font-bold ${
+                        className={`text-2xl sm:text-3xl font-mono font-bold tabular-nums ${
                             resiliencePct >= 65
                                 ? 'text-emerald-600'
                                 : resiliencePct >= 45
                                   ? 'text-amber-600'
                                   : 'text-red-600'
                         }`}
+                        role="meter"
+                        aria-valuenow={resiliencePct}
+                        aria-valuemin={0}
+                        aria-valuemax={100}
+                        aria-label={`Digital resilience score ${resiliencePct} percent`}
                     >
                         {resiliencePct}%
                     </div>
@@ -76,7 +91,7 @@ export const CitizenShieldLab: React.FC = () => {
             </div>
 
             {/* Terminal Heartbeat — Live telemetry from Mobius Civic AI Terminal */}
-            <div className="mb-6 sm:mb-8">
+            <div id="shield-terminal" className="mb-6 sm:mb-8 scroll-mt-4">
                 <ShieldTerminalPanel />
             </div>
 
@@ -89,7 +104,23 @@ export const CitizenShieldLab: React.FC = () => {
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-6 sm:mb-8">
                 
                 {/* Modules */}
-                <div className="bg-white p-4 sm:p-6 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-between">
+                <div
+                    role={onNavigateToHive ? 'button' : undefined}
+                    tabIndex={onNavigateToHive ? 0 : undefined}
+                    onClick={() => onNavigateToHive?.()}
+                    onKeyDown={(e) => {
+                      if (!onNavigateToHive) return;
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        onNavigateToHive();
+                      }
+                    }}
+                    className={`bg-white p-4 sm:p-6 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-between text-left w-full ${
+                      onNavigateToHive
+                        ? 'cursor-pointer hover:border-blue-200 hover:shadow-md transition focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 focus-visible:ring-offset-2'
+                        : ''
+                    }`}
+                >
                     <div className="flex justify-between items-start mb-3 sm:mb-4">
                         <div className="p-1.5 sm:p-2 bg-blue-50 text-blue-600 rounded-md">
                             <Wifi className="w-4 h-4 sm:w-5 sm:h-5" />
@@ -104,6 +135,9 @@ export const CitizenShieldLab: React.FC = () => {
                         <h3 className="font-semibold text-slate-800 text-sm sm:text-base">Digital Hygiene</h3>
                         <p className="text-[10px] sm:text-xs text-slate-500 mt-1">
                             Terminal-fed score {Math.round(hygieneScore * 100)}/100 · HTTPS &amp; passkey-capable.
+                            {onNavigateToHive && (
+                              <span className="block mt-1 text-blue-600 font-medium">Open HIVE mesh loop →</span>
+                            )}
                         </p>
                     </div>
                 </div>
@@ -160,8 +194,11 @@ export const CitizenShieldLab: React.FC = () => {
                 <div className="p-4 sm:p-6">
                     <CivicRadar 
                         maxAlerts={4}
-                        onModuleNavigate={(moduleId) => {
-                            console.log('Navigate to Shield module:', moduleId);
+                        onModuleNavigate={() => {
+                            document.getElementById('shield-terminal')?.scrollIntoView({
+                              behavior: 'smooth',
+                              block: 'start',
+                            });
                         }}
                     />
                 </div>

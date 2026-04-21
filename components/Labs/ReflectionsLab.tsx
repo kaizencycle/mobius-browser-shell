@@ -251,7 +251,13 @@ function createNewEntry(): ReflectionEntry {
   };
 }
 
-export const ReflectionsLab: React.FC = () => {
+export interface ReflectionsLabProps {
+  onNavigateToKnowledgeGraph?: () => void;
+}
+
+export const ReflectionsLab: React.FC<ReflectionsLabProps> = ({
+  onNavigateToKnowledgeGraph,
+}) => {
   const [entries, setEntries] = useState<ReflectionEntry[]>([]);
   const [activeEntryId, setActiveEntryId] = useState<string | null>(null);
   const [activePhaseId, setActivePhaseId] = useState<PhaseId>('raw');
@@ -507,6 +513,12 @@ export const ReflectionsLab: React.FC = () => {
     return () => window.clearTimeout(timeoutId);
   }, [agentNotice]);
 
+  useEffect(() => {
+    if (!agentError) return;
+    const t = window.setTimeout(() => setAgentError(null), 8000);
+    return () => window.clearTimeout(t);
+  }, [agentError]);
+
   const recipient = user?.id || user?.email || 'local-user';
   const chainTransactions = getChainTransactions(recipient);
   const loopMicEarnedFromChain = Math.round(
@@ -617,8 +629,25 @@ export const ReflectionsLab: React.FC = () => {
     }
   };
 
+  const goNextPhase = () => {
+    if (activePhaseIndex < PHASE_TEMPLATE.length - 1) {
+      setActivePhaseId(PHASE_TEMPLATE[activePhaseIndex + 1].id);
+    }
+  };
+  const goPrevPhase = () => {
+    if (activePhaseIndex > 0) {
+      setActivePhaseId(PHASE_TEMPLATE[activePhaseIndex - 1].id);
+    }
+  };
+
   return (
-    <div className="h-full flex flex-col bg-stone-50 overflow-hidden">
+    <div className="h-full flex flex-col bg-stone-50 overflow-hidden relative">
+      <a
+        href="#reflection-editor"
+        className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-20 focus:z-50 focus:px-3 focus:py-2 focus:bg-stone-900 focus:text-white focus:rounded-md"
+      >
+        Skip to reflection editor
+      </a>
       {/* Header */}
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between px-4 sm:px-6 py-3 border-b border-stone-200 bg-white">
         <div className="flex items-center space-x-2">
@@ -635,13 +664,26 @@ export const ReflectionsLab: React.FC = () => {
           </div>
         </div>
 
-        <button
-          onClick={handleNewEntry}
-          className="inline-flex items-center justify-center space-x-2 px-3 py-2 sm:py-1.5 rounded-md text-xs font-medium bg-stone-900 text-stone-50 hover:bg-stone-800 transition w-full sm:w-auto"
-        >
-          <Plus className="w-3 h-3" />
-          <span>New entry</span>
-        </button>
+        <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+          <button
+            type="button"
+            onClick={handleNewEntry}
+            className="inline-flex items-center justify-center space-x-2 px-3 py-2 sm:py-1.5 rounded-md text-xs font-medium bg-stone-900 text-stone-50 hover:bg-stone-800 transition w-full sm:w-auto"
+          >
+            <Plus className="w-3 h-3" />
+            <span>New entry</span>
+          </button>
+          {onNavigateToKnowledgeGraph && (
+            <button
+              type="button"
+              onClick={onNavigateToKnowledgeGraph}
+              className="inline-flex items-center justify-center gap-1.5 px-3 py-2 sm:py-1.5 rounded-md text-xs font-medium border border-stone-200 bg-white text-stone-700 hover:bg-stone-50 transition w-full sm:w-auto"
+            >
+              <Network className="w-3 h-3" />
+              Open graph
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Body: sidebar + editor */}
@@ -746,7 +788,7 @@ export const ReflectionsLab: React.FC = () => {
         )}
 
         {/* Right: editor */}
-        <section className="flex-1 flex flex-col min-w-0 min-h-0">
+        <section id="reflection-editor" className="flex-1 flex flex-col min-w-0 min-h-0 scroll-mt-4">
           {!activeEntry && (
             <div className="h-full flex flex-col items-center justify-center text-center px-6">
               <Sparkles className="w-8 h-8 text-stone-300 mb-3" />
@@ -772,23 +814,51 @@ export const ReflectionsLab: React.FC = () => {
               {/* Title + phase tabs */}
               <div className="border-b border-stone-200 bg-white px-4 sm:px-6 py-3 flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
                 <div className="flex-1 min-w-0 flex items-center space-x-2">
-                  <PenLine className="w-4 h-4 text-stone-400 flex-none" />
+                  <PenLine className="w-4 h-4 text-stone-400 flex-none" aria-hidden />
                   <input
-                    className="w-full bg-transparent border-none outline-none text-sm font-semibold text-stone-900 placeholder:text-stone-400"
+                    className="w-full bg-transparent border-none outline-none text-sm font-semibold text-stone-900 placeholder:text-stone-400 focus:ring-0"
                     value={activeEntry.title}
                     onChange={(e) => handleTitleChange(e.target.value)}
                     placeholder="Give this reflection a name…"
+                    aria-label="Reflection title"
                   />
                   <button
+                    type="button"
                     onClick={() => handleDeleteEntry(activeEntry.id)}
-                    className="p-2 text-stone-400 hover:text-red-500 hover:bg-red-50 rounded transition-colors"
+                    className="p-2 text-stone-400 hover:text-red-500 hover:bg-red-50 rounded transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-red-400"
                     title="Delete entry"
+                    aria-label="Delete this reflection entry"
                   >
                     <Trash2 className="w-4 h-4" />
                   </button>
                 </div>
 
-                <div className="flex items-center space-x-2 mt-2 md:mt-0 overflow-x-auto pb-1 md:pb-0 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                <div className="hidden md:flex items-center gap-1 shrink-0" aria-label="Phase navigation">
+                  <button
+                    type="button"
+                    onClick={goPrevPhase}
+                    disabled={activePhaseIndex <= 0}
+                    className="p-1.5 rounded-md border border-stone-200 text-stone-600 hover:bg-stone-50 disabled:opacity-40"
+                    aria-label="Previous phase"
+                  >
+                    <ChevronLeft className="w-4 h-4" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={goNextPhase}
+                    disabled={activePhaseIndex >= PHASE_TEMPLATE.length - 1}
+                    className="p-1.5 rounded-md border border-stone-200 text-stone-600 hover:bg-stone-50 disabled:opacity-40"
+                    aria-label="Next phase"
+                  >
+                    <ChevronRight className="w-4 h-4" />
+                  </button>
+                </div>
+
+                <div
+                  className="flex items-center space-x-2 mt-2 md:mt-0 overflow-x-auto pb-1 md:pb-0 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+                  role="tablist"
+                  aria-label="Reflection phases"
+                >
                   {PHASE_TEMPLATE.map((phaseDef) => {
                     const done = !!activeEntry.phases.find(
                       (p) =>
@@ -798,9 +868,13 @@ export const ReflectionsLab: React.FC = () => {
 
                     return (
                       <button
+                        type="button"
                         key={phaseDef.id}
+                        role="tab"
+                        aria-selected={isActive}
+                        id={`phase-tab-${phaseDef.id}`}
                         onClick={() => setActivePhaseId(phaseDef.id)}
-                        className={`px-3 py-1.5 rounded-full text-[11px] font-medium border flex items-center space-x-1 whitespace-nowrap ${
+                        className={`px-3 py-1.5 rounded-full text-[11px] font-medium border flex items-center space-x-1 whitespace-nowrap focus:outline-none focus-visible:ring-2 focus-visible:ring-stone-900 focus-visible:ring-offset-2 ${
                           isActive
                             ? 'bg-stone-900 text-stone-50 border-stone-900'
                             : 'bg-stone-50 text-stone-600 border-stone-200 hover:border-stone-400'
@@ -808,7 +882,7 @@ export const ReflectionsLab: React.FC = () => {
                       >
                         <span>{phaseDef.label}</span>
                         {done && (
-                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" aria-label="phase has content" />
                         )}
                       </button>
                     );
@@ -846,6 +920,15 @@ export const ReflectionsLab: React.FC = () => {
 
               {/* Phase editor */}
               <div className="flex-1 flex flex-col min-h-0 px-4 sm:px-6 py-4 space-y-3 overflow-auto">
+                {rewardNotice && (
+                  <div
+                    role="status"
+                    aria-live="polite"
+                    className="rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs text-emerald-900"
+                  >
+                    {rewardNotice}
+                  </div>
+                )}
                 <div>
                   <div className="text-xs font-semibold text-stone-700 tracking-wide">
                     {activePhase.label}
@@ -856,13 +939,20 @@ export const ReflectionsLab: React.FC = () => {
                 </div>
 
                 <textarea
-                  className="flex-1 w-full min-h-[42vh] md:min-h-[200px] resize-none rounded-md border border-stone-200 bg-white px-3 py-3 text-sm text-stone-900 placeholder:text-stone-400 focus:outline-none focus:ring-1 focus:ring-stone-900/60 focus:border-stone-900/60"
+                  id={`reflection-phase-${activePhase.id}`}
+                  role="tabpanel"
+                  aria-labelledby={`phase-tab-${activePhase.id}`}
+                  className="flex-1 w-full min-h-[42vh] md:min-h-[200px] resize-y rounded-md border border-stone-200 bg-white px-3 py-3 text-sm text-stone-900 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-stone-900/25 focus:border-stone-900/40"
                   value={activePhase.content}
                   onChange={(e) =>
                     handlePhaseChange(activePhase.id, e.target.value)
                   }
                   placeholder={activePhase.helper}
                 />
+                <p className="text-[11px] text-stone-500">
+                  {countWords(activePhase.content)} words in this phase ·{' '}
+                  {activeEntry.phases.reduce((n, p) => n + countWords(p.content), 0)} total
+                </p>
 
                 <div className="text-[11px] text-stone-400 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 pt-1">
                   <span>
