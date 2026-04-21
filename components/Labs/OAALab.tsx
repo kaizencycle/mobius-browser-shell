@@ -1,10 +1,15 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { getLabById } from '../../constants';
 import { TabId } from '../../types';
 import { shouldUseLiveMode, env } from '../../config/env';
 import { LabFrame } from '../LabFrame';
+import { MOBIUS_OPEN_INQUIRY_EVENT } from '../InquiryChatModal';
 import { Map, Compass, Plus, Atom, Calculator, Dna, Code, FlaskConical, Cpu, Globe, Rocket, ArrowRight, ArrowLeft, Send, X, BookOpen, ChevronDown, GraduationCap, Award } from 'lucide-react';
 import { LearningProgressTracker } from '../Learning';
+
+export interface OAALabProps {
+  onNavigateToKnowledgeGraph?: () => void;
+}
 
 // Subject type definition
 interface Subject {
@@ -37,8 +42,9 @@ const SUBJECTS: Subject[] = [
 // View mode for OAA Lab
 type OAAView = 'subjects' | 'learning';
 
-export const OAALab: React.FC = () => {
+export const OAALab: React.FC<OAALabProps> = ({ onNavigateToKnowledgeGraph }) => {
   const lab = getLabById(TabId.OAA);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
   
   // State for view mode
   const [currentView, setCurrentView] = useState<OAAView>('subjects');
@@ -135,13 +141,22 @@ export const OAALab: React.FC = () => {
     }
   };
 
-  // Handle key press (Enter to send)
-  const handleKeyPress = (e: React.KeyboardEvent) => {
+  // Enter sends; Shift+Enter newline; Cmd/Ctrl+Enter sends from textarea
+  const handleComposerKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
+      e.preventDefault();
+      void handleSendMessage();
+      return;
+    }
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
-      handleSendMessage();
+      void handleSendMessage();
     }
   };
+
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
+  }, [messages, isLoading, selectedSubject]);
 
   // Handle going back to subject selection
   const handleBackToSubjects = () => {
@@ -155,7 +170,11 @@ export const OAALab: React.FC = () => {
     const Icon = selectedSubject.icon;
     
     return (
-      <div className="h-full flex flex-col lg:flex-row bg-stone-50">
+      <div
+        className="h-full flex flex-col lg:flex-row bg-stone-50"
+        role="main"
+        aria-label="OAA Learning Hub tutor session"
+      >
         {/* Mobile Header - Shows current subject with toggle */}
         <div className="lg:hidden bg-white border-b border-stone-200 px-3 py-3 flex items-center justify-between">
           <div className="flex items-center space-x-3">
@@ -260,10 +279,14 @@ export const OAALab: React.FC = () => {
           </div>
           
           {/* Messages Area */}
-          <div className="flex-1 overflow-y-auto p-3 sm:p-4 lg:p-6 space-y-3 lg:space-y-4">
+          <div
+            className="flex-1 overflow-y-auto p-3 sm:p-4 lg:p-6 space-y-3 lg:space-y-4"
+            aria-live="polite"
+            aria-relevant="additions"
+          >
             {messages.map((message, idx) => (
               <div
-                key={idx}
+                key={`${message.role}-${idx}-${message.content.slice(0, 24)}`}
                 className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
               >
                 <div
@@ -296,25 +319,31 @@ export const OAALab: React.FC = () => {
                 </div>
               </div>
             )}
+            <div ref={messagesEndRef} />
           </div>
           
           {/* Input Area */}
           <div className="bg-white border-t border-stone-200 p-3 sm:p-4">
             <div className="max-w-4xl mx-auto">
-              <div className="flex space-x-2 sm:space-x-3">
-                <input
-                  type="text"
+              <label htmlFor="oaa-tutor-composer" className="sr-only">
+                Message to tutor about {selectedSubject.title}
+              </label>
+              <div className="flex space-x-2 sm:space-x-3 items-end">
+                <textarea
+                  id="oaa-tutor-composer"
+                  rows={2}
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
-                  onKeyDown={handleKeyPress}
-                  placeholder={`Ask about ${selectedSubject.title}...`}
+                  onKeyDown={handleComposerKeyDown}
+                  placeholder={`Ask about ${selectedSubject.title}…`}
                   disabled={isLoading}
-                  className="flex-1 px-3 py-2.5 sm:px-4 sm:py-3 border border-stone-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-stone-400 focus:border-transparent disabled:bg-stone-50 disabled:text-stone-400 text-sm"
+                  className="flex-1 min-h-[44px] max-h-40 px-3 py-2.5 sm:px-4 sm:py-3 border border-stone-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-stone-400 focus:border-transparent disabled:bg-stone-50 disabled:text-stone-400 text-sm resize-y"
                 />
                 <button
-                  onClick={handleSendMessage}
+                  type="button"
+                  onClick={() => void handleSendMessage()}
                   disabled={!input.trim() || isLoading}
-                  className={`px-4 sm:px-5 py-2.5 sm:py-3 rounded-xl font-medium transition-colors flex items-center space-x-1 sm:space-x-2 ${
+                  className={`shrink-0 px-4 sm:px-5 py-2.5 sm:py-3 rounded-xl font-medium transition-colors flex items-center space-x-1 sm:space-x-2 ${
                     input.trim() && !isLoading
                       ? 'bg-stone-900 text-white hover:bg-stone-800'
                       : 'bg-stone-200 text-stone-400 cursor-not-allowed'
@@ -325,7 +354,7 @@ export const OAALab: React.FC = () => {
                 </button>
               </div>
               <p className="text-[10px] sm:text-xs text-stone-400 mt-2 text-center hidden sm:block">
-                Press Enter to send • Learning is non-linear; follow curiosity
+                Enter to send · Shift+Enter for a new line · ⌘/Ctrl+Enter to send
               </p>
             </div>
           </div>
@@ -337,7 +366,7 @@ export const OAALab: React.FC = () => {
   // Learning Hub view
   if (currentView === 'learning') {
     return (
-      <div className="h-full overflow-y-auto bg-stone-50">
+      <div className="h-full overflow-y-auto bg-stone-50" role="main" aria-label="Learn and earn MIC">
         {/* Header with back button */}
         <div className="bg-white border-b border-stone-200 px-4 sm:px-6 py-4">
           <div className="max-w-7xl mx-auto flex items-center justify-between">
@@ -367,7 +396,11 @@ export const OAALab: React.FC = () => {
 
   // Subject selection view (default)
   return (
-    <div className="h-full overflow-y-auto p-4 sm:p-6 lg:p-8 bg-stone-50">
+    <div
+      className="h-full overflow-y-auto p-4 sm:p-6 lg:p-8 bg-stone-50"
+      role="main"
+      aria-label="OAA Learning Hub subject chooser"
+    >
       <div className="max-w-7xl mx-auto space-y-6 sm:space-y-8 lg:space-y-10">
         
         {/* Header Section */}
@@ -391,12 +424,21 @@ export const OAALab: React.FC = () => {
                 <span className="hidden sm:inline">Learn & Earn MIC</span>
                 <span className="sm:hidden">Earn MIC</span>
              </button>
-             <button className="flex items-center space-x-1.5 sm:space-x-2 bg-white border border-stone-200 px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg sm:rounded-xl text-xs sm:text-sm font-medium hover:border-stone-300 hover:bg-stone-50 transition-colors shadow-sm text-stone-600">
+             <button
+               type="button"
+               onClick={() => onNavigateToKnowledgeGraph?.()}
+               disabled={!onNavigateToKnowledgeGraph}
+               className="flex items-center space-x-1.5 sm:space-x-2 bg-white border border-stone-200 px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg sm:rounded-xl text-xs sm:text-sm font-medium hover:border-stone-300 hover:bg-stone-50 transition-colors shadow-sm text-stone-600 disabled:opacity-40 disabled:cursor-not-allowed"
+             >
                 <Map className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                 <span className="hidden sm:inline">Knowledge Graph</span>
                 <span className="sm:hidden">Graph</span>
              </button>
-             <button className="flex items-center space-x-1.5 sm:space-x-2 bg-stone-900 text-white px-3 sm:px-5 py-2 sm:py-2.5 rounded-lg sm:rounded-xl text-xs sm:text-sm font-medium hover:bg-stone-800 transition-colors shadow-sm">
+             <button
+               type="button"
+               onClick={() => window.dispatchEvent(new CustomEvent(MOBIUS_OPEN_INQUIRY_EVENT))}
+               className="flex items-center space-x-1.5 sm:space-x-2 bg-stone-900 text-white px-3 sm:px-5 py-2 sm:py-2.5 rounded-lg sm:rounded-xl text-xs sm:text-sm font-medium hover:bg-stone-800 transition-colors shadow-sm"
+             >
                 <Plus className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                 <span className="hidden sm:inline">New Inquiry</span>
                 <span className="sm:hidden">New</span>
@@ -405,9 +447,9 @@ export const OAALab: React.FC = () => {
         </div>
 
         {/* STEM Domains Grid */}
-        <div>
+        <section aria-labelledby="oaa-stem-heading">
             <div className="flex items-center justify-between mb-4 sm:mb-6">
-                <h2 className="text-base sm:text-lg lg:text-xl font-semibold text-stone-900 flex items-center">
+                <h2 id="oaa-stem-heading" className="text-base sm:text-lg lg:text-xl font-semibold text-stone-900 flex items-center">
                     <Compass className="w-4 h-4 sm:w-5 sm:h-5 mr-1.5 sm:mr-2 text-stone-400" />
                     STEM Domains
                 </h2>
@@ -419,9 +461,11 @@ export const OAALab: React.FC = () => {
                     const Icon = subject.icon;
                     return (
                         <button
+                            type="button"
                             key={subject.id}
                             onClick={() => handleSubjectSelect(subject)}
-                            className={`group bg-white p-3 sm:p-4 lg:p-6 rounded-xl sm:rounded-2xl border ${subject.border} shadow-sm hover:shadow-lg transition-all cursor-pointer hover:border-opacity-100 border-opacity-60 flex flex-col h-full text-left active:scale-[0.98] sm:hover:scale-[1.02]`}
+                            aria-label={`Start ${subject.title} tutoring session`}
+                            className={`group bg-white p-3 sm:p-4 lg:p-6 rounded-xl sm:rounded-2xl border ${subject.border} shadow-sm hover:shadow-lg transition-all cursor-pointer hover:border-opacity-100 border-opacity-60 flex flex-col h-full text-left active:scale-[0.98] sm:hover:scale-[1.02] focus:outline-none focus-visible:ring-2 focus-visible:ring-stone-900 focus-visible:ring-offset-2`}
                         >
                             <div className="flex justify-between items-start mb-2 sm:mb-4">
                                 <div className={`w-10 h-10 sm:w-12 sm:h-12 ${subject.bg} ${subject.color} rounded-lg sm:rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform`}>
@@ -466,7 +510,7 @@ export const OAALab: React.FC = () => {
                     );
                 })}
             </div>
-        </div>
+        </section>
         
         {/* Footer Motivation */}
         <div className="text-center py-6 sm:py-8 lg:py-10 border-t border-stone-200 mt-4 sm:mt-6 lg:mt-8">

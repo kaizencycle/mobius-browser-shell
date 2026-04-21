@@ -129,7 +129,11 @@ const TestnetDisclaimer: React.FC = () => {
 
 type WalletView = 'wallet' | 'blockchain';
 
-export const WalletLab: React.FC = () => {
+export interface WalletLabProps {
+  onNavigateToOaa?: () => void;
+}
+
+export const WalletLab: React.FC<WalletLabProps> = ({ onNavigateToOaa }) => {
   const { user } = useAuth();
   const { wallet, events, loading, refreshWallet, chainStats } = useWallet();
   const { isGuest } = useGuest();
@@ -142,12 +146,23 @@ export const WalletLab: React.FC = () => {
   const hasRealData = !!wallet;
 
   return (
-    <div className="h-full overflow-y-auto bg-stone-50 p-4 sm:p-6 lg:p-10 font-sans text-stone-900">
+    <div className="h-full overflow-y-auto bg-stone-50 p-4 sm:p-6 lg:p-10 font-sans text-stone-900 relative">
+      <a
+        href="#wallet-balance-card"
+        className="sr-only focus:not-sr-only focus:absolute focus:left-6 focus:top-6 focus:z-10 focus:px-3 focus:py-2 focus:rounded-md focus:bg-stone-900 focus:text-white focus:text-xs"
+      >
+        Skip to balance
+      </a>
       <div className="max-w-6xl mx-auto space-y-4 sm:space-y-6 lg:space-y-8">
 
         {/* ═══ View Tabs: Wallet / Blockchain ═══ */}
-        <div className="flex gap-2 border-b border-stone-200 pb-0">
+        <div className="flex gap-2 border-b border-stone-200 pb-0" role="tablist" aria-label="Wallet views">
           <button
+            type="button"
+            role="tab"
+            aria-selected={activeView === 'wallet'}
+            id="wallet-tab-wallet"
+            aria-controls="wallet-panel-wallet"
             onClick={() => setActiveView('wallet')}
             className={`
               flex items-center gap-1.5 px-4 py-2.5 text-sm font-semibold border-b-2 transition-all -mb-px
@@ -160,6 +175,11 @@ export const WalletLab: React.FC = () => {
             Fractal Wallet
           </button>
           <button
+            type="button"
+            role="tab"
+            aria-selected={activeView === 'blockchain'}
+            id="wallet-tab-blockchain"
+            aria-controls="wallet-panel-blockchain"
             onClick={() => setActiveView('blockchain')}
             className={`
               flex items-center gap-1.5 px-4 py-2.5 text-sm font-semibold border-b-2 transition-all -mb-px
@@ -177,9 +197,22 @@ export const WalletLab: React.FC = () => {
         </div>
 
         {/* ═══ Blockchain View ═══ */}
-        {activeView === 'blockchain' && <MICBlockchainExplorer />}
+        <div
+          id="wallet-panel-blockchain"
+          role="tabpanel"
+          aria-labelledby="wallet-tab-blockchain"
+          hidden={activeView !== 'blockchain'}
+        >
+          {activeView === 'blockchain' && <MICBlockchainExplorer />}
+        </div>
 
         {/* ═══ Wallet View (original content) ═══ */}
+        <div
+          id="wallet-panel-wallet"
+          role="tabpanel"
+          aria-labelledby="wallet-tab-wallet"
+          hidden={activeView !== 'wallet'}
+        >
         {activeView === 'wallet' && (
         <>
         {/* Header: Identity & Balance */}
@@ -203,7 +236,10 @@ export const WalletLab: React.FC = () => {
               </div>
             )}
             {/* Balance Card with Testnet Badge */}
-            <div className="bg-white p-4 sm:p-6 rounded-xl sm:rounded-2xl border border-stone-200 shadow-sm w-full lg:w-auto lg:min-w-[280px] flex flex-col items-start sm:items-end relative">
+            <div
+              id="wallet-balance-card"
+              className="bg-white p-4 sm:p-6 rounded-xl sm:rounded-2xl border border-stone-200 shadow-sm w-full lg:w-auto lg:min-w-[280px] flex flex-col items-start sm:items-end relative scroll-mt-4"
+            >
                 {/* Testnet Badge - Absolute positioned */}
                 <TestnetBadge className="absolute top-3 right-3" />
                 <span className="text-[10px] sm:text-xs font-bold text-stone-400 uppercase tracking-widest mb-1">Available Balance</span>
@@ -221,6 +257,7 @@ export const WalletLab: React.FC = () => {
                 {/* Refresh button if user is logged in */}
                 {user && (
                   <button
+                    type="button"
                     onClick={refreshWallet}
                     disabled={loading}
                     className="mt-2 text-[10px] text-indigo-600 hover:text-indigo-800 font-medium disabled:opacity-50"
@@ -230,6 +267,19 @@ export const WalletLab: React.FC = () => {
                 )}
             </div>
         </div>
+
+        {onNavigateToOaa && (
+          <div className="rounded-lg border border-stone-200 bg-white px-4 py-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 text-sm text-stone-600">
+            <span>Earn MIC through the OAA tutor and reflection loops.</span>
+            <button
+              type="button"
+              onClick={onNavigateToOaa}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-amber-500 text-stone-900 text-xs font-semibold hover:bg-amber-400 shrink-0"
+            >
+              Go to OAA Hub
+            </button>
+          </div>
+        )}
 
         {/* Testnet Disclaimer */}
         <TestnetDisclaimer />
@@ -486,6 +536,7 @@ export const WalletLab: React.FC = () => {
 
         </>
         )}
+        </div>
 
       </div>
     </div>

@@ -2,6 +2,8 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   AlertTriangle,
   CheckCircle2,
+  ChevronDown,
+  ChevronUp,
   Circle,
   Loader2,
   MapPin,
@@ -57,6 +59,7 @@ function persistSave(save: HivePlayableSave): void {
 }
 
 export const MeshWorldPanel: React.FC = () => {
+  const [meshDetailsOpen, setMeshDetailsOpen] = useState(true);
   const [status, setStatus] = useState<LoadStatus>('idle');
   const [bundle, setBundle] = useState<HiveWorldBundle | null>(null);
   const [save, setSave] = useState<HivePlayableSave | null>(null);
@@ -190,10 +193,13 @@ export const MeshWorldPanel: React.FC = () => {
   };
 
   return (
-    <div className="border border-stone-200 rounded-lg bg-white p-4 space-y-3">
+    <div
+      className="border border-stone-200 rounded-lg bg-white p-4 space-y-3"
+      aria-busy={status === 'loading'}
+    >
       <div className="flex items-start justify-between gap-3">
         <div className="flex items-center gap-2 min-w-0">
-          <Radio className="w-4 h-4 text-indigo-600 shrink-0" />
+          <Radio className="w-4 h-4 text-indigo-600 shrink-0" aria-hidden />
           <div className="min-w-0">
             <h3 className="text-sm font-semibold text-stone-800">Mesh world (HIVE)</h3>
             <p className="text-[11px] text-stone-500 truncate" title={getHiveWorldBaseUrl()}>
@@ -202,6 +208,25 @@ export const MeshWorldPanel: React.FC = () => {
           </div>
         </div>
         <div className="flex items-center gap-2 shrink-0">
+          <button
+            type="button"
+            onClick={() => setMeshDetailsOpen((o) => !o)}
+            className="inline-flex items-center gap-1 text-[11px] px-2 py-1 rounded border border-stone-200 text-stone-600 hover:bg-stone-50"
+            aria-expanded={meshDetailsOpen}
+            aria-controls="hive-mesh-details"
+          >
+            {meshDetailsOpen ? (
+              <>
+                <ChevronUp className="w-3.5 h-3.5" aria-hidden />
+                Hide
+              </>
+            ) : (
+              <>
+                <ChevronDown className="w-3.5 h-3.5" aria-hidden />
+                Show
+              </>
+            )}
+          </button>
           <button
             type="button"
             onClick={resetProgress}
@@ -276,7 +301,20 @@ export const MeshWorldPanel: React.FC = () => {
             </div>
           )}
 
-          <div className="grid gap-3 sm:grid-cols-2">
+          {!meshDetailsOpen && (
+            <button
+              type="button"
+              id="hive-mesh-summary"
+              onClick={() => setMeshDetailsOpen(true)}
+              className="w-full text-left rounded-md border border-stone-200 bg-stone-50 px-3 py-2 text-xs text-stone-700 hover:bg-stone-100"
+            >
+              <span className="font-medium">{save.quest.title}</span>
+              <span className="text-stone-500"> · {progressPct}% · tap to expand mesh details</span>
+            </button>
+          )}
+
+          {meshDetailsOpen && (
+          <div id="hive-mesh-details" className="grid gap-3 sm:grid-cols-2">
             <div className="rounded-md border border-stone-100 bg-stone-50 p-3 space-y-1">
               <div className="flex items-center gap-1.5 text-[11px] font-medium text-stone-600">
                 <MapPin className="w-3.5 h-3.5" />
@@ -313,7 +351,14 @@ export const MeshWorldPanel: React.FC = () => {
             <div className="rounded-md border border-stone-100 p-3 space-y-2 sm:col-span-2">
               <p className="text-[11px] font-medium text-stone-600">Quest progress</p>
               <p className="text-sm font-semibold text-stone-900">{save.quest.title}</p>
-              <div className="h-2 rounded-full bg-stone-200 overflow-hidden">
+              <div
+                className="h-2 rounded-full bg-stone-200 overflow-hidden"
+                role="progressbar"
+                aria-valuenow={progressPct}
+                aria-valuemin={0}
+                aria-valuemax={100}
+                aria-label="Quest completion"
+              >
                 <div
                   className="h-full bg-indigo-600 transition-all duration-300"
                   style={{ width: `${Math.min(100, progressPct)}%` }}
@@ -354,45 +399,56 @@ export const MeshWorldPanel: React.FC = () => {
                 <p className="text-sm text-indigo-950 leading-relaxed mt-1">{sentinelLine}</p>
               </div>
             )}
+          </div>
+          )}
 
-            <div className="rounded-md border border-stone-200 bg-stone-50/80 p-3 space-y-2 sm:col-span-2">
-              <p className="text-[11px] font-medium text-stone-700">Actions</p>
-              {actionError && (
-                <p className="text-[11px] text-red-600">{actionError}</p>
-              )}
-              <div className="flex flex-wrap gap-2">
-                <button
-                  type="button"
-                  disabled={actionBusy || questComplete || steps.find((x) => x.id === 'inspect')?.completed}
-                  onClick={() => void runAction('inspect_beacon')}
-                  className="px-3 py-1.5 text-xs font-medium rounded-md bg-stone-900 text-white hover:bg-stone-800 disabled:opacity-40 disabled:cursor-not-allowed"
-                >
-                  Inspect Beacon
-                </button>
-                <button
-                  type="button"
-                  disabled={actionBusy || questComplete || !steps.find((x) => x.id === 'inspect')?.completed}
-                  onClick={() => void runAction('view_fallback_path')}
-                  className="px-3 py-1.5 text-xs font-medium rounded-md border border-stone-300 bg-white hover:bg-stone-50 disabled:opacity-40 disabled:cursor-not-allowed"
-                >
-                  View Fallback Path
-                </button>
-                <button
-                  type="button"
-                  disabled={actionBusy || save.dialogue_acknowledged}
-                  onClick={() => void runAction('acknowledge_sentinel')}
-                  className="px-3 py-1.5 text-xs font-medium rounded-md border border-indigo-200 text-indigo-900 bg-indigo-50 hover:bg-indigo-100 disabled:opacity-40 disabled:cursor-not-allowed"
-                >
-                  Acknowledge Sentinel
-                </button>
-              </div>
-              {save.interaction_log.events.length > 0 && (
-                <p className="text-[10px] text-stone-500 pt-1">
-                  Logged {save.interaction_log.events.length} interaction
-                  {save.interaction_log.events.length === 1 ? '' : 's'} (local + server when API available).
-                </p>
-              )}
+          <div className="rounded-md border border-stone-200 bg-stone-50/80 p-3 space-y-2">
+            <p className="text-[11px] font-medium text-stone-700">Actions</p>
+            {actionError && (
+              <p className="text-[11px] text-red-600" role="alert">
+                {actionError}
+              </p>
+            )}
+            <p className="text-[10px] text-stone-500">
+              Actions call <code className="text-[10px] bg-stone-200/80 px-1 rounded">POST /api/hive/action</code> on
+              the shell host. Pure Vite dev may show a network error—use{' '}
+              <span className="font-medium">vercel dev</span> or a deployed preview to verify the full loop.
+            </p>
+            <div className="flex flex-wrap gap-2">
+              <button
+                type="button"
+                disabled={actionBusy || questComplete || steps.find((x) => x.id === 'inspect')?.completed}
+                aria-busy={actionBusy}
+                onClick={() => void runAction('inspect_beacon')}
+                className="px-3 py-1.5 text-xs font-medium rounded-md bg-stone-900 text-white hover:bg-stone-800 disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                Inspect Beacon
+              </button>
+              <button
+                type="button"
+                disabled={actionBusy || questComplete || !steps.find((x) => x.id === 'inspect')?.completed}
+                aria-busy={actionBusy}
+                onClick={() => void runAction('view_fallback_path')}
+                className="px-3 py-1.5 text-xs font-medium rounded-md border border-stone-300 bg-white hover:bg-stone-50 disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                View Fallback Path
+              </button>
+              <button
+                type="button"
+                disabled={actionBusy || save.dialogue_acknowledged}
+                aria-busy={actionBusy}
+                onClick={() => void runAction('acknowledge_sentinel')}
+                className="px-3 py-1.5 text-xs font-medium rounded-md border border-indigo-200 text-indigo-900 bg-indigo-50 hover:bg-indigo-100 disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                Acknowledge Sentinel
+              </button>
             </div>
+            {save.interaction_log.events.length > 0 && (
+              <p className="text-[10px] text-stone-500 pt-1">
+                Logged {save.interaction_log.events.length} interaction
+                {save.interaction_log.events.length === 1 ? '' : 's'} (local + server when API available).
+              </p>
+            )}
           </div>
         </>
       )}

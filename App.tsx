@@ -110,6 +110,9 @@ const App: React.FC = () => {
     setTimeout(() => setWakeComplete(false), 3000);
   };
 
+  const goToKnowledgeGraph = React.useCallback(() => setActiveTab(TabId.KNOWLEDGE_GRAPH), []);
+  const goToReflections = React.useCallback(() => setActiveTab(TabId.REFLECTIONS), []);
+
   const renderContent = () => {
     switch (activeTab) {
       case TabId.OAA:
@@ -120,7 +123,7 @@ const App: React.FC = () => {
             errorCode={ErrorCodes.OAA_LOAD_FAILED}
             onError={logToAtlas}
           >
-            <OAALab />
+            <OAALab onNavigateToKnowledgeGraph={goToKnowledgeGraph} />
           </ShellErrorBoundary>
         );
       case TabId.HIVE:
@@ -142,7 +145,7 @@ const App: React.FC = () => {
             errorCode={ErrorCodes.REFL_MIRROR_SYNC}
             onError={logToAtlas}
           >
-            <ReflectionsLab />
+            <ReflectionsLab onNavigateToKnowledgeGraph={goToKnowledgeGraph} />
           </ShellErrorBoundary>
         );
       case TabId.KNOWLEDGE_GRAPH:
@@ -154,7 +157,7 @@ const App: React.FC = () => {
             recoverable={false}
             onError={logToAtlas}
           >
-            <KnowledgeGraphLab />
+            <KnowledgeGraphLab onNavigateToReflections={goToReflections} />
           </ShellErrorBoundary>
         );
       case TabId.SHIELD:
@@ -165,7 +168,7 @@ const App: React.FC = () => {
             errorCode={ErrorCodes.SHIELD_AUTH_EXPIRED}
             onError={logToAtlas}
           >
-            <CitizenShieldLab />
+            <CitizenShieldLab onNavigateToHive={() => setActiveTab(TabId.HIVE)} />
           </ShellErrorBoundary>
         );
       case TabId.JADE:
@@ -178,6 +181,9 @@ const App: React.FC = () => {
             <UnderConstructionLab
               labName="Jade Chamber"
               subtitle="JADE is temporarily paused while we prepare the next release."
+              onBackToHub={() => setActiveTab(TabId.OAA)}
+              onOpenKnowledgeGraph={() => setActiveTab(TabId.KNOWLEDGE_GRAPH)}
+              onOpenOaa={() => setActiveTab(TabId.OAA)}
             />
           </ShellErrorBoundary>
         );
@@ -189,7 +195,7 @@ const App: React.FC = () => {
             errorCode={ErrorCodes.MIC_SYNC_FAILED}
             onError={logToAtlas}
           >
-            <WalletLab />
+            <WalletLab onNavigateToOaa={() => setActiveTab(TabId.OAA)} />
           </ShellErrorBoundary>
         );
       default:
