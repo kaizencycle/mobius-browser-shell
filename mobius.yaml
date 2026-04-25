@@ -1,7 +1,7 @@
-# Mobius Mesh declaration contract (v1) — mobius-browser-shell
-# Execution: declared jobs in `jobs.workflows` map to `.github/workflows/*`.
+# Mobius Mesh declaration contract v1.1 — mobius-browser-shell
+# Phase 3 Civic Mesh: Browser Shell is the human interface and world-state reader.
 
-version: "1.0"
+version: "1.1"
 
 mesh:
   enabled: true
@@ -10,20 +10,47 @@ mesh:
   tier: "client"
   role: "human_shell"
 
-repository:
-  full_name: "kaizencycle/mobius-browser-shell"
-  default_branch: "main"
+  repository:
+    full_name: "kaizencycle/mobius-browser-shell"
+    default_branch: "main"
+
+  discovery:
+    enabled: true
+    registry_participation: true
+
+  civic_mesh:
+    phase: 3
+    role: "human_interface_world_reader"
+    upstream_pulse: "kaizencycle/mobius-civic-ai-terminal"
+    upstream_memory: "kaizencycle/Mobius-Substrate"
+    downstream_world: "kaizencycle/mobius-hive"
+    canon: "Browser Shell translates world state into human-readable civic signals."
 
 pulse:
   enabled: true
-  # Canonical pulse is produced by Mobius-Substrate; shell reads for HUD / labs.
   feed_url: "https://raw.githubusercontent.com/kaizencycle/Mobius-Substrate/main/ledger/mobius-pulse.json"
+  terminal_snapshot_url: "https://mobius-civic-ai-terminal.vercel.app/api/terminal/snapshot-lite"
   freshness_sla_seconds: 1800
+  integrity_weight: 0.75
   lanes:
     - world
     - lore
     - quests
     - sentinel_state
+    - shell_hud
+  authoritative_for:
+    - human_shell_state
+    - hive_world_projection
+    - civic_signal_surface
+  emits:
+    heartbeat: false
+    gi: false
+    mii: true
+    mic: false
+    vault: false
+    tripwire: false
+    anomalies: false
+    world_pulse: true
 
 ingest:
   enabled: true
@@ -37,21 +64,65 @@ ingest:
       read_url: "https://raw.githubusercontent.com/kaizencycle/Mobius-Substrate/main/ledger/mobius-pulse.json"
     sovereign_memory:
       node_id: "oaa-api-library"
-      # Replace host when OAA exposes latest-by-key; shell uses VITE_OAA_API_BASE + path at runtime where applicable.
       read_url: "https://oaa-api-library.onrender.com/api/oaa/kv/latest"
+    hive_world:
+      node_id: "mobius-hive"
+      read_url: "https://raw.githubusercontent.com/kaizencycle/mobius-hive/main/world/current-cycle.json"
+  emits:
+    - HIVE_WORLD_PULSE_V1
+    - SHELL_WORLD_VIEW_V1
+  idempotency:
+    required: true
+    key_fields:
+      - node_id
+      - event_type
+      - cycle
+      - source_hash
+      - workflow_id
+
+flow:
+  model: "world_signal_surface"
+  reads:
+    - "Terminal snapshot-lite"
+    - "Substrate mobius-pulse"
+    - "HIVE world JSON"
+    - "OAA latest memory when available"
+  writes:
+    local_world_snapshot: "public/world/**"
+    pulse_packet: "public/world/hive-world-pulse.json"
+  route:
+    - "HIVE_WORLD_JSON"
+    - "BROWSER_SHELL_WORLD_VIEW"
+    - "TERMINAL_HIVE_WORLD_PULSE"
+    - "SUBSTRATE_MEMORY"
+    - "CIVIC_LEDGER_PROOF"
+  rule: "Browser Shell shows world state. It does not canonize world state."
 
 jobs:
   enabled: true
+  status_values:
+    - active
+    - manual
+    - planned
+    - archived
   workflows:
     - id: "fetch-hive-world"
       file: ".github/workflows/fetch-hive-world.yml"
+      status: "active"
       trigger: "schedule"
       cron: "*/15 * * * *"
+      role: "world_signal_filter"
+      output:
+        - "public/world/**"
+        - "public/world/hive-world-pulse.json"
     - id: "fetch-hive-world-manual"
       file: ".github/workflows/fetch-hive-world.yml"
+      status: "active"
       trigger: "workflow_dispatch"
+      role: "manual_world_signal_filter"
     - id: "hive-player-action"
       file: "api/hive/action.ts"
+      status: "active"
       trigger: "on_demand"
       note: "Vercel serverless — POST /api/hive/action (C-289 playable loop)"
 
@@ -61,3 +132,11 @@ governance:
   required_reviewers:
     - "ZEUS"
     - "ATLAS"
+
+policy:
+  write_truth_locally: false
+  browser_shell_is_canon: false
+  browser_shell_is_surface: true
+  canonical_ledger_node: "civic-protocol-core"
+  hash_algorithm: "sha256"
+  human_merge_required_for_canon: true
