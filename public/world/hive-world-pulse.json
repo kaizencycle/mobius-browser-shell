@@ -1,0 +1,95 @@
+{
+  "agent_routing": {
+    "ATLAS": "surface world status",
+    "ECHO": "ingest world signal",
+    "HERMES": "route world packet",
+    "JADE": "gate canon world changes",
+    "ZEUS": "verify pulse integrity"
+  },
+  "canon_rule": "Browser Shell shows world state; it does not canonize world state.",
+  "cycle": "C-292",
+  "generated_at": "2026-04-25T17:41:22.135397Z",
+  "idempotency_key": "mobius-browser-shell:HIVE_WORLD_PULSE_V1:C-292:1844118a99442c50:fetch-hive-world",
+  "node_id": "mobius-browser-shell",
+  "schema": "HIVE_WORLD_PULSE_V1",
+  "source_hash": "1844118a99442c509e4ddccb613816f94ff44706197e8dd1649500a0b3e17327",
+  "terminal_gi": 0.682,
+  "terminal_snapshot_available": true,
+  "terminal_snapshot_error": null,
+  "world": {
+    "branch": "main",
+    "current_cycle": {
+      "active_event_id": "quiet-grid",
+      "active_quest_id": "patrol-the-lanes",
+      "active_sentinel_id": "atlas",
+      "cycle_id": "C-292",
+      "ingest_health": {
+        "cycle_state": true,
+        "mobius_pulse": true,
+        "oaa_kv_latest": false,
+        "terminal_snapshot": true
+      },
+      "rules_fired": [
+        "steady_state"
+      ],
+      "signals": {
+        "gi": 0.689,
+        "kv_status": "unknown",
+        "vault_progress": 0.658
+      },
+      "updated_at": "2026-04-25T16:55:31.709Z"
+    },
+    "event": {
+      "cycle_id": "C-292",
+      "description": "No mesh alarms fired on this tick.",
+      "id": "quiet-grid",
+      "sentinel_owner": "atlas",
+      "severity": "low",
+      "summary": "No mesh alarms fired on this tick.",
+      "title": "Quiet Grid",
+      "tone": "calm",
+      "type": "calm_event",
+      "ui": {
+        "color": "neutral",
+        "overlay": "clear",
+        "priority": 0
+      },
+      "updated_at": "2026-04-25T16:55:31.709Z"
+    },
+    "quest": {
+      "assigned_by": "atlas",
+      "cycle_id": "C-292",
+      "description": "Keep watch: terminal heartbeat, pulse freshness, OAA seals.",
+      "id": "patrol-the-lanes",
+      "progress": 0,
+      "reward_preview": {
+        "mic_effect": "none_until_eligible",
+        "vault_effect": "none"
+      },
+      "sentinel_id": "atlas",
+      "status": "active",
+      "steps": [
+        {
+          "completed": false,
+          "id": "heartbeat",
+          "label": "Log heartbeat"
+        },
+        {
+          "completed": false,
+          "id": "freshness",
+          "label": "Check pulse freshness"
+        }
+      ],
+      "title": "Patrol the Lanes",
+      "type": "vigil_quest",
+      "updated_at": "2026-04-25T16:55:31.709Z"
+    },
+    "repo": "kaizencycle/mobius-hive",
+    "sentinel": null
+  },
+  "world_refs": {
+    "active_event_id": "quiet-grid",
+    "active_quest_id": "patrol-the-lanes",
+    "assigned_sentinel_id": null
+  }
+}
