@@ -1,6 +1,6 @@
 {
   "cycle_id": "C-292",
-  "updated_at": "2026-04-25T08:07:28.251Z",
+  "updated_at": "2026-04-25T09:11:42.186Z",
   "rules_fired": [
     "steady_state"
   ],
@@ -10,7 +10,7 @@
   "signals": {
     "kv_status": "unknown",
     "gi": 0.688,
-    "vault_progress": 0.7
+    "vault_progress": 0.677
   },
   "ingest_health": {
     "terminal_snapshot": true,
