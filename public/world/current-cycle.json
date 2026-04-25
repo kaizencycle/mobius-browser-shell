@@ -1,16 +1,16 @@
 {
   "cycle_id": "C-291",
-  "updated_at": "2026-04-24T23:52:06.456Z",
+  "updated_at": "2026-04-25T02:51:08.383Z",
   "rules_fired": [
-    "vault_rising_and_gi"
+    "kv_degraded"
   ],
-  "active_event_id": "fountain-murmur",
-  "active_quest_id": "prepare-the-seal",
-  "active_sentinel_id": "hermes",
+  "active_event_id": "signal-fog",
+  "active_quest_id": "restore-the-beacon",
+  "active_sentinel_id": "zeus",
   "signals": {
-    "kv_status": "unknown",
-    "gi": 0.69,
-    "vault_progress": 0.691
+    "kv_status": "degraded",
+    "gi": 0.696,
+    "vault_progress": 0.698
   },
   "ingest_health": {
     "terminal_snapshot": true,
