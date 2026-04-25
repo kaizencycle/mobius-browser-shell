@@ -19,6 +19,8 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Pull world JSON from mobius-hive
+        env:
+          TERMINAL_SNAPSHOT_URL: https://mobius-civic-ai-terminal.vercel.app/api/terminal/snapshot-lite
         # Optional: set MOBIUS_HIVE_REPO / MOBIUS_HIVE_BRANCH in repo Variables to override defaults.
         run: bash scripts/mesh/fetch-hive-world.sh
 
@@ -27,5 +29,9 @@ jobs:
           git config user.name "mobius-bot"
           git config user.email "bot@mobius.systems"
           git add public/world
-          git diff --staged --quiet || git commit -m "chore(mesh): sync HIVE world snapshot"
-          git push
+          if git diff --staged --quiet; then
+            echo "No HIVE world snapshot changes"
+          else
+            git commit -m "chore(mesh): sync HIVE world snapshot [skip ci]"
+            git push
+          fi
