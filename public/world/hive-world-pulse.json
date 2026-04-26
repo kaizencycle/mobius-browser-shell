@@ -8,20 +8,20 @@
   },
   "canon_rule": "Browser Shell shows world state; it does not canonize world state.",
   "cycle": "C-293",
-  "generated_at": "2026-04-26T14:23:22.908034Z",
-  "idempotency_key": "mobius-browser-shell:HIVE_WORLD_PULSE_V1:C-293:b1a0e3150fa921d5:fetch-hive-world",
+  "generated_at": "2026-04-26T15:09:51.968310Z",
+  "idempotency_key": "mobius-browser-shell:HIVE_WORLD_PULSE_V1:C-293:2f544ec4e3d000fe:fetch-hive-world",
   "node_id": "mobius-browser-shell",
   "schema": "HIVE_WORLD_PULSE_V1",
-  "source_hash": "b1a0e3150fa921d5522b9459afbd2d3579c6da6483b710a3646ff2b36695e5f8",
-  "terminal_gi": 0.695,
+  "source_hash": "2f544ec4e3d000fe61187e175488176adc37360d3e6eb1892d346075269243bf",
+  "terminal_gi": 0.673,
   "terminal_snapshot_available": true,
   "terminal_snapshot_error": null,
   "world": {
     "branch": "main",
     "current_cycle": {
-      "active_event_id": "quiet-grid",
-      "active_quest_id": "patrol-the-lanes",
-      "active_sentinel_id": "atlas",
+      "active_event_id": "fountain-murmur",
+      "active_quest_id": "prepare-the-seal",
+      "active_sentinel_id": "hermes",
       "cycle_id": "C-293",
       "ingest_health": {
         "cycle_state": true,
@@ -30,66 +30,66 @@
         "terminal_snapshot": true
       },
       "rules_fired": [
-        "steady_state"
+        "vault_rising_and_gi"
       ],
       "signals": {
-        "gi": 0.664,
+        "gi": 0.671,
         "kv_status": "unknown",
-        "vault_progress": 0.655
+        "vault_progress": 0.695
       },
-      "updated_at": "2026-04-26T13:25:44.166Z"
+      "updated_at": "2026-04-26T14:24:09.350Z"
     },
     "event": {
       "cycle_id": "C-293",
-      "description": "No mesh alarms fired on this tick.",
-      "id": "quiet-grid",
-      "sentinel_owner": "atlas",
+      "description": "The vault deepens and integrity rises; the city hears water again.",
+      "id": "fountain-murmur",
+      "sentinel_owner": "hermes",
       "severity": "low",
-      "summary": "No mesh alarms fired on this tick.",
-      "title": "Quiet Grid",
-      "tone": "calm",
-      "type": "calm_event",
+      "summary": "The vault deepens and integrity rises; the city hears water again.",
+      "title": "Fountain Murmur",
+      "tone": "hope",
+      "type": "integrity_event",
       "ui": {
-        "color": "neutral",
-        "overlay": "clear",
-        "priority": 0
+        "color": "warm",
+        "overlay": "shimmer",
+        "priority": 2
       },
-      "updated_at": "2026-04-26T13:25:44.166Z"
+      "updated_at": "2026-04-26T14:24:09.350Z"
     },
     "quest": {
-      "assigned_by": "atlas",
+      "assigned_by": "hermes",
       "cycle_id": "C-293",
-      "description": "Keep watch: terminal heartbeat, pulse freshness, OAA seals.",
-      "id": "patrol-the-lanes",
+      "description": "Align proofs and ledger anchors before the next cycle boundary.",
+      "id": "prepare-the-seal",
       "progress": 0,
       "reward_preview": {
         "mic_effect": "none_until_eligible",
-        "vault_effect": "none"
+        "vault_effect": "seal_readiness"
       },
-      "sentinel_id": "atlas",
+      "sentinel_id": "hermes",
       "status": "active",
       "steps": [
         {
           "completed": false,
-          "id": "heartbeat",
-          "label": "Log heartbeat"
+          "id": "gather",
+          "label": "Gather proofs"
         },
         {
           "completed": false,
-          "id": "freshness",
-          "label": "Check pulse freshness"
+          "id": "align",
+          "label": "Align anchors"
         }
       ],
-      "title": "Patrol the Lanes",
-      "type": "vigil_quest",
-      "updated_at": "2026-04-26T13:25:44.166Z"
+      "title": "Prepare the Seal",
+      "type": "governance_quest",
+      "updated_at": "2026-04-26T14:24:09.350Z"
     },
     "repo": "kaizencycle/mobius-hive",
     "sentinel": null
   },
   "world_refs": {
-    "active_event_id": "quiet-grid",
-    "active_quest_id": "patrol-the-lanes",
+    "active_event_id": "fountain-murmur",
+    "active_quest_id": "prepare-the-seal",
     "assigned_sentinel_id": null
   }
 }
