@@ -85,3 +85,13 @@ export interface WorldBloxBlock {
   };
   actions?: WorldBloxAction[];
 }
+
+export interface WorldBloxZone {
+  id: string;
+  title?: string;
+  description?: string;
+  features?: string[];
+  default_overlay?: string;
+  cycle_id?: string;
+  updated_at?: string;
+}
