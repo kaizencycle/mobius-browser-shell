@@ -1,5 +1,5 @@
 import { env } from '../../config/env';
-import type { HiveCurrentCycle, HiveEvent, HiveQuest, HiveSentinel } from './meshWorldTypes';
+import type { HiveCurrentCycle, HiveEvent, HiveQuest, HiveSentinel, WorldBloxBlock } from './meshWorldTypes';
 
 const DEFAULT_REMOTE_BASE =
   'https://raw.githubusercontent.com/kaizencycle/mobius-hive/main';
@@ -31,7 +31,18 @@ export interface HiveWorldBundle {
   activeEvent: HiveEvent | null;
   activeQuest: HiveQuest | null;
   sentinel: HiveSentinel | null;
+  blocks?: WorldBloxBlock[];
   sourceUrl: string;
+}
+
+async function loadBlocks(base: string, signal?: AbortSignal): Promise<WorldBloxBlock[]> {
+  try {
+    return [
+      await fetchJson<WorldBloxBlock>(`${base}/world/blocks/castle-core.block.json`, signal),
+    ];
+  } catch {
+    return [];
+  }
 }
 
 export async function loadHiveWorldBundle(signal?: AbortSignal): Promise<HiveWorldBundle> {
@@ -44,7 +55,7 @@ export async function loadHiveWorldBundle(signal?: AbortSignal): Promise<HiveWor
   const questId = currentCycle.active_quest_id;
   const sentinelId = currentCycle.assigned_sentinel_id;
 
-  const [activeEvent, activeQuest, sentinel] = await Promise.all([
+  const [activeEvent, activeQuest, sentinel, blocks] = await Promise.all([
     eventId
       ? fetchJson<HiveEvent>(`${base}/world/events/${eventId}.json`, signal).catch(() => null)
       : Promise.resolve(null),
@@ -54,6 +65,7 @@ export async function loadHiveWorldBundle(signal?: AbortSignal): Promise<HiveWor
     sentinelId
       ? fetchJson<HiveSentinel>(`${base}/world/sentinels/${sentinelId}.json`, signal).catch(() => null)
       : Promise.resolve(null),
+    loadBlocks(base, signal),
   ]);
 
   return {
@@ -61,6 +73,7 @@ export async function loadHiveWorldBundle(signal?: AbortSignal): Promise<HiveWor
     activeEvent,
     activeQuest,
     sentinel,
+    blocks,
     sourceUrl: cycleUrl,
   };
 }
@@ -73,7 +86,7 @@ export async function loadBundledHiveWorld(signal?: AbortSignal): Promise<HiveWo
   const questId = currentCycle.active_quest_id;
   const sentinelId = currentCycle.assigned_sentinel_id;
 
-  const [activeEvent, activeQuest, sentinel] = await Promise.all([
+  const [activeEvent, activeQuest, sentinel, blocks] = await Promise.all([
     eventId
       ? fetchJson<HiveEvent>(`/world/events/${eventId}.json`, signal).catch(() => null)
       : Promise.resolve(null),
@@ -83,6 +96,7 @@ export async function loadBundledHiveWorld(signal?: AbortSignal): Promise<HiveWo
     sentinelId
       ? fetchJson<HiveSentinel>(`/world/sentinels/${sentinelId}.json`, signal).catch(() => null)
       : Promise.resolve(null),
+    loadBlocks('', signal),
   ]);
 
   return {
@@ -90,6 +104,7 @@ export async function loadBundledHiveWorld(signal?: AbortSignal): Promise<HiveWo
     activeEvent,
     activeQuest,
     sentinel,
+    blocks,
     sourceUrl: cycleUrl,
   };
 }
