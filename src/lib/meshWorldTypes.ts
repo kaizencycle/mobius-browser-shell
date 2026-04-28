@@ -57,3 +57,31 @@ export interface HiveSentinel {
   role?: string;
   lines?: string[];
 }
+
+export type WorldBloxState =
+  | 'draft'
+  | 'simulated'
+  | 'attested'
+  | 'sealed'
+  | 'quarantined'
+  | 'timed_out'
+  | 'legacy';
+
+export interface WorldBloxAction {
+  id: string;
+  label?: string;
+}
+
+export interface WorldBloxBlock {
+  id: string;
+  type: string;
+  zone: string;
+  title?: string;
+  description?: string;
+  state: WorldBloxState;
+  integrity?: {
+    gi?: number;
+    mii?: number;
+  };
+  actions?: WorldBloxAction[];
+}
