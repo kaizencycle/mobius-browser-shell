@@ -8,20 +8,20 @@
   },
   "canon_rule": "Browser Shell shows world state; it does not canonize world state.",
   "cycle": "C-298",
-  "generated_at": "2026-05-01T16:04:13.540713Z",
-  "idempotency_key": "mobius-browser-shell:HIVE_WORLD_PULSE_V1:C-298:69d3607aae46961f:fetch-hive-world",
+  "generated_at": "2026-05-01T17:14:34.065433Z",
+  "idempotency_key": "mobius-browser-shell:HIVE_WORLD_PULSE_V1:C-298:d573bbc6699a7485:fetch-hive-world",
   "node_id": "mobius-browser-shell",
   "schema": "HIVE_WORLD_PULSE_V1",
-  "source_hash": "69d3607aae46961f914a52f928f1e777d8ee10272c94ae7dc53940f5c4fb7193",
-  "terminal_gi": 0.675,
+  "source_hash": "d573bbc6699a74859a290c054694fed13a39d6329dfda0392bc814d7a5f15be7",
+  "terminal_gi": 0.662,
   "terminal_snapshot_available": true,
   "terminal_snapshot_error": null,
   "world": {
     "branch": "main",
     "current_cycle": {
-      "active_event_id": "fountain-murmur",
-      "active_quest_id": "prepare-the-seal",
-      "active_sentinel_id": "hermes",
+      "active_event_id": "quiet-grid",
+      "active_quest_id": "patrol-the-lanes",
+      "active_sentinel_id": "atlas",
       "cycle_id": "C-298",
       "ingest_health": {
         "cycle_state": true,
@@ -30,66 +30,66 @@
         "terminal_snapshot": true
       },
       "rules_fired": [
-        "vault_rising_and_gi"
+        "steady_state"
       ],
       "signals": {
-        "gi": 0.675,
+        "gi": 0.669,
         "kv_status": "unknown",
-        "vault_progress": 0.661
+        "vault_progress": 0.675
       },
-      "updated_at": "2026-05-01T15:00:47.423Z"
+      "updated_at": "2026-05-01T16:10:41.944Z"
     },
     "event": {
       "cycle_id": "C-298",
-      "description": "The vault deepens and integrity rises; the city hears water again.",
-      "id": "fountain-murmur",
-      "sentinel_owner": "hermes",
+      "description": "No mesh alarms fired on this tick.",
+      "id": "quiet-grid",
+      "sentinel_owner": "atlas",
       "severity": "low",
-      "summary": "The vault deepens and integrity rises; the city hears water again.",
-      "title": "Fountain Murmur",
-      "tone": "hope",
-      "type": "integrity_event",
+      "summary": "No mesh alarms fired on this tick.",
+      "title": "Quiet Grid",
+      "tone": "calm",
+      "type": "calm_event",
       "ui": {
-        "color": "warm",
-        "overlay": "shimmer",
-        "priority": 2
+        "color": "neutral",
+        "overlay": "clear",
+        "priority": 0
       },
-      "updated_at": "2026-05-01T15:00:47.423Z"
+      "updated_at": "2026-05-01T16:10:41.944Z"
     },
     "quest": {
-      "assigned_by": "hermes",
+      "assigned_by": "atlas",
       "cycle_id": "C-298",
-      "description": "Align proofs and ledger anchors before the next cycle boundary.",
-      "id": "prepare-the-seal",
+      "description": "Keep watch: terminal heartbeat, pulse freshness, OAA seals.",
+      "id": "patrol-the-lanes",
       "progress": 0,
       "reward_preview": {
         "mic_effect": "none_until_eligible",
-        "vault_effect": "seal_readiness"
+        "vault_effect": "none"
       },
-      "sentinel_id": "hermes",
+      "sentinel_id": "atlas",
       "status": "active",
       "steps": [
         {
           "completed": false,
-          "id": "gather",
-          "label": "Gather proofs"
+          "id": "heartbeat",
+          "label": "Log heartbeat"
         },
         {
           "completed": false,
-          "id": "align",
-          "label": "Align anchors"
+          "id": "freshness",
+          "label": "Check pulse freshness"
         }
       ],
-      "title": "Prepare the Seal",
-      "type": "governance_quest",
-      "updated_at": "2026-05-01T15:00:47.423Z"
+      "title": "Patrol the Lanes",
+      "type": "vigil_quest",
+      "updated_at": "2026-05-01T16:10:41.944Z"
     },
     "repo": "kaizencycle/mobius-hive",
     "sentinel": null
   },
   "world_refs": {
-    "active_event_id": "fountain-murmur",
-    "active_quest_id": "prepare-the-seal",
+    "active_event_id": "quiet-grid",
+    "active_quest_id": "patrol-the-lanes",
     "assigned_sentinel_id": null
   }
 }
