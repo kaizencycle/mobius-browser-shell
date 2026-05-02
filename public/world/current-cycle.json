@@ -1,6 +1,6 @@
 {
   "cycle_id": "C-299",
-  "updated_at": "2026-05-02T21:01:30.410Z",
+  "updated_at": "2026-05-02T22:00:08.203Z",
   "rules_fired": [
     "steady_state"
   ],
@@ -9,7 +9,7 @@
   "active_sentinel_id": "atlas",
   "signals": {
     "kv_status": "unknown",
-    "gi": 0.675,
+    "gi": 0.68,
     "vault_progress": 0.682
   },
   "ingest_health": {
