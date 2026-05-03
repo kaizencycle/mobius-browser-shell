@@ -1,16 +1,16 @@
 {
-  "cycle_id": "C-299",
-  "updated_at": "2026-05-03T03:41:40.865Z",
+  "cycle_id": "C-300",
+  "updated_at": "2026-05-03T06:17:45.273Z",
   "rules_fired": [
-    "steady_state"
+    "vault_rising_and_gi"
   ],
-  "active_event_id": "quiet-grid",
-  "active_quest_id": "patrol-the-lanes",
-  "active_sentinel_id": "atlas",
+  "active_event_id": "fountain-murmur",
+  "active_quest_id": "prepare-the-seal",
+  "active_sentinel_id": "hermes",
   "signals": {
     "kv_status": "unknown",
-    "gi": 0.689,
-    "vault_progress": 0.701
+    "gi": 0.701,
+    "vault_progress": 0.704
   },
   "ingest_health": {
     "terminal_snapshot": true,

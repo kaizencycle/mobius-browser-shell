@@ -22,7 +22,7 @@
     "vault_effect": "seal_readiness",
     "mic_effect": "none_until_eligible"
   },
-  "cycle_id": "C-299",
-  "updated_at": "2026-05-02T16:02:27.866Z",
+  "cycle_id": "C-300",
+  "updated_at": "2026-05-03T06:17:45.273Z",
   "sentinel_id": "hermes"
 }
