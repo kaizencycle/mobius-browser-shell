@@ -1,6 +1,6 @@
 {
   "cycle_id": "C-301",
-  "updated_at": "2026-05-04T17:12:30.045Z",
+  "updated_at": "2026-05-04T18:57:56.462Z",
   "rules_fired": [
     "steady_state"
   ],
@@ -10,7 +10,7 @@
   "signals": {
     "kv_status": "unknown",
     "gi": 0.717,
-    "vault_progress": 0.715
+    "vault_progress": 0.718
   },
   "ingest_health": {
     "terminal_snapshot": true,
