@@ -1,16 +1,16 @@
 {
   "cycle_id": "C-303",
-  "updated_at": "2026-05-06T14:49:09.892Z",
+  "updated_at": "2026-05-06T16:46:25.112Z",
   "rules_fired": [
-    "kv_degraded"
+    "steady_state"
   ],
-  "active_event_id": "signal-fog",
-  "active_quest_id": "restore-the-beacon",
-  "active_sentinel_id": "zeus",
+  "active_event_id": "quiet-grid",
+  "active_quest_id": "patrol-the-lanes",
+  "active_sentinel_id": "atlas",
   "signals": {
-    "kv_status": "degraded",
-    "gi": 0.92,
-    "vault_progress": 0.721
+    "kv_status": "unknown",
+    "gi": 0.743,
+    "vault_progress": 0.723
   },
   "ingest_health": {
     "terminal_snapshot": true,
