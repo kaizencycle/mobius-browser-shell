@@ -25,11 +25,14 @@
       ]
     },
     "allowImportingTsExtensions": true,
-    "noEmit": true
+    "noEmit": true,
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "exactOptionalPropertyTypes": false
   },
   "exclude": [
     "node_modules",
     "dist",
-    "OAA-API-Library"
+    "OAA-Library"
   ]
 }

@@ -33,7 +33,8 @@
     "build": "vite build",
     "preview": "vite preview",
     "lint": "tsc --noEmit",
-    "check": "tsc --noEmit && npm run build"
+    "check": "npm run typecheck && npm run lint",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@simplewebauthn/server": "^13.2.2",

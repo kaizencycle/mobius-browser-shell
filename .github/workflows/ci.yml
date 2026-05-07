@@ -1,0 +1,74 @@
+# MOBIUS-CLASS: ci
+# OWNER: @kaizencycle
+# INTRODUCED: C-303
+# PURPOSE: First CI for mobius-browser-shell — lint, typecheck, build.
+#          Previously this repo had zero automated checks; broken builds
+#          were only caught after Vercel deployed to preview.
+
+name: CI
+
+on:
+  push:
+    branches: [main]
+    paths-ignore:
+      - '**.md'
+      - '.github/ISSUE_TEMPLATE/**'
+  pull_request:
+    branches: [main]
+    paths-ignore:
+      - '**.md'
+      - '.github/ISSUE_TEMPLATE/**'
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  ci:
+    name: Lint · Typecheck · Build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Build
+        run: npm run build
+        env:
+          NODE_ENV: production
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        if: github.event_name == 'pull_request'
+        with:
+          name: browser-shell-dist
+          path: dist/
+          retention-days: 3
+          if-no-files-found: ignore
+
+      - name: CI Summary
+        if: always()
+        run: |
+          echo "## 🐚 Browser Shell CI" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Step | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|------|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Lint | ${{ job.status }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Typecheck | ${{ job.status }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Build | ${{ job.status }} |" >> $GITHUB_STEP_SUMMARY
