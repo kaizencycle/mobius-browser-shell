@@ -8,12 +8,12 @@
   },
   "canon_rule": "Browser Shell shows world state; it does not canonize world state.",
   "cycle": "C-304",
-  "generated_at": "2026-05-07T10:28:02.902953Z",
-  "idempotency_key": "mobius-browser-shell:HIVE_WORLD_PULSE_V1:C-304:dc2900ef9db61065:fetch-hive-world",
+  "generated_at": "2026-05-07T12:18:36.302970Z",
+  "idempotency_key": "mobius-browser-shell:HIVE_WORLD_PULSE_V1:C-304:dd92bea975178b10:fetch-hive-world",
   "node_id": "mobius-browser-shell",
   "schema": "HIVE_WORLD_PULSE_V1",
-  "source_hash": "dc2900ef9db61065e35592c854333a2e8cf21cd705100c0d40e1a5943d95d4f0",
-  "terminal_gi": 0.743,
+  "source_hash": "dd92bea975178b102f9ac31b5a4ba1b28d753d981a51892093dd34b096d943d8",
+  "terminal_gi": 0.718,
   "terminal_snapshot_available": true,
   "terminal_snapshot_error": null,
   "world": {
@@ -33,11 +33,11 @@
         "steady_state"
       ],
       "signals": {
-        "gi": 0.716,
+        "gi": 0.736,
         "kv_status": "unknown",
         "vault_progress": 0.743
       },
-      "updated_at": "2026-05-07T07:49:37.414Z"
+      "updated_at": "2026-05-07T10:28:53.474Z"
     },
     "event": {
       "cycle_id": "C-304",
@@ -54,7 +54,7 @@
         "overlay": "clear",
         "priority": 0
       },
-      "updated_at": "2026-05-07T07:49:37.414Z"
+      "updated_at": "2026-05-07T10:28:53.474Z"
     },
     "quest": {
       "assigned_by": "atlas",
@@ -82,7 +82,7 @@
       ],
       "title": "Patrol the Lanes",
       "type": "vigil_quest",
-      "updated_at": "2026-05-07T07:49:37.414Z"
+      "updated_at": "2026-05-07T10:28:53.474Z"
     },
     "repo": "kaizencycle/mobius-hive",
     "sentinel": null
