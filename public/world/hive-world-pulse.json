@@ -8,12 +8,12 @@
   },
   "canon_rule": "Browser Shell shows world state; it does not canonize world state.",
   "cycle": "C-306",
-  "generated_at": "2026-05-09T04:50:23.398816Z",
-  "idempotency_key": "mobius-browser-shell:HIVE_WORLD_PULSE_V1:C-306:7517eb3b79eb8ea6:fetch-hive-world",
+  "generated_at": "2026-05-09T07:10:05.210389Z",
+  "idempotency_key": "mobius-browser-shell:HIVE_WORLD_PULSE_V1:C-306:7264c7f935d84716:fetch-hive-world",
   "node_id": "mobius-browser-shell",
   "schema": "HIVE_WORLD_PULSE_V1",
-  "source_hash": "7517eb3b79eb8ea68e82e30c51abd3d18d6f021b25890b4c16ea15e159cdc861",
-  "terminal_gi": 0.755,
+  "source_hash": "7264c7f935d84716bcad84e3170323f36081b81fb5304e14b9a8bec1ecb5b83f",
+  "terminal_gi": 0.727,
   "terminal_snapshot_available": true,
   "terminal_snapshot_error": null,
   "world": {
@@ -22,7 +22,7 @@
       "active_event_id": "quiet-grid",
       "active_quest_id": "patrol-the-lanes",
       "active_sentinel_id": "atlas",
-      "cycle_id": "C-305",
+      "cycle_id": "C-306",
       "ingest_health": {
         "cycle_state": true,
         "mobius_pulse": true,
@@ -33,14 +33,14 @@
         "steady_state"
       ],
       "signals": {
-        "gi": 0.756,
+        "gi": 0.755,
         "kv_status": "unknown",
-        "vault_progress": 0.732
+        "vault_progress": 0.755
       },
-      "updated_at": "2026-05-09T01:24:21.707Z"
+      "updated_at": "2026-05-09T04:51:30.023Z"
     },
     "event": {
-      "cycle_id": "C-305",
+      "cycle_id": "C-306",
       "description": "No mesh alarms fired on this tick.",
       "id": "quiet-grid",
       "sentinel_owner": "atlas",
@@ -54,11 +54,11 @@
         "overlay": "clear",
         "priority": 0
       },
-      "updated_at": "2026-05-09T01:24:21.707Z"
+      "updated_at": "2026-05-09T04:51:30.023Z"
     },
     "quest": {
       "assigned_by": "atlas",
-      "cycle_id": "C-305",
+      "cycle_id": "C-306",
       "description": "Keep watch: terminal heartbeat, pulse freshness, OAA seals.",
       "id": "patrol-the-lanes",
       "progress": 0,
@@ -82,7 +82,7 @@
       ],
       "title": "Patrol the Lanes",
       "type": "vigil_quest",
-      "updated_at": "2026-05-09T01:24:21.707Z"
+      "updated_at": "2026-05-09T04:51:30.023Z"
     },
     "repo": "kaizencycle/mobius-hive",
     "sentinel": null
