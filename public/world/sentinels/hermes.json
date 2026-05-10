@@ -1,0 +1,9 @@
+{
+  "id": "hermes",
+  "name": "HERMES",
+  "role": "routing_sentinel",
+  "lines": [
+    "I route world packets across the mesh. Speed is integrity.",
+    "Latency is a form of decay. I do not tolerate it."
+  ]
+}

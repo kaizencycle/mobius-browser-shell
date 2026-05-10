@@ -4,7 +4,7 @@ import { ErrorCodes } from '../../errors/errorCodes';
 import { useAtlasErrorLog } from '../useAtlasErrorLog';
 
 const HiveLab = lazy(() =>
-  import('../Labs/HiveLab').then((m) => ({ default: m.HiveLab })),
+  import('../Labs/HivePortal').then((m) => ({ default: m.HivePortal })),
 );
 
 export const HiveChamber: React.FC = () => {

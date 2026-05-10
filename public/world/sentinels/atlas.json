@@ -1,0 +1,9 @@
+{
+  "id": "atlas",
+  "name": "ATLAS",
+  "role": "surface_sentinel",
+  "lines": [
+    "The world state is live. I am reading it now.",
+    "Every signal logged is a vote for continuity."
+  ]
+}
