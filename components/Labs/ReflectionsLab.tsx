@@ -16,6 +16,12 @@ import {
 import { useKnowledgeGraph } from '../../contexts/KnowledgeGraphContext';
 import { useWallet } from '../../contexts/WalletContext';
 import { useAuth } from '../../contexts/AuthContext';
+import { EveChamberHeader } from './EveChamberHeader';
+import { EveSignalSidebar } from './EveSignalSidebar';
+import { ReflectionArchiveLane, archiveReflection } from './ReflectionArchiveLane';
+import { emitReflectionEpicon, hashReflectionBody } from '../../hooks/useEveEpicon';
+import { useDailyPrompt } from '../../hooks/useDailyPrompt';
+import { useTerminal } from '../../contexts/TerminalContext';
 
 type PhaseId = 'raw' | 'mirror' | 'reframe' | 'recode';
 type ReflectionRewardId = 'spark' | 'geist_mode' | 'epiphany';
@@ -275,6 +281,8 @@ export const ReflectionsLab: React.FC<ReflectionsLabProps> = ({
   const { extractAndAddConcepts, stats } = useKnowledgeGraph();
   const { user } = useAuth();
   const { wallet, earnMIC, burnMIC, getChainBalance, getChainTransactions } = useWallet();
+  const { state: terminalState } = useTerminal();
+  const dailyPrompt = useDailyPrompt();
 
   // Load from localStorage on mount
   useEffect(() => {
@@ -404,8 +412,36 @@ export const ReflectionsLab: React.FC<ReflectionsLabProps> = ({
       } else {
         setRewardNotice('A hidden reflection bonus was detected, but minting failed. Try again soon.');
       }
+
+      // EVE E-3: EPICON emit (body-hash only, no PII)
+      const bodyText = entry.phases.map((p) => p.content).join('\n');
+      void hashReflectionBody(bodyText).then((bodyHash) => {
+        void emitReflectionEpicon({
+          citizenId: user?.id ?? 'guest',
+          entryId: entry.id,
+          bodyHash,
+          wordCount: analysis.totalWords,
+          completedPhases: analysis.completedPhaseCount,
+          rewardTier: reward.id,
+          mic: reward.mic,
+          cycle: terminalState?.cycle ?? null,
+          gi: terminalState?.gi ?? null,
+        });
+
+        // EVE E-5: persist to archive lane
+        archiveReflection({
+          id: entry.id,
+          title: entry.title,
+          bodyHash,
+          gi: terminalState?.gi ?? null,
+          mode: terminalState?.mode ?? null,
+          cycle: terminalState?.cycle ?? null,
+          timestamp: new Date().toISOString(),
+          wordCount: analysis.totalWords,
+        });
+      });
     },
-    [earnMIC]
+    [earnMIC, user, terminalState]
   );
 
   const handlePhaseChange = (phaseId: PhaseId, content: string) => {
@@ -642,6 +678,7 @@ export const ReflectionsLab: React.FC<ReflectionsLabProps> = ({
 
   return (
     <div className="h-full flex flex-col bg-stone-50 overflow-hidden relative">
+      <EveChamberHeader />
       <a
         href="#reflection-editor"
         className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-20 focus:z-50 focus:px-3 focus:py-2 focus:bg-stone-900 focus:text-white focus:rounded-md"
@@ -686,7 +723,7 @@ export const ReflectionsLab: React.FC<ReflectionsLabProps> = ({
         </div>
       </div>
 
-      {/* Body: sidebar + editor */}
+      {/* Body: sidebar + editor + EVE signal panel */}
       <div className="flex-1 flex min-h-0 flex-col md:flex-row">
         {/* Left: entries list */}
         <aside className="w-64 border-r border-stone-200 bg-stone-100/60 flex-col hidden md:flex">
@@ -938,6 +975,13 @@ export const ReflectionsLab: React.FC<ReflectionsLabProps> = ({
                   </p>
                 </div>
 
+                {/* EVE E-4: Daily Prompt */}
+                {activePhase.id === 'raw' && dailyPrompt && (
+                  <div className="rounded-md border border-stone-200 bg-stone-50 px-3 py-2 text-xs text-stone-600 font-medium italic">
+                    ⬡ {dailyPrompt}
+                  </div>
+                )}
+
                 <textarea
                   id={`reflection-phase-${activePhase.id}`}
                   role="tabpanel"
@@ -1146,7 +1190,9 @@ export const ReflectionsLab: React.FC<ReflectionsLabProps> = ({
             </>
           )}
         </section>
+        <EveSignalSidebar />
       </div>
+      <ReflectionArchiveLane />
     </div>
   );
 };

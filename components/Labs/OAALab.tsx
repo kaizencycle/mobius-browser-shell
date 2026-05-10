@@ -7,6 +7,10 @@ import { MOBIUS_OPEN_INQUIRY_EVENT } from '../InquiryChatModal';
 import { Map, Compass, Plus, Atom, Calculator, Dna, Code, FlaskConical, Cpu, Globe, Rocket, ArrowRight, ArrowLeft, Send, X, BookOpen, ChevronDown, GraduationCap, Award } from 'lucide-react';
 import { LearningProgressTracker } from '../Learning';
 import { OAALearnToEarn } from './OAALearnToEarn';
+import { AtlasChamberHeader } from './AtlasChamberHeader';
+import { CitizenOnboardingStepper } from './CitizenOnboardingStepper';
+import { useWallet } from '../../contexts/WalletContext';
+import { useTerminal } from '../../contexts/TerminalContext';
 
 export interface OAALabProps {
   onNavigateToKnowledgeGraph?: () => void;
@@ -46,17 +50,24 @@ type OAAView = 'subjects' | 'learning';
 export const OAALab: React.FC<OAALabProps> = ({ onNavigateToKnowledgeGraph }) => {
   const lab = getLabById(TabId.OAA);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  
+  const { wallet } = useWallet();
+  const { state: terminalState } = useTerminal();
+  const [sessionXp, setSessionXp] = useState(0);
+
   // State for view mode
   const [currentView, setCurrentView] = useState<OAAView>('subjects');
-  
+
   // State for subject selection and chat
   const [selectedSubject, setSelectedSubject] = useState<Subject | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
-  
+
+  const XP_PER_LESSON = 10;
+  const XP_TO_MIC_THRESHOLD = 50;
+  const ribbonPct = Math.min(100, Math.round((sessionXp % XP_TO_MIC_THRESHOLD) / XP_TO_MIC_THRESHOLD * 100));
+
   // If live mode is enabled and URL exists, show iframe
   if (lab && shouldUseLiveMode(lab.url)) {
     return (
@@ -69,7 +80,26 @@ export const OAALab: React.FC<OAALabProps> = ({ onNavigateToKnowledgeGraph }) =>
   }
 
   // Demo mode — show the Claude Design Learn-to-Earn experience
-  return <OAALearnToEarn onNavigateToKnowledgeGraph={onNavigateToKnowledgeGraph} />;
+  return (
+    <div className="flex flex-col h-full overflow-hidden">
+      <AtlasChamberHeader />
+      {/* XP→MIC Progress Ribbon */}
+      <div className="flex items-center gap-2 px-4 py-1.5 bg-stone-800 border-b border-stone-700 flex-shrink-0">
+        <span className="text-[10px] font-mono text-stone-400 flex-shrink-0">XP → MIC</span>
+        <div className="flex-1 h-1.5 rounded-full bg-stone-700 overflow-hidden">
+          <div
+            className="h-full bg-amber-400 rounded-full transition-all duration-500"
+            style={{ width: `${ribbonPct}%` }}
+          />
+        </div>
+        <span className="text-[10px] font-mono text-amber-400 flex-shrink-0">{sessionXp} XP</span>
+      </div>
+      <CitizenOnboardingStepper />
+      <div className="flex-1 min-h-0">
+        <OAALearnToEarn onNavigateToKnowledgeGraph={onNavigateToKnowledgeGraph} />
+      </div>
+    </div>
+  );
 
   // Handle subject selection
   const handleSubjectSelect = (subject: Subject) => {
