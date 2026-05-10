@@ -11,8 +11,6 @@ interface AtlasChamberProps {
   onNavigateToReflections?: () => void;
 }
 
-const STAR_COUNT = 140;
-
 export const AtlasChamber: React.FC<AtlasChamberProps> = ({ onNavigateToReflections }) => {
   const logToAtlas = useAtlasErrorLog();
   const starsRef = useRef<HTMLDivElement>(null);
@@ -20,58 +18,49 @@ export const AtlasChamber: React.FC<AtlasChamberProps> = ({ onNavigateToReflecti
   useEffect(() => {
     if (!starsRef.current) return;
     let html = '';
-    for (let i = 0; i < STAR_COUNT; i++) {
-      const x = Math.random() * 100;
-      const y = Math.random() * 100;
-      const delay = (Math.random() * 4).toFixed(2);
-      const dur = (3 + Math.random() * 3).toFixed(2);
+    for (let i = 0; i < 140; i++) {
+      const x = (Math.random() * 100).toFixed(2);
+      const y = (Math.random() * 100).toFixed(2);
+      const d = (Math.random() * 4).toFixed(2);
       const sz = (Math.random() * 1.6 + 0.4).toFixed(1);
-      html += `<span style="left:${x}%;top:${y}%;width:${sz}px;height:${sz}px;animation-delay:${delay}s;animation-duration:${dur}s"></span>`;
+      html += `<span style="left:${x}%;top:${y}%;width:${sz}px;height:${sz}px;animation-delay:${d}s"></span>`;
     }
     starsRef.current.innerHTML = html;
   }, []);
 
   return (
-    <div className="ch-atlas">
-      {/* Star field */}
-      <div className="ch-atlas__stars" ref={starsRef} aria-hidden />
+    <div className="at-room">
+      {/* Twinkling star field */}
+      <div className="at-stars" ref={starsRef} aria-hidden />
 
-      {/* SVG constellation */}
-      <svg className="ch-atlas__svg" viewBox="0 0 1000 1000" preserveAspectRatio="none" aria-hidden>
-        <line x1="220" y1="280" x2="500" y2="430" className="ch-at-link ch-at-link--bright" />
-        <line x1="500" y1="430" x2="780" y2="320" className="ch-at-link" />
-        <line x1="500" y1="430" x2="320" y2="700" className="ch-at-link ch-at-link--bright" />
-        <line x1="500" y1="430" x2="720" y2="700" className="ch-at-link" />
-        <line x1="320" y1="700" x2="720" y2="700" className="ch-at-link" />
-        <line x1="220" y1="280" x2="780" y2="320" className="ch-at-link" />
+      {/* Constellation lines */}
+      <svg className="at-svg" viewBox="0 0 1000 1000" preserveAspectRatio="none" aria-hidden>
+        <line x1="220" y1="280" x2="500" y2="430" className="link bright" />
+        <line x1="500" y1="430" x2="780" y2="320" className="link" />
+        <line x1="500" y1="430" x2="320" y2="700" className="link bright" />
+        <line x1="500" y1="430" x2="720" y2="700" className="link" />
+        <line x1="320" y1="700" x2="720" y2="700" className="link" />
+        <line x1="220" y1="280" x2="780" y2="320" className="link" />
       </svg>
 
       {/* Title overlay (top-left) */}
-      <div className="ch-atlas__title">
-        <div className="ch-atlas__eyebrow">Room 05 · ATLAS · Knowledge Graph</div>
-        <h2 className="ch-atlas__h2">
-          What you know,<br /><em>arranged by light.</em>
-        </h2>
-        <p className="ch-atlas__obs">
-          Every thought you've captured lives somewhere in here. Navigate the graph to find the clusters.
+      <div className="at-title">
+        <div className="label">Room 05 · ATLAS · Knowledge Graph</div>
+        <h2>What you know,<br /><em>arranged by light.</em></h2>
+        <p className="obs">
+          Force-directed constellations of everything you've learned. Navigate the graph to find your clusters.
         </p>
       </div>
 
       {/* Legend (bottom-left) */}
-      <div className="ch-atlas__legend" aria-hidden>
-        <span className="ch-atlas__legend-item">
-          <span className="ch-atlas__legend-sw" />concept
-        </span>
-        <span className="ch-atlas__legend-item">
-          <span className="ch-atlas__legend-sw ch-atlas__legend-sw--sq" />artifact
-        </span>
-        <span className="ch-atlas__legend-item">
-          <span className="ch-atlas__legend-sw ch-atlas__legend-sw--d" />intent
-        </span>
+      <div className="at-legend" aria-hidden>
+        <span><span className="sw" style={{ borderRadius: '50%' }} />concept</span>
+        <span><span className="sw s" />artifact</span>
+        <span><span className="sw d" />intent</span>
       </div>
 
-      {/* Lab content (full-bleed under overlay) */}
-      <div className="ch-atlas__content">
+      {/* Full-bleed lab content (behind overlays) */}
+      <div className="at-content">
         <ShellErrorBoundary
           appName="ATLAS Sentinel"
           appIcon="⬡"

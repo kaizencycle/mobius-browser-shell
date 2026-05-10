@@ -19,7 +19,7 @@ const PROPOSITIONS = [
   {
     n: 'PROPOSITION · 03',
     q: 'A daily JADE prompt, pinned across the shell.',
-    hint: 'One question of the day at the omnibar\'s right edge — "What did you avoid yesterday?" — taps route to JADE pre-loaded. The chamber lives outside its tab.',
+    hint: 'One question of the day at the right edge — "What did you avoid yesterday?" — taps route to JADE pre-loaded. The chamber lives outside its tab.',
   },
   {
     n: 'PROPOSITION · 04',
@@ -29,7 +29,7 @@ const PROPOSITIONS = [
   {
     n: 'PROPOSITION · 05',
     q: 'Aesthetic that earns the name.',
-    hint: 'Soft jade gradients. Slow-breathing background. A single column of conversation. The other chambers are dashboards; JADE should feel like a tea room. Differentiation by mood.',
+    hint: 'Soft jade gradients. Slow-breathing background. A single column of conversation. The other chambers are dashboards; JADE should feel like a tea room.',
   },
 ];
 
@@ -37,67 +37,55 @@ export const JadeChamber: React.FC<JadeChamberProps> = ({ onNavigateToOaa, onNav
   const [notified, setNotified] = useState(false);
 
   return (
-    <div className="ch-jade">
-      <div className="ch-jade__breathe" aria-hidden />
-      <div className="ch-jade__inner">
+    <div className="ja-room">
+      <div className="ja-inner">
         {/* Header */}
-        <div className="ch-jade__head">
-          <div className="ch-jade__eyebrow">ROOM 06 · SENTINEL</div>
-          <h2 className="ch-jade__h2">JADE</h2>
-          <p className="ch-jade__obs">
-            The room that asks <em>why</em>. Slow down. JADE isn't a chatbot — it's a mirror with questions.
+        <div className="ja-head">
+          <div className="label">Room 06 · JADE · Currently paused</div>
+          <h2>The tea is hot.<br />Sit awhile.</h2>
+          <p className="obs">
+            JADE isn't a chatbot — it's a mirror with questions. Slow down.
           </p>
         </div>
 
         {/* Socratic propositions */}
         {PROPOSITIONS.map((p) => (
-          <div key={p.n} className="ch-jade__msg">
-            <div className="ch-jade__avatar">J</div>
-            <div className="ch-jade__bubble">
-              <div className="ch-jade__bubble-num">{p.n} · PROPOSITION</div>
-              <h4 className="ch-jade__bubble-q">{p.q}</h4>
-              <p className="ch-jade__bubble-hint">{p.hint}</p>
+          <div key={p.n} className="ja-msg">
+            <div className="av">J</div>
+            <div className="bub">
+              <div className="num">{p.n}</div>
+              <h4>{p.q}</h4>
+              <p>{p.hint}</p>
             </div>
           </div>
         ))}
 
-        {/* Coming soon / nav cards */}
-        <div className="ch-jade__cards">
-          <div className="ch-jade__card">
-            <div className="ch-jade__card-ico">🔮</div>
-            <div>
-              <b>JADE Sessions</b>
-              <p>Guided socratic dialogue. Coming next cycle.</p>
+        {/* Nav links */}
+        {(onNavigateToOaa || onNavigateToKnowledgeGraph) && (
+          <div className="ja-msg">
+            <div className="av">J</div>
+            <div className="bub" style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+              {onNavigateToOaa && (
+                <button className="ja-nav-btn" onClick={onNavigateToOaa}>📚 OAA Academy</button>
+              )}
+              {onNavigateToKnowledgeGraph && (
+                <button className="ja-nav-btn" onClick={onNavigateToKnowledgeGraph}>⬡ ATLAS Graph</button>
+              )}
             </div>
           </div>
-          <button className="ch-jade__card ch-jade__card--link" onClick={onNavigateToOaa}>
-            <div className="ch-jade__card-ico">📚</div>
-            <div>
-              <b>OAA Academy</b>
-              <p>Apply what JADE surfaces — start a module.</p>
-            </div>
-          </button>
-          <button className="ch-jade__card ch-jade__card--link" onClick={onNavigateToKnowledgeGraph}>
-            <div className="ch-jade__card-ico">⬡</div>
-            <div>
-              <b>ATLAS Knowledge Graph</b>
-              <p>See how JADE's propositions map to your concepts.</p>
-            </div>
-          </button>
-        </div>
+        )}
 
-        {/* Notify CTA */}
-        <div className="ch-jade__foot">
+        {/* Footer */}
+        <div className="ja-foot">
           {notified ? (
-            <span className="ch-jade__notified">✦ JADE will reach you when ready.</span>
+            <em>✦ JADE will reach you when ready.</em>
           ) : (
-            <button className="ch-jade__notify" onClick={() => setNotified(true)}>
+            <button className="ja-notify" onClick={() => setNotified(true)}>
               Notify me when JADE Sessions open
             </button>
           )}
-          <p className="ch-jade__motto">
-            — take what is useful, leave what is not.
-          </p>
+          <br />
+          <em>— take what is useful, leave what is not.</em>
         </div>
       </div>
     </div>
