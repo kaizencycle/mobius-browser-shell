@@ -2574,3 +2574,224 @@
   box-shadow: 0 4px 8px rgba(0,0,0,.3);
   pointer-events: none;
 }
+
+/* ═══════════════════════════════════════════════════════
+   APP SHELL — full-screen router wrapper
+═══════════════════════════════════════════════════════ */
+.app-shell {
+  position: relative;
+  width: 100%;
+  height: 100vh;
+  overflow: hidden;
+}
+.app-main {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+/* ═══════════════════════════════════════════════════════
+   FLOATING BACK BUTTON — fixed pill in top-left corner
+═══════════════════════════════════════════════════════ */
+.hall-back-float {
+  position: fixed;
+  top: 18px;
+  left: 18px;
+  z-index: 9999;
+  padding: 7px 16px;
+  background: rgba(26, 26, 26, 0.82);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 999px;
+  color: #e5e5e5;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+  transition: background 0.18s, border-color 0.18s, color 0.18s;
+}
+.hall-back-float:hover {
+  background: rgba(40, 40, 40, 0.95);
+  border-color: rgba(255, 255, 255, 0.25);
+  color: #fff;
+}
+
+/* ═══════════════════════════════════════════════════════
+   HALLWAY — hall-head (self-contained navigation header)
+═══════════════════════════════════════════════════════ */
+.hall-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 28px;
+  gap: 16px;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+
+/* Brand (left) */
+.hall-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+}
+.hall-brand-glyph {
+  width: 32px;
+  height: 32px;
+  color: rgba(255,255,255,0.55);
+  flex-shrink: 0;
+}
+.hall-brand-glyph svg {
+  width: 100%;
+  height: 100%;
+}
+.hall-brand-name {
+  font-family: 'Fraunces', serif;
+  font-size: 14px;
+  font-weight: 600;
+  color: #f0ede6;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+.hall-brand-sub {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 0.14em;
+  color: rgba(255,255,255,0.35);
+  text-transform: uppercase;
+  margin-top: 2px;
+  white-space: nowrap;
+}
+.hall-testnet {
+  display: inline-block;
+  background: #b45309;
+  color: #fef3c7;
+  font-size: 8px;
+  letter-spacing: 0.1em;
+  padding: 1px 5px;
+  border-radius: 3px;
+  margin-right: 6px;
+  vertical-align: middle;
+}
+
+/* Right actions cluster */
+.hall-head-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+/* GI chip */
+.hall-gi {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-decoration: none;
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px solid currentColor;
+  transition: opacity 0.15s;
+  white-space: nowrap;
+}
+.hall-gi:hover { opacity: 0.75; }
+.hall-gi--green { color: #34d399; }
+.hall-gi--yellow { color: #fbbf24; }
+.hall-gi--red    { color: #f87171; }
+.hall-gi--dim    { color: rgba(255,255,255,0.25); border-color: rgba(255,255,255,0.1); }
+
+/* Balance chip */
+.hall-chip {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  padding: 4px 10px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+.hall-chip--mic {
+  background: rgba(251,191,36,0.12);
+  color: #fbbf24;
+  border: 1px solid rgba(251,191,36,0.25);
+}
+.hall-chip--mii {
+  background: rgba(139,92,246,0.12);
+  color: #a78bfa;
+  border: 1px solid rgba(139,92,246,0.22);
+}
+
+/* Wake button */
+.hall-wake {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,0.12);
+  background: transparent;
+  color: rgba(255,255,255,0.45);
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+  flex-shrink: 0;
+}
+.hall-wake:hover:not(:disabled) {
+  background: rgba(255,255,255,0.06);
+  color: rgba(255,255,255,0.8);
+}
+.hall-wake:disabled { opacity: 0.4; cursor: default; }
+
+/* Sentinel pip */
+.hall-sentinels {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  color: rgba(255,255,255,0.35);
+  white-space: nowrap;
+}
+.hall-pip {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #34d399;
+  box-shadow: 0 0 6px #34d399;
+  flex-shrink: 0;
+}
+.hall-sentinels-detail {
+  display: none;
+}
+@media (min-width: 900px) {
+  .hall-sentinels-detail { display: flex; align-items: center; }
+}
+
+/* Guest button */
+.hall-guest {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  padding: 4px 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,0.15);
+  background: transparent;
+  color: rgba(255,255,255,0.5);
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+  white-space: nowrap;
+}
+.hall-guest:hover {
+  background: rgba(255,255,255,0.06);
+  color: rgba(255,255,255,0.8);
+}
+
+/* Responsive: collapse some items on small screens */
+@media (max-width: 600px) {
+  .hall-head { padding: 10px 14px; gap: 8px; }
+  .hall-sentinels { display: none; }
+  .hall-chip--mii { display: none; }
+  .hall-brand-name { font-size: 12px; }
+}
