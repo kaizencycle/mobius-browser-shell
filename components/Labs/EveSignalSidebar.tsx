@@ -1,7 +1,6 @@
-// components/Labs/EveSignalSidebar.tsx
-// C-307 · EVE · Collapsible top-3 live world signals from terminalState
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useTerminal } from '../../contexts/TerminalContext';
+import type { TerminalState } from '../../src/lib/terminal-bridge';
 
 interface Signal {
   label: string;
@@ -9,7 +8,7 @@ interface Signal {
   trend: 'up' | 'down' | 'flat';
 }
 
-function extractSignals(state: ReturnType<typeof useTerminal>['state']): Signal[] {
+function extractSignals(state: TerminalState | null): Signal[] {
   if (!state) return [];
   const signals: Signal[] = [];
 
@@ -51,7 +50,7 @@ const TREND_CLS: Record<Signal['trend'], string> = {
 export const EveSignalSidebar: React.FC = () => {
   const [open, setOpen] = useState(true);
   const { state } = useTerminal();
-  const signals = extractSignals(state);
+  const signals = useMemo(() => extractSignals(state), [state]);
 
   return (
     <div className={`flex-shrink-0 border-l border-stone-200 bg-white transition-all duration-200 ${open ? 'w-44' : 'w-8'} flex flex-col`}>

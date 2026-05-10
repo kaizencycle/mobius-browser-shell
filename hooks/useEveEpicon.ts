@@ -1,5 +1,3 @@
-// hooks/useEveEpicon.ts
-// C-307 · EVE · reflection completion → EPICON substrate write (body-hash, no PII)
 import { env } from '../config/env';
 
 interface ReflectionPayload {
@@ -14,15 +12,13 @@ interface ReflectionPayload {
   gi: number | null;
 }
 
-async function sha256Hex(text: string): Promise<string> {
-  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(text));
+const ENCODER = new TextEncoder();
+
+export async function hashReflectionBody(body: string): Promise<string> {
+  const buf = await crypto.subtle.digest('SHA-256', ENCODER.encode(body));
   return Array.from(new Uint8Array(buf))
     .map((b) => b.toString(16).padStart(2, '0'))
     .join('');
-}
-
-export async function hashReflectionBody(body: string): Promise<string> {
-  return sha256Hex(body);
 }
 
 export async function emitReflectionEpicon(payload: ReflectionPayload): Promise<void> {
