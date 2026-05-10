@@ -6,6 +6,7 @@ import { LabFrame } from '../LabFrame';
 import { MOBIUS_OPEN_INQUIRY_EVENT } from '../InquiryChatModal';
 import { Map, Compass, Plus, Atom, Calculator, Dna, Code, FlaskConical, Cpu, Globe, Rocket, ArrowRight, ArrowLeft, Send, X, BookOpen, ChevronDown, GraduationCap, Award } from 'lucide-react';
 import { LearningProgressTracker } from '../Learning';
+import { OAALearnToEarn } from './OAALearnToEarn';
 
 export interface OAALabProps {
   onNavigateToKnowledgeGraph?: () => void;
@@ -59,13 +60,16 @@ export const OAALab: React.FC<OAALabProps> = ({ onNavigateToKnowledgeGraph }) =>
   // If live mode is enabled and URL exists, show iframe
   if (lab && shouldUseLiveMode(lab.url)) {
     return (
-      <LabFrame 
-        url={lab.url!} 
+      <LabFrame
+        url={lab.url!}
         title={lab.name}
         description={lab.description}
       />
     );
   }
+
+  // Demo mode — show the Claude Design Learn-to-Earn experience
+  return <OAALearnToEarn onNavigateToKnowledgeGraph={onNavigateToKnowledgeGraph} />;
 
   // Handle subject selection
   const handleSubjectSelect = (subject: Subject) => {
