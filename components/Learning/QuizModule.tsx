@@ -82,9 +82,9 @@ export const QuizModule: React.FC<QuizModuleProps> = ({
     const atlasResult = atlas.handleAnswer(
       currentQuestionIndex,
       selectedAnswer,
-      currentQuestion.correctAnswer,
-      currentQuestion.question,
-      currentQuestion.options
+      currentQuestion!.correctAnswer,
+      currentQuestion!.question,
+      currentQuestion!.options
     );
 
     const isCorrect = atlasResult.isCorrect;
@@ -317,6 +317,7 @@ export const QuizModule: React.FC<QuizModuleProps> = ({
   // ═══════════════════════════════════════════
   // QUIZ INTERFACE — MIC is the active reward
   // ═══════════════════════════════════════════
+  if (!currentQuestion) return null;
   const currentQMic = questionMicValue(currentQuestion);
 
   return (

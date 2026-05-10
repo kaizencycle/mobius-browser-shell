@@ -748,7 +748,7 @@ export function getAtlasAssistMessage(): string {
     "Second attempt after ATLAS assist. +5 MIC.",
     "Correction integrated. +5 MIC.",
   ];
-  return messages[Math.floor(Math.random() * messages.length)];
+  return messages[Math.floor(Math.random() * messages.length)]!;
 }
 
 // ─── ATLAS Intervention UI Component ───
@@ -900,8 +900,8 @@ export function useAtlas({ moduleId }: UseAtlasOptions) {
       selectedAnswer,
       correctAnswer,
       questionText,
-      options[selectedAnswer],
-      options[correctAnswer]
+      options[selectedAnswer]!,
+      options[correctAnswer]!
     );
 
     setState((prev) => ({

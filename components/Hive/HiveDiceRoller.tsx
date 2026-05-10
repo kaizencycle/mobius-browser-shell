@@ -1,7 +1,6 @@
 // components/Hive/HiveDiceRoller.tsx
 // ============================================
 // HIVE Dice-Ethics Roller Component
-// Rolls don't decide if you win — they decide what kind of cost your choice carries
 // ============================================
 
 import React, { useState, useEffect, useCallback } from "react";
@@ -43,24 +42,21 @@ export const HiveDiceRoller: React.FC<HiveDiceRollerProps> = ({
     setIsRolling(true);
     setLastOutcome(null);
 
-    // Perform the actual roll
     const outcome = rollWithShard(selectedShard, shardValue, intentText || undefined);
 
-    // Animate dice
     const animationFrames = generateDiceAnimation(outcome.rawRoll, 10);
     let frameIndex = 0;
 
     const animationInterval = setInterval(() => {
-      setAnimatedDice(animationFrames[frameIndex]);
+      setAnimatedDice(animationFrames[frameIndex]!);
       frameIndex++;
 
       if (frameIndex >= animationFrames.length) {
         clearInterval(animationInterval);
         setIsRolling(false);
         setLastOutcome(outcome);
-        setRollHistory((prev) => [outcome, ...prev].slice(0, 10)); // Keep last 10
+        setRollHistory((prev) => [outcome, ...prev].slice(0, 10));
 
-        // Notify parent of roll completion
         if (onRollComplete) {
           const micDelta = calculateMicDelta(outcome.band);
           onRollComplete(outcome, micDelta);
@@ -69,7 +65,6 @@ export const HiveDiceRoller: React.FC<HiveDiceRollerProps> = ({
     }, 80);
   }, [isRolling, selectedShard, shardValue, intentText, onRollComplete]);
 
-  // Reset animated dice when not rolling
   useEffect(() => {
     if (!isRolling) {
       const timer = setTimeout(() => setAnimatedDice(null), 500);

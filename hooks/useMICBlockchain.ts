@@ -68,13 +68,13 @@ async function computeMerkleRoot(transactions: MICTransaction[]): Promise<string
   while (level.length > 1) {
     const next: string[] = [];
     for (let i = 0; i < level.length; i += 2) {
-      const left = level[i];
+      const left = level[i]!;
       const right = level[i + 1] ?? left;       // duplicate last if odd
       next.push(await sha256(left + right));
     }
     level = next;
   }
-  return level[0];
+  return level[0]!;
 }
 
 async function computeBlockHash(block: Omit<MICBlock, 'hash'>): Promise<string> {
@@ -119,11 +119,11 @@ async function validateChain(chain: MICBlock[]): Promise<boolean> {
   if (chain.length === 0) return true;
 
   // Verify genesis block
-  if (chain[0].previousHash !== '0'.repeat(64)) return false;
+  if (chain[0]!.previousHash !== '0'.repeat(64)) return false;
 
   for (let i = 1; i < chain.length; i++) {
-    const current = chain[i];
-    const previous = chain[i - 1];
+    const current = chain[i]!;
+    const previous = chain[i - 1]!;
 
     // Link check
     if (current.previousHash !== previous.hash) return false;
@@ -209,9 +209,9 @@ function computeStats(chain: MICBlock[], isValid: boolean): ChainStats {
     totalMicMinted: Math.round(totalMicMinted * 100) / 100,
     totalTransactions,
     isValid,
-    genesisTimestamp: chain.length > 0 ? chain[0].timestamp : null,
-    latestTimestamp: chain.length > 0 ? chain[chain.length - 1].timestamp : null,
-    latestHash: chain.length > 0 ? chain[chain.length - 1].hash : '',
+    genesisTimestamp: chain.length > 0 ? chain[0]!.timestamp : null,
+    latestTimestamp: chain.length > 0 ? chain[chain.length - 1]!.timestamp : null,
+    latestHash: chain.length > 0 ? chain[chain.length - 1]!.hash : '',
     difficulty: DIFFICULTY,
   };
 }
@@ -260,7 +260,7 @@ export function useMICBlockchain() {
     async (transactions: MICTransaction[]): Promise<MICBlock | null> => {
       if (chain.length === 0) return null;
 
-      const previousBlock = chain[chain.length - 1];
+      const previousBlock = chain[chain.length - 1]!;
       const timestamp = new Date().toISOString();
       const merkleRoot = await computeMerkleRoot(transactions);
 
@@ -333,8 +333,8 @@ export function useMICBlockchain() {
         if (!holders[tx.recipient]) {
           holders[tx.recipient] = { balance: 0, txCount: 0 };
         }
-        holders[tx.recipient].balance += tx.amount;
-        holders[tx.recipient].txCount++;
+        holders[tx.recipient]!.balance += tx.amount;
+        holders[tx.recipient]!.txCount++;
       }
     }
     return Object.entries(holders)

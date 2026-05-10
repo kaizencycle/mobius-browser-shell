@@ -3,19 +3,6 @@
  *
  * Intercepts citizens with onboarded=false immediately after authentication.
  * Renders the onboarding flow instead of the shell until completion.
- *
- * Layer order (outermost → innermost):
- *   RootErrorBoundary
- *     └─ AuthProvider
- *         └─ AuthGate           ← blocks unauthenticated
- *             └─ OnboardingGate ← blocks unboarded citizens  ← THIS
- *                 └─ App        ← the shell
- *
- * Design principles:
- * - 3 steps: Covenants → Handle → Enter
- * - Progressive: one step at a time, no overwhelm
- * - Skippable steps are clearly marked — citizens own their data
- * - No intermediate persistence — single POST at end
  */
 
 import { useState, useEffect, useCallback, type ReactNode } from 'react';
@@ -30,12 +17,6 @@ import type { CovenantsConsents } from './steps/CovenantsStep';
 const ONBOARDING_STEP_KEY = 'mobius:onboarding:step';
 const ONBOARDING_PENDING_KEY = 'mobius:onboarding:pending';
 
-/**
- * OnboardingGate
- *
- * Pure pass-through for citizen.onboarded === true. Zero overhead for returning citizens.
- * Shows MICGenesisGrant once after covenants signed, before shell.
- */
 export function OnboardingGate({ children }: { children: ReactNode }) {
   const { citizen, claimGenesisGrant } = useAuth();
   const [showGenesisGrant, setShowGenesisGrant] = useState(false);
@@ -64,7 +45,7 @@ export function OnboardingGate({ children }: { children: ReactNode }) {
   );
 }
 
-// ── Flow controller ───────────────────────────────────────────────────────────
+// ── Flow controller ───────────────────────────────────────────────────────────────────────────────
 
 interface OnboardingFormState {
   consents: CovenantsConsents;
@@ -101,7 +82,7 @@ function OnboardingFlow({ onOnboardingComplete }: { onOnboardingComplete?: () =>
   const [error, setError] = useState<string | null>(null);
   const [showOfflineQueue, setShowOfflineQueue] = useState(false);
 
-  const currentStep = ONBOARDING_STEPS[currentStepIndex];
+  const currentStep = ONBOARDING_STEPS[currentStepIndex]!;
   const isLastStep = currentStepIndex === ONBOARDING_STEPS.length - 1;
   const progress = ((currentStepIndex + 1) / ONBOARDING_STEPS.length) * 100;
 
@@ -117,7 +98,6 @@ function OnboardingFlow({ onOnboardingComplete }: { onOnboardingComplete?: () =>
     [completeOnboarding]
   );
 
-  // Retry pending onboarding when back online
   useEffect(() => {
     if (!navigator.onLine) return;
     try {

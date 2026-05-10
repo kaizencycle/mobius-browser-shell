@@ -290,14 +290,14 @@ export const HiveCharacterCreator: React.FC<HiveCharacterCreatorProps> = ({
           {step !== "intro" && step !== "complete" && (
             <div className="flex items-center justify-between mt-6 pt-4 border-t border-stone-200">
               <button
-                onClick={() => setStep(steps[currentStepIndex - 1])}
+                onClick={() => setStep(steps[currentStepIndex - 1]!)}
                 className="flex items-center space-x-1 px-4 py-2 text-sm text-stone-600 hover:text-stone-800"
               >
                 <ChevronLeft className="w-4 h-4" />
                 <span>Back</span>
               </button>
               <button
-                onClick={() => setStep(steps[currentStepIndex + 1])}
+                onClick={() => setStep(steps[currentStepIndex + 1]!)}
                 disabled={!canProceed()}
                 className={`flex items-center space-x-1 px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
                   canProceed()
