@@ -37,7 +37,7 @@ function pickPrompt(prompts: string[], seed: string): string {
   for (let i = 0; i < seed.length; i++) {
     hash = (hash * 31 + seed.charCodeAt(i)) >>> 0;
   }
-  return prompts[hash % prompts.length];
+  return prompts[hash % prompts.length]!;
 }
 
 export function useDailyPrompt(): string {
