@@ -409,37 +409,33 @@ export const ReflectionsLab: React.FC<ReflectionsLabProps> = ({
 
       if (success) {
         setRewardNotice(`A hidden reflection bonus crystallized: +${reward.mic} MIC XP`);
+        const bodyText = entry.phases.map((p) => p.content).join('\n');
+        void hashReflectionBody(bodyText).then((bodyHash) => {
+          void emitReflectionEpicon({
+            citizenId: user?.id ?? 'guest',
+            entryId: entry.id,
+            bodyHash,
+            wordCount: analysis.totalWords,
+            completedPhases: analysis.completedPhaseCount,
+            rewardTier: reward.id,
+            mic: reward.mic,
+            cycle: terminalState?.cycle ?? null,
+            gi: terminalState?.gi ?? null,
+          });
+          archiveReflection({
+            id: entry.id,
+            title: entry.title,
+            bodyHash,
+            gi: terminalState?.gi ?? null,
+            mode: terminalState?.mode ?? null,
+            cycle: terminalState?.cycle ?? null,
+            timestamp: new Date().toISOString(),
+            wordCount: analysis.totalWords,
+          });
+        });
       } else {
         setRewardNotice('A hidden reflection bonus was detected, but minting failed. Try again soon.');
       }
-
-      // EVE E-3: EPICON emit (body-hash only, no PII)
-      const bodyText = entry.phases.map((p) => p.content).join('\n');
-      void hashReflectionBody(bodyText).then((bodyHash) => {
-        void emitReflectionEpicon({
-          citizenId: user?.id ?? 'guest',
-          entryId: entry.id,
-          bodyHash,
-          wordCount: analysis.totalWords,
-          completedPhases: analysis.completedPhaseCount,
-          rewardTier: reward.id,
-          mic: reward.mic,
-          cycle: terminalState?.cycle ?? null,
-          gi: terminalState?.gi ?? null,
-        });
-
-        // EVE E-5: persist to archive lane
-        archiveReflection({
-          id: entry.id,
-          title: entry.title,
-          bodyHash,
-          gi: terminalState?.gi ?? null,
-          mode: terminalState?.mode ?? null,
-          cycle: terminalState?.cycle ?? null,
-          timestamp: new Date().toISOString(),
-          wordCount: analysis.totalWords,
-        });
-      });
     },
     [earnMIC, user, terminalState]
   );

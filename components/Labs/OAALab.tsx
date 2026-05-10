@@ -47,6 +47,8 @@ const SUBJECTS: Subject[] = [
 // View mode for OAA Lab
 type OAAView = 'subjects' | 'learning';
 
+const XP_TO_MIC_THRESHOLD = 50;
+
 export const OAALab: React.FC<OAALabProps> = ({ onNavigateToKnowledgeGraph }) => {
   const lab = getLabById(TabId.OAA);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -64,8 +66,6 @@ export const OAALab: React.FC<OAALabProps> = ({ onNavigateToKnowledgeGraph }) =>
   const [isLoading, setIsLoading] = useState(false);
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
 
-  const XP_PER_LESSON = 10;
-  const XP_TO_MIC_THRESHOLD = 50;
   const ribbonPct = Math.min(100, Math.round((sessionXp % XP_TO_MIC_THRESHOLD) / XP_TO_MIC_THRESHOLD * 100));
 
   // If live mode is enabled and URL exists, show iframe

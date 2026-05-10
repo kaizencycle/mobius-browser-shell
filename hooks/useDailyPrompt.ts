@@ -1,5 +1,3 @@
-// hooks/useDailyPrompt.ts
-// C-307 · EVE · GI-mode-aware daily prompt, deterministic per cycle
 import { useTerminal } from '../contexts/TerminalContext';
 
 const GREEN_PROMPTS = [

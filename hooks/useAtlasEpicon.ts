@@ -1,5 +1,3 @@
-// hooks/useAtlasEpicon.ts
-// C-307 · ATLAS · lesson completion → EPICON substrate write
 import { env } from '../config/env';
 
 interface LessonPayload {

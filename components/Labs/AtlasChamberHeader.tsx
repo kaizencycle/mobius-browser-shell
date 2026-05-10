@@ -1,16 +1,8 @@
-// components/Labs/AtlasChamberHeader.tsx
-// C-307 · ATLAS · Chamber 1 identity + health header
 import React from 'react';
 import { useWallet } from '../../contexts/WalletContext';
 import { useTerminal } from '../../contexts/TerminalContext';
 import { useAtlasWakeGuard } from '../../hooks/useAtlasWakeGuard';
-
-function giColorClass(mode: string | undefined, stale: boolean): string {
-  if (stale || !mode) return 'text-stone-400';
-  if (mode === 'green') return 'text-emerald-400';
-  if (mode === 'red') return 'text-rose-400';
-  return 'text-amber-400';
-}
+import { giTextColor } from '../../utils/gi';
 
 const STATUS_CONFIG = {
   checking: { label: '◌ Connecting…', cls: 'text-stone-400' },
@@ -24,10 +16,8 @@ export const AtlasChamberHeader: React.FC = () => {
   const { state: terminalState } = useTerminal();
   const wakeStatus = useAtlasWakeGuard();
 
-  const giLabel = terminalState
-    ? `GI ${terminalState.gi.toFixed(2)}`
-    : 'GI —';
-  const giCls = giColorClass(terminalState?.mode, terminalState?.stale ?? false);
+  const giLabelText = terminalState ? `GI ${terminalState.gi.toFixed(2)}` : 'GI —';
+  const giCls = giTextColor(terminalState?.mode, terminalState?.stale);
   const { label: statusLabel, cls: statusCls } = STATUS_CONFIG[wakeStatus];
 
   return (
@@ -40,7 +30,7 @@ export const AtlasChamberHeader: React.FC = () => {
       </div>
       <div className="flex items-center gap-4">
         <span className={`${statusCls} text-[10px]`}>{statusLabel}</span>
-        <span className={giCls}>{giLabel}</span>
+        <span className={giCls}>{giLabelText}</span>
         {wallet && (
           <span className="text-amber-400">
             ◎ {wallet.balance.toFixed(2)} MIC

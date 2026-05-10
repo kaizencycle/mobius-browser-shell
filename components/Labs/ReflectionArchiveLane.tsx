@@ -1,6 +1,5 @@
-// components/Labs/ReflectionArchiveLane.tsx
-// C-307 · EVE · Session localStorage archive of last 5 reflections with GI context
 import React, { useState, useEffect } from 'react';
+import { giTextColor } from '../../utils/gi';
 
 const ARCHIVE_KEY = 'eve_reflection_archive';
 const MAX_ARCHIVE = 5;
@@ -37,18 +36,13 @@ function loadArchive(): ArchivedReflection[] {
   }
 }
 
-function modeColor(mode: string | null): string {
-  if (mode === 'green') return 'text-emerald-600';
-  if (mode === 'red') return 'text-rose-600';
-  return 'text-amber-600';
-}
-
 export const ReflectionArchiveLane: React.FC = () => {
-  const [archive, setArchive] = useState<ArchivedReflection[]>([]);
+  const [archive, setArchive] = useState<ArchivedReflection[]>(() => loadArchive());
 
   useEffect(() => {
-    setArchive(loadArchive());
-    const handler = () => setArchive(loadArchive());
+    const handler = (e: StorageEvent) => {
+      if (e.key === ARCHIVE_KEY) setArchive(loadArchive());
+    };
     window.addEventListener('storage', handler);
     return () => window.removeEventListener('storage', handler);
   }, []);
@@ -70,7 +64,7 @@ export const ReflectionArchiveLane: React.FC = () => {
             <span className="text-[9px] text-stone-400">{new Date(r.timestamp).toLocaleDateString()}</span>
             <div className="flex items-center gap-1">
               {r.gi !== null && (
-                <span className={`text-[9px] font-mono ${modeColor(r.mode)}`}>
+                <span className={`text-[9px] font-mono ${giTextColor(r.mode)}`}>
                   GI {r.gi.toFixed(2)}
                 </span>
               )}
