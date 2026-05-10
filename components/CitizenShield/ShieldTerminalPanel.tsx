@@ -472,7 +472,7 @@ export const ShieldTerminalPanel: React.FC = () => {
           ) : (
             <div className="flex flex-wrap gap-2">
               {laneKeys.map((key) => {
-                const lane = state!.lanes[key];
+                const lane = state!.lanes[key]!;
                 const ok = lane.ok;
                 return (
                   <span
