@@ -36,7 +36,7 @@ function isRateLimited(ip: string): boolean {
 
 function getClientIp(req: VercelRequest): string {
   const forwarded = req.headers['x-forwarded-for'];
-  if (typeof forwarded === 'string') return forwarded.split(',')[0].trim();
+  if (typeof forwarded === 'string') return forwarded.split(',')[0]!.trim();
   return 'unknown';
 }
 
