@@ -1,1 +1,334 @@
 @import "tailwindcss";
+
+/* ═══════════════════════════════════════════════════════════════
+   C-306 · HALLWAY + ROOM-SHELL CSS
+   ─────────────────────────────────────────────────────────────── */
+
+@keyframes hallway-pip-pulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.35; }
+}
+
+@keyframes door-enter {
+  from { opacity: 0; transform: scale(0.97) translateY(8px); }
+  to   { opacity: 1; transform: scale(1)    translateY(0);   }
+}
+
+/* ── HALLWAY ROOT ──────────────────────────────────────────────── */
+.hallway-root {
+  position: absolute;
+  inset: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  background:
+    radial-gradient(ellipse 90% 60% at 50% 105%, #2a2521 0%, transparent 60%),
+    radial-gradient(ellipse 70% 50% at 50% -10%, #3b332b 0%, transparent 55%),
+    linear-gradient(180deg, #14110f 0%, #0c0a09 100%);
+  color: #e7e5e4;
+  -webkit-font-smoothing: antialiased;
+}
+
+.hallway-inner {
+  display: flex;
+  flex-direction: column;
+  min-height: 100%;
+  padding: 28px 32px 24px;
+}
+
+/* ── Hero ─────────────────────────────────────────────────────── */
+.hallway-eyebrow {
+  font-family: 'JetBrains Mono', 'Fira Code', monospace;
+  font-size: 11px;
+  color: #a8a29e;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  margin-bottom: 12px;
+}
+
+.hallway-hero {
+  padding: 40px 0 28px;
+  flex-shrink: 0;
+}
+
+.hallway-h1 {
+  font-family: 'Fraunces', Georgia, serif;
+  font-weight: 500;
+  font-size: clamp(52px, 7vw, 88px);
+  line-height: 0.95;
+  letter-spacing: -0.035em;
+  color: #fafaf9;
+  margin-bottom: 16px;
+}
+
+.hallway-h1 em {
+  font-style: italic;
+  color: #a8a29e;
+}
+
+.hallway-lede {
+  max-width: 580px;
+  color: #d6d3d1;
+  font-size: 14.5px;
+  line-height: 1.6;
+}
+
+.hallway-lede-q { color: #a8a29e; }
+
+/* ── Door grid ────────────────────────────────────────────────── */
+.hallway-doors {
+  flex: 1;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  grid-template-rows: repeat(2, 1fr);
+  gap: 12px;
+  min-height: 0;
+  grid-auto-rows: minmax(160px, 1fr);
+  padding-bottom: 4px;
+  animation: door-enter 0.45s ease both;
+}
+
+@media (max-width: 1024px) {
+  .hallway-doors {
+    grid-template-columns: repeat(2, 1fr);
+    grid-template-rows: repeat(4, auto);
+    grid-auto-rows: minmax(140px, auto);
+  }
+}
+
+@media (max-width: 640px) {
+  .hallway-doors {
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+  .hallway-inner { padding: 16px 16px 20px; }
+  .hallway-h1 { font-size: 42px; }
+}
+
+/* ── Individual door ──────────────────────────────────────────── */
+.hallway-door {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 16px;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  overflow: hidden;
+  cursor: pointer;
+  color: #fafaf9;
+  text-align: left;
+  background: transparent;
+  transition:
+    transform 0.32s cubic-bezier(0.2, 0.8, 0.2, 1),
+    box-shadow 0.32s ease,
+    border-color 0.22s ease;
+}
+
+.hallway-door:focus-visible {
+  outline: 2px solid rgba(255,255,255,0.4);
+  outline-offset: 2px;
+}
+
+.hallway-door:not(.hallway-door--disabled):hover {
+  transform: translateY(-4px);
+  border-color: rgba(255, 255, 255, 0.22);
+  box-shadow: 0 18px 48px rgba(0, 0, 0, 0.55);
+}
+
+.hallway-door--disabled {
+  cursor: default;
+  opacity: 0.7;
+}
+
+.door-lit {
+  position: absolute;
+  inset: 0;
+  opacity: 0.85;
+  transition: opacity 0.3s;
+  z-index: 0;
+}
+
+.hallway-door:not(.hallway-door--disabled):hover .door-lit { opacity: 1; }
+
+.door-glow {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 50% 110%, rgba(255,255,255,0.16), transparent 65%);
+  z-index: 1;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.32s;
+}
+
+.hallway-door:not(.hallway-door--disabled):hover .door-glow { opacity: 1; }
+
+/* ── Per-door backgrounds ─────────────────────────────────────── */
+.door-lit-oaa     .door-lit { background: linear-gradient(160deg,#064e3b 0%,#0f3a2e 100%); }
+.door-lit-hive    .door-lit { background: linear-gradient(160deg,#3f1d2e 0%,#1c0d18 100%); }
+.door-lit-reflect .door-lit { background: linear-gradient(160deg,#312e81 0%,#1e1b4b 100%); }
+.door-lit-shield  .door-lit { background: linear-gradient(160deg,#1e293b 0%,#0f172a 100%); }
+.door-lit-atlas   .door-lit { background: linear-gradient(160deg,#92400e 0%,#451a03 100%); }
+.door-lit-jade    .door-lit { background: linear-gradient(160deg,#134e4a 0%,#042f2e 100%); }
+.door-lit-wallet  .door-lit { background: linear-gradient(160deg,#4c1d95 0%,#2e1065 100%); }
+.door-lit-mii     .door-lit { background: linear-gradient(160deg,#292524 0%,#0c0a09 100%); }
+
+/* ── Door content layers ──────────────────────────────────────── */
+.door-num {
+  position: relative;
+  z-index: 2;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  opacity: 0.7;
+}
+
+.door-body {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.door-icon {
+  font-size: 26px;
+  line-height: 1;
+}
+
+.door-title {
+  font-family: 'Fraunces', Georgia, serif;
+  font-weight: 600;
+  font-size: clamp(18px, 2vw, 24px);
+  letter-spacing: -0.015em;
+  line-height: 1.05;
+}
+
+.door-role {
+  font-size: 11px;
+  line-height: 1.5;
+  opacity: 0.8;
+  max-width: 220px;
+}
+
+.door-enter {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  opacity: 0.65;
+}
+
+.door-arrow {
+  width: 14px;
+  height: 14px;
+  transition: transform 0.28s ease;
+}
+
+.hallway-door:not(.hallway-door--disabled):hover .door-arrow {
+  transform: translateX(5px);
+}
+
+/* ── Hallway footer ───────────────────────────────────────────── */
+.hallway-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 20px;
+  padding-top: 14px;
+  border-top: 1px solid rgba(255,255,255,0.07);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10.5px;
+  color: #78716c;
+  letter-spacing: 0.06em;
+  flex-shrink: 0;
+}
+
+.hallway-footer-motto {
+  font-style: italic;
+  letter-spacing: 0.02em;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   ROOM SHELL — atmospheric wrapper applied per-chamber
+   ─────────────────────────────────────────────────────────────── */
+
+.room-shell {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.room-shell::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.06;
+}
+
+.room-shell--oaa::before {
+  background: radial-gradient(ellipse at 50% 100%, #10b981 0%, transparent 60%);
+}
+.room-shell--hive::before {
+  background: radial-gradient(ellipse at 50% 100%, #a855f7 0%, transparent 60%);
+}
+.room-shell--reflect::before {
+  background: radial-gradient(ellipse at 50% 100%, #6366f1 0%, transparent 60%);
+}
+.room-shell--shield::before {
+  background: radial-gradient(ellipse at 50% 100%, #3b82f6 0%, transparent 60%);
+}
+.room-shell--atlas::before {
+  background: radial-gradient(ellipse at 50% 100%, #f59e0b 0%, transparent 60%);
+}
+.room-shell--jade::before {
+  background: radial-gradient(ellipse at 50% 100%, #14b8a6 0%, transparent 60%);
+}
+.room-shell--wallet::before {
+  background: radial-gradient(ellipse at 50% 100%, #8b5cf6 0%, transparent 60%);
+}
+
+.room-shell__content {
+  position: relative;
+  z-index: 1;
+  flex: 1;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── Back-to-hallway button ──────────────────────────────────── */
+.hallway-back-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px 5px 8px;
+  border-radius: 999px;
+  border: 1px solid rgba(0,0,0,0.1);
+  background: transparent;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  color: #57534e;
+  cursor: pointer;
+  transition: all 0.18s ease;
+  flex-shrink: 0;
+}
+
+.hallway-back-btn:hover {
+  background: rgba(0,0,0,0.05);
+  border-color: rgba(0,0,0,0.18);
+  color: #292524;
+}
+
+.hallway-back-btn svg {
+  width: 13px;
+  height: 13px;
+}

@@ -1,4 +1,5 @@
 export enum TabId {
+  HALLWAY = 'HALLWAY',
   OAA = 'OAA_HUB',
   HIVE = 'HIVE_LAB',
   REFLECTIONS = 'REFLECTIONS',
