@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import type { HiveActionId, HivePlayableSave } from '../../../src/lib/hive-action-types';
-import { HIVE_LOCAL_STORAGE_KEY } from '../../../src/lib/hive-action-types';
+import { HIVE_LOCAL_STORAGE_KEY, HIVE_SAVE_VERSION } from '../../../src/lib/hive-action-types';
 import type { HiveCycleData } from '../../../hooks/useHiveWorld';
 
 interface Props {
@@ -20,15 +20,25 @@ const ACTIONS: ActionDef[] = [
   { id: 'acknowledge_sentinel', label: 'Acknowledge', description: 'Confirm sentinel status' },
 ];
 
-function loadSave(): HivePlayableSave | null {
+function loadSave(cycleId: string, questId: string | null): HivePlayableSave {
   try {
     const raw = localStorage.getItem(HIVE_LOCAL_STORAGE_KEY);
-    if (!raw) return null;
-    const parsed = JSON.parse(raw) as HivePlayableSave;
-    return parsed.version === 1 ? parsed : null;
+    if (raw) {
+      const parsed = JSON.parse(raw) as HivePlayableSave;
+      if (parsed.version === 1) return parsed;
+    }
   } catch {
-    return null;
+    // fall through to default
   }
+  const seed: HivePlayableSave = {
+    version: HIVE_SAVE_VERSION,
+    seed_cycle_id: cycleId,
+    active_event_id: null,
+    quest: { id: questId ?? 'unknown', title: '' },
+    interaction_log: { cycle: cycleId, events: [] },
+  };
+  saveToDisk(seed);
+  return seed;
 }
 
 function saveToDisk(save: HivePlayableSave): void {
@@ -44,13 +54,7 @@ export const ActionRibbon: React.FC<Props> = ({ cycle, onActionComplete }) => {
   const [toast, setToast] = useState<string | null>(null);
 
   const dispatch = async (action: HiveActionId) => {
-    const save = loadSave();
-    if (!save) {
-      setToast('No active save — visit HIVE City View first');
-      setTimeout(() => setToast(null), 3000);
-      return;
-    }
-
+    const save = loadSave(cycle.cycle_id, cycle.active_quest_id);
     setBusy(action);
     try {
       const res = await fetch('/api/hive/action', {
