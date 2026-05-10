@@ -44,6 +44,7 @@ const KnowledgeGraphLab = lazy(() =>
     default: m.KnowledgeGraphLab,
   })),
 );
+import { Hallway } from './components/Hallway';
 import { wakeAllServices, env } from './config/env';
 import { useAuth } from './contexts/AuthContext';
 import { useWallet } from './contexts/WalletContext';
@@ -59,6 +60,16 @@ import { WorldSignalStrip } from './components/WorldSignalStrip';
 import { TerminalHeartbeat } from './components/TerminalHeartbeat';
 
 const TERMINAL_APP_URL = `${env.terminalOrigin.replace(/\/+$/, '')}/terminal`;
+
+const ROOM_SHELL_ID: Partial<Record<TabId, string>> = {
+  [TabId.OAA]:             'oaa',
+  [TabId.HIVE]:            'hive',
+  [TabId.REFLECTIONS]:     'reflect',
+  [TabId.SHIELD]:          'shield',
+  [TabId.KNOWLEDGE_GRAPH]: 'atlas',
+  [TabId.JADE]:            'jade',
+  [TabId.WALLET]:          'wallet',
+};
 
 function giChipLinkClasses(
   mode: TerminalState['mode'],
@@ -77,7 +88,7 @@ function giChipLinkClasses(
 }
 
 const App: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<TabId>(TabId.OAA);
+  const [activeTab, setActiveTab] = useState<TabId>(TabId.HALLWAY);
   const [isWaking, setIsWaking] = useState(false);
   const [wakeComplete, setWakeComplete] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -114,6 +125,8 @@ const App: React.FC = () => {
 
   const renderContent = () => {
     switch (activeTab) {
+      case TabId.HALLWAY:
+        return <Hallway onEnter={setActiveTab} />;
       case TabId.OAA:
         return (
           <ShellErrorBoundary
@@ -249,6 +262,25 @@ const App: React.FC = () => {
                 </span>
               )}
               <TerminalHeartbeat compact className="hidden sm:inline-flex" />
+              {activeTab !== TabId.HALLWAY && (
+                <button
+                  className="hallway-back-btn"
+                  onClick={() => setActiveTab(TabId.HALLWAY)}
+                  title="Back to chamber hallway"
+                  aria-label="Back to hallway"
+                >
+                  <svg viewBox="0 0 13 13" fill="none" aria-hidden>
+                    <path
+                      d="M9 6.5H4M6.5 9L4 6.5l2.5-2.5"
+                      stroke="currentColor"
+                      strokeWidth="1.4"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                  HALLWAY
+                </button>
+              )}
               <span className="text-[10px] sm:text-xs text-emerald-600 font-mono px-1.5 sm:px-2 py-0.5 bg-emerald-50 border border-emerald-200 rounded hidden sm:inline">Beta v1.0.0</span>
            </div>
            
@@ -447,22 +479,37 @@ const App: React.FC = () => {
           </div>
         )}
 
-        {/* Row 2: Omnibar */}
-        <div className="py-2 sm:py-4 px-3 sm:px-6">
+        {/* Row 2: Omnibar (hidden in hallway) */}
+        {activeTab !== TabId.HALLWAY && (
+          <div className="py-2 sm:py-4 px-3 sm:px-6">
             <Omnibar />
-        </div>
+          </div>
+        )}
 
-        {/* Row 3: Tabs */}
-        <div className="px-2 sm:px-6">
+        {/* Row 3: Tabs (hidden in hallway) */}
+        {activeTab !== TabId.HALLWAY && (
+          <div className="px-2 sm:px-6">
             <TabNavigation activeTab={activeTab} onTabChange={setActiveTab} />
-        </div>
+          </div>
+        )}
       </header>
 
       <WorldSignalStrip terminalState={terminalState} />
 
       {/* 🧩 MAIN CONTENT AREA */}
-      <main className="flex-1 overflow-hidden relative shadow-inner">
-        <Suspense fallback={<LabSkeleton />}>{renderContent()}</Suspense>
+      <main
+        className={[
+          'flex-1 overflow-hidden relative shadow-inner',
+          activeTab !== TabId.HALLWAY
+            ? `room-shell room-shell--${ROOM_SHELL_ID[activeTab] ?? ''}`
+            : '',
+        ]
+          .filter(Boolean)
+          .join(' ')}
+      >
+        <Suspense fallback={activeTab !== TabId.HALLWAY ? <LabSkeleton /> : null}>
+          {renderContent()}
+        </Suspense>
       </main>
 
       {/* Inquiry Chat Modal - Floating button */}
