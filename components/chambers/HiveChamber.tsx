@@ -21,9 +21,10 @@ export const HiveChamber: React.FC<HiveChamberProps> = () => {
       <div className="ch-hive__vignette" aria-hidden />
       {/* Pixel header bar */}
       <div className="ch-hive__header">
-        <span className="ch-hive__title">HIVE — QUEST LOG</span>
+        <h2>HIVE — QUEST LOG</h2>
         <div className="ch-hive__stats">
-          <span className="ch-hive__stat">ROOM <b>02</b></span>
+          <span className="ch-hive__stat">ROOM · <b>02</b></span>
+          <span className="ch-hive__stat">SHARDS · <b>×24</b></span>
           <span className="ch-hive__stat">MII · <b>0.95</b></span>
           <span className="ch-hive__blink">▶</span>
         </div>

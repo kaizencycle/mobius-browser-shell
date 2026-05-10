@@ -7,29 +7,29 @@ interface JadeChamberProps {
 
 const PROPOSITIONS = [
   {
-    n: '01',
-    q: "What's one thing you learned this week that surprised you?",
-    hint: 'Surprise is often where growth lives. JADE is listening.',
+    n: 'PROPOSITION · 01',
+    q: 'Position JADE as the room that asks why.',
+    hint: 'Not analytics. Not settings. A Socratic sentinel. Every other chamber answers; JADE questions. Frame it that way and the empty state has a job.',
   },
   {
-    n: '02',
-    q: 'When did you last change your mind about something important?',
-    hint: 'Intellectual honesty is the rarest currency. No rush.',
+    n: 'PROPOSITION · 02',
+    q: 'Make the construction page substantive.',
+    hint: 'Replace the placeholder with a "what JADE will do" preview — three mock insight cards, one teaser query, opt-in to be pinged at launch. Even paused chambers can earn trust.',
   },
   {
-    n: '03',
-    q: 'What would you study if there were no credentials, no career, no audience?',
-    hint: 'This answer is the truest signal JADE has seen from you.',
+    n: 'PROPOSITION · 03',
+    q: 'A daily JADE prompt, pinned across the shell.',
+    hint: 'One question of the day at the omnibar\'s right edge — "What did you avoid yesterday?" — taps route to JADE pre-loaded. The chamber lives outside its tab.',
   },
   {
-    n: '04',
-    q: 'What is a belief you hold that most people in your circle disagree with?',
-    hint: "Disagreement is data. JADE won't judge.",
+    n: 'PROPOSITION · 04',
+    q: 'Bind JADE to MII drift, not just UX.',
+    hint: 'When MII dips, JADE wakes first and explains what looked off — before the sentinel banner. Makes the integrity index human-readable.',
   },
   {
-    n: '05',
-    q: 'If you could send one message to yourself six months ago, what would it say?',
-    hint: 'Future-you is watching. What do you want them to know?',
+    n: 'PROPOSITION · 05',
+    q: 'Aesthetic that earns the name.',
+    hint: 'Soft jade gradients. Slow-breathing background. A single column of conversation. The other chambers are dashboards; JADE should feel like a tea room. Differentiation by mood.',
   },
 ];
 
@@ -96,7 +96,7 @@ export const JadeChamber: React.FC<JadeChamberProps> = ({ onNavigateToOaa, onNav
             </button>
           )}
           <p className="ch-jade__motto">
-            "The unexamined protocol is not worth running." — JADE, v0.1
+            — take what is useful, leave what is not.
           </p>
         </div>
       </div>

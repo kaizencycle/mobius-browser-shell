@@ -1,21 +1,15 @@
-import React, { lazy, Suspense, useState } from 'react';
+import React, { Suspense, useState } from 'react';
 import { SENTINELS } from './constants';
 import { TabId } from './types';
 import { SentinelStatus } from './components/SentinelStatus';
-import { ShellErrorBoundary } from './components/ShellErrorBoundary';
-import { useAtlasErrorLog } from './components/useAtlasErrorLog';
-import { ErrorCodes } from './errors/errorCodes';
 import { Omnibar } from './components/Omnibar';
 import { TabNavigation } from './components/TabNavigation';
 import { LabSkeleton } from './components/Labs/LabSkeleton';
 import { Tornado, Coffee, CheckCircle } from 'lucide-react';
 
-// OAA is the only lab still directly rendered from App — all other labs are
-// wrapped by their chamber components which handle their own lazy loading.
-const OAALab = lazy(() =>
-  import('./components/Labs/OAALab').then((m) => ({ default: m.OAALab })),
-);
+// All labs are now wrapped by chamber components that handle their own lazy loading.
 import { Hallway } from './components/Hallway';
+import { OAAChamber } from './components/chambers/OAAChamber';
 import { HiveChamber } from './components/chambers/HiveChamber';
 import { ReflectionsChamber } from './components/chambers/ReflectionsChamber';
 import { ShieldChamber } from './components/chambers/ShieldChamber';
@@ -91,9 +85,6 @@ const App: React.FC = () => {
   // Single shell-wide terminal subscription (see contexts/TerminalContext).
   const { state: terminalState } = useTerminal();
 
-  // ATLAS error logging — shared across all panel boundaries
-  const logToAtlas = useAtlasErrorLog();
-
   const handleWakeAllLabs = async () => {
     setIsWaking(true);
     setWakeComplete(false);
@@ -114,16 +105,7 @@ const App: React.FC = () => {
       case TabId.HALLWAY:
         return <Hallway onEnter={setActiveTab} />;
       case TabId.OAA:
-        return (
-          <ShellErrorBoundary
-            appName="OAA Learning Hub"
-            appIcon="📚"
-            errorCode={ErrorCodes.OAA_LOAD_FAILED}
-            onError={logToAtlas}
-          >
-            <OAALab onNavigateToKnowledgeGraph={goToKnowledgeGraph} />
-          </ShellErrorBoundary>
-        );
+        return <OAAChamber onNavigateToKnowledgeGraph={goToKnowledgeGraph} />;
       case TabId.HIVE:
         return <HiveChamber />;
       case TabId.REFLECTIONS:
@@ -142,15 +124,7 @@ const App: React.FC = () => {
       case TabId.WALLET:
         return <WalletChamber onNavigateToOaa={() => setActiveTab(TabId.OAA)} />;
       default:
-        return (
-          <ShellErrorBoundary
-            appName="OAA Learning Hub"
-            appIcon="📚"
-            onError={logToAtlas}
-          >
-            <OAALab />
-          </ShellErrorBoundary>
-        );
+        return <OAAChamber />;
     }
   };
 

@@ -16,73 +16,73 @@ const DOORS: Door[] = [
   {
     id: TabId.OAA,
     num: '01',
-    slug: 'OAA · SCHOOL',
+    slug: 'LAB 7',
     icon: '📚',
-    title: 'Open Academy',
-    role: 'AI-guided learning. Structured knowledge for the civic era.',
+    title: 'OAA Library',
+    role: 'Learn-to-earn. Modules, quizzes, MIC as XP.',
     litClass: 'door-lit-oaa',
   },
   {
     id: TabId.HIVE,
     num: '02',
-    slug: 'HIVE · ARCADE',
+    slug: 'LAB 8',
     icon: '🎮',
-    title: 'HIVE Lab',
-    role: '16-bit JRPG. Earn shards. Defend the protocol.',
+    title: 'HIVE Arcade',
+    role: '16-bit governance JRPG. Dice, mesh, shards.',
     litClass: 'door-lit-hive',
   },
   {
     id: TabId.REFLECTIONS,
     num: '03',
-    slug: 'REFLECTIONS · STUDIO',
+    slug: 'LAB 4',
     icon: '🪞',
-    title: 'Reflections',
-    role: 'Write with integrity. Mirror your reasoning.',
+    title: 'Reflection Nook',
+    role: 'Journal, mood, E.O.M.M. Past-you, present-you.',
     litClass: 'door-lit-reflect',
   },
   {
     id: TabId.SHIELD,
     num: '04',
-    slug: 'SHIELD · STATION',
-    icon: '🛡️',
-    title: 'Citizen Shield',
-    role: 'Protect civil discourse. Fact-check in real time.',
+    slug: 'LAB 6',
+    icon: '🛡',
+    title: 'Shield War Room',
+    role: 'Civic radar + ECHO threat intel.',
     litClass: 'door-lit-shield',
   },
   {
     id: TabId.KNOWLEDGE_GRAPH,
     num: '05',
-    slug: 'ATLAS · SENTINEL',
+    slug: 'SENTINEL',
     icon: '⬡',
-    title: 'ATLAS',
-    role: 'Knowledge graph. Sentinel oversight. System health.',
+    title: 'ATLAS Observatory',
+    role: 'Knowledge graph. Concepts, intents, time.',
     litClass: 'door-lit-atlas',
   },
   {
     id: TabId.JADE,
     num: '06',
-    slug: 'JADE · STUDIO',
-    icon: '🔮',
-    title: 'JADE',
-    role: 'Behavioral integrity. Reflective agent in session.',
+    slug: 'SENTINEL',
+    icon: '🍵',
+    title: 'JADE Tea Room',
+    role: 'The room that asks why. Socratic UX.',
     litClass: 'door-lit-jade',
   },
   {
     id: TabId.WALLET,
     num: '07',
-    slug: 'VAULT · TREASURY',
+    slug: 'TREASURY',
     icon: '◎',
     title: 'MIC Vault',
-    role: 'Integrity-backed tokens. Provenance on chain.',
+    role: 'Wallet, shards, ledger. Provenance over balance.',
     litClass: 'door-lit-wallet',
   },
   {
     id: null,
-    num: '08',
-    slug: 'MII · INDEX',
-    icon: '∿',
-    title: 'MII Index',
-    role: 'Mobius Integrity Index. Coming next cycle.',
+    num: 'FACULTY',
+    slug: 'MII 0.95',
+    icon: '⬢',
+    title: 'ATLAS · JADE',
+    role: 'Four sentinels watching the school. All green.',
     litClass: 'door-lit-mii',
     disabled: true,
   },
@@ -98,14 +98,15 @@ export const Hallway: React.FC<HallwayProps> = ({ onEnter }) => {
       <div className="hallway-inner">
 
         <div className="hallway-hero">
-          <div className="hallway-eyebrow">CITIZEN ENTRY POINT</div>
+          <div className="hallway-eyebrow">A school, not a dashboard</div>
           <h1 className="hallway-h1">
-            Choose your <em>chamber.</em>
+            Pick a room. <em>Each one is its own world.</em>
           </h1>
           <p className="hallway-lede">
-            Eight rooms. One protocol. Each chamber is a node in the civic
-            integrity graph.{' '}
-            <span className="hallway-lede-q">Where do you go today?</span>
+            Seven chambers, each with its own atmosphere, vocabulary, and
+            personality. The classroom feels like a classroom; the arcade feels
+            like an arcade; the tea room invites you to slow down.{' '}
+            <span className="hallway-lede-q">Step in to see each room's native voice.</span>
           </p>
         </div>
 

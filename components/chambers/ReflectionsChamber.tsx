@@ -15,30 +15,31 @@ export const ReflectionsChamber: React.FC<ReflectionsChamberProps> = ({ onNaviga
   const logToAtlas = useAtlasErrorLog();
   return (
     <div className="ch-reflect">
-      {/* Left: oval mirror */}
-      <div className="ch-reflect__mirror" aria-hidden>
-        <div className="ch-reflect__mirror-haze" />
-        <div className="ch-reflect__candle" />
-        <div className="ch-reflect__mirror-text">
-          <div className="ch-reflect__role">ROOM 03 · REFLECTIONS</div>
-          <h2 className="ch-reflect__h2">Reflection<br />Nook</h2>
-          <p className="ch-reflect__obs">
-            "The past is not what happened. It is what you chose to remember."
-          </p>
+      {/* Left: candlelit oval mirror column */}
+      <div className="ch-reflect__mirror-col" aria-hidden>
+        <div className="ch-reflect__mirror">
+          <div className="ch-reflect__mirror-haze" />
+          <div className="ch-reflect__mirror-role">Room 03 · Reflections</div>
+          <div className="ch-reflect__mirror-title">The mirror<br />asks softly.</div>
         </div>
+        <div className="ch-reflect__candle" />
+        <div className="ch-reflect__label">ROOM 03 · CANDLELIGHT</div>
       </div>
       {/* Right: journal paper wrapping the lab */}
       <div className="ch-reflect__journal">
-        <ShellErrorBoundary
-          appName="Reflections Lab"
-          appIcon="🪞"
-          errorCode={ErrorCodes.REFL_MIRROR_SYNC}
-          onError={logToAtlas}
-        >
-          <Suspense fallback={null}>
-            <ReflectionsLab onNavigateToKnowledgeGraph={onNavigateToKnowledgeGraph} />
-          </Suspense>
-        </ShellErrorBoundary>
+        <div className="ch-reflect__journal-lines" aria-hidden />
+        <div className="ch-reflect__journal-content">
+          <ShellErrorBoundary
+            appName="Reflections Lab"
+            appIcon="🪞"
+            errorCode={ErrorCodes.REFL_MIRROR_SYNC}
+            onError={logToAtlas}
+          >
+            <Suspense fallback={null}>
+              <ReflectionsLab onNavigateToKnowledgeGraph={onNavigateToKnowledgeGraph} />
+            </Suspense>
+          </ShellErrorBoundary>
+        </div>
       </div>
     </div>
   );
