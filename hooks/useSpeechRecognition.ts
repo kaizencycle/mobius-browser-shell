@@ -90,15 +90,15 @@ export function useSpeechRecognition(
 
     recognition.onresult = (event: SpeechRecognitionEvent) => {
       const results = event.results;
-      const latestResult = results[results.length - 1];
-      
+      const latestResult = results[results.length - 1]!;
+
       if (latestResult.isFinal) {
         // Final result - send to handler
-        const transcript = latestResult[0].transcript;
+        const transcript = latestResult[0]!.transcript;
         onResult(transcript);
       } else if (onInterim) {
         // Interim result (still speaking)
-        const transcript = latestResult[0].transcript;
+        const transcript = latestResult[0]!.transcript;
         onInterim(transcript);
       }
     };

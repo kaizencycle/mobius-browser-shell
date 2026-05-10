@@ -17,7 +17,7 @@ export function useUserDisplayName(user?: UserData | null): string | null {
   if (user.name) return user.name;
 
   if (user.email) {
-    const emailName = user.email.split('@')[0];
+    const emailName = user.email.split('@')[0]!;
     // Capitalize first letter
     return emailName.charAt(0).toUpperCase() + emailName.slice(1);
   }

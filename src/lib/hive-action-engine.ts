@@ -118,7 +118,7 @@ export function applyHiveAction(
 
   if (aid === 'inspect_beacon') {
     const idx = steps.findIndex((s) => s.id === 'inspect');
-    if (idx >= 0) steps[idx] = { ...steps[idx], completed: true };
+    if (idx >= 0) steps[idx] = { ...steps[idx]!, completed: true };
     const done = steps.filter((s) => s.completed).length;
     next.quest = { ...q, steps, progress: done / steps.length, status: 'active' };
   }
@@ -129,7 +129,7 @@ export function applyHiveAction(
       return { ok: false, error: 'Inspect the Beacon first.' };
     }
     const idx = steps.findIndex((s) => s.id === 'fallback');
-    if (idx >= 0) steps[idx] = { ...steps[idx], completed: true };
+    if (idx >= 0) steps[idx] = { ...steps[idx]!, completed: true };
     const done = steps.filter((s) => s.completed).length;
     next.quest = { ...q, steps, progress: done / steps.length, status: 'active' };
     next.kv_status = 'ok';
