@@ -47,7 +47,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   const parts = cookieValue.split('.');
   if (parts.length !== 3) return res.status(400).json({ error: 'Malformed challenge' });
-  const [challengeB64, expiresAtStr, sig] = parts;
+  const [challengeB64, expiresAtStr, sig] = parts as [string, string, string];
   const payload = `${challengeB64}.${expiresAtStr}`;
   const expectedSig = createHmac('sha256', CHALLENGE_SECRET).update(payload).digest('base64url');
 
@@ -157,7 +157,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
 function parseCookie(header: string, name: string): string | null {
   const match = header.match(new RegExp(`(?:^|;\\s*)${name}=([^;]*)`));
-  return match ? decodeURIComponent(match[1]) : null;
+  return match ? decodeURIComponent(match[1]!) : null;
 }
 
 function timingSafeEqual(a: string, b: string): boolean {
