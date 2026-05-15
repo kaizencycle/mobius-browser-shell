@@ -25,12 +25,23 @@ export interface SnapshotLite {
   mii?: number;
 }
 
+export interface SentinelEntry {
+  id?: string;
+  name?: string;
+  active?: boolean;
+  heartbeatOk?: boolean;
+  confidence?: number;
+  score?: number;
+}
+
 export interface IntegrityStatus {
   global_integrity: number | null;
   mode: 'green' | 'yellow' | 'red' | null;
   degraded?: boolean;
   gi_age_seconds?: number;
   terminal_status?: string;
+  agents?: SentinelEntry[];
+  sentinels?: SentinelEntry[];
 }
 
 export interface EPICONEntry {
@@ -55,6 +66,7 @@ interface EPICONFeedResponse {
 }
 
 export const terminalBridge = {
+  baseUrl: BASE,
   snapshotLite: () => fetchJSON<SnapshotLite>(`${BASE}/api/terminal/snapshot-lite`, 30_000),
   integrityStatus: () => fetchJSON<IntegrityStatus>(`${BASE}/api/integrity-status`, 30_000),
   epiconFeed: async (limit = 20): Promise<EPICONEntry[]> => {

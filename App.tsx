@@ -14,6 +14,7 @@ import { VaultChamber } from './components/chambers/VaultChamber';
 import { EPICONChamber } from './components/chambers/EPICONChamber';
 import { ReturnCitizenDashboard } from './components/onboarding/ReturnCitizenDashboard';
 import { CivicAlertBanner } from './components/Notifications/CivicAlertBanner';
+import { LiveSystemBar } from './components/Header/LiveSystemBar';
 import { useAuth } from './contexts/AuthContext';
 import { useSessionHeartbeat } from './hooks/useSessionHeartbeat';
 import { InquiryChatModal } from './components/InquiryChatModal';
