@@ -124,7 +124,7 @@ export const Hallway: React.FC<HallwayProps> = ({ onEnter, onOpenProfile }) => {
             </span>
 
             <span className="hall-sentinels-detail">
-              <SentinelStatus sentinels={SENTINELS} />
+              <SentinelStatus sentinels={SENTINELS} mii={terminalState?.echo?.avgMii ?? null} />
             </span>
 
             {isGuest ? (
