@@ -155,13 +155,17 @@ export function projectTerminalFaculty(state: TerminalState | null): MeshFaculty
 
   return DEFAULT_ORDER.map((id) => {
     const agent = terminalAgents.get(id);
+    const hasTerminalAgent = Boolean(agent);
+
     return buildMeshFacultyProjection({
       id,
-      freshnessSeconds: runtimeAge,
-      active: agent ? agent.heartbeatOk : false,
-      terminalStatus: agent?.status ?? (state ? state.terminalStatus : 'offline'),
+      // Missing agents are fallback faculty, not live heartbeat participants.
+      // Do not let them inherit the global runtime age or the hallway invents presence.
+      freshnessSeconds: hasTerminalAgent ? runtimeAge : null,
+      active: hasTerminalAgent ? agent?.heartbeatOk : false,
+      terminalStatus: agent?.status ?? (state ? 'offline' : 'offline'),
       detail: agent?.detail,
-      source: agent ? 'terminal' : 'fallback',
+      source: hasTerminalAgent ? 'terminal' : 'fallback',
     });
   });
 }
