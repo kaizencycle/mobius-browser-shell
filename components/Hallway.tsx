@@ -145,8 +145,8 @@ export const Hallway: React.FC<HallwayProps> = ({ onEnter, onOpenProfile }) => {
           </p>
         </div>
 
-        {/* ── Door grid ────────────────────────────────────────── */}
-        <div className="hallway-doors">
+        {/* ── Door grid ───────────────────────────────────────── */}
+        <div className="doors">
           {DOORS.map((door) => (
             <button
               key={door.room}
