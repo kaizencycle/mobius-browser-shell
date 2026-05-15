@@ -32,9 +32,9 @@ async function fetchVaultState(): Promise<VaultState> {
         ledger_ok: false,
       };
     }
-  } catch { /* both failed */ }
+  } catch { /* fall through */ }
 
-  return { metrics: emptyMetrics(), seals: [], fetched_at: new Date().toISOString(), ledger_ok: false };
+  throw new Error('Vault unreachable: ledger and terminal fallback both failed');
 }
 
 function buildMetricsFromSeals(seals: VaultSeal[]): VaultMetrics {
@@ -52,12 +52,6 @@ function buildMetricsFromSeals(seals: VaultSeal[]): VaultMetrics {
   };
 }
 
-function emptyMetrics(): VaultMetrics {
-  return {
-    total_seals: 0, sealed: 0, quarantined: 0, pending: 0, reattestation: 0,
-    total_mic_reserved: 0, chain_length: 0, last_seal_at: null, chain_valid: false,
-  };
-}
 
 export function useVaultState() {
   const [state, setState] = useState<VaultState | null>(null);
