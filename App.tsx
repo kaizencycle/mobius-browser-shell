@@ -66,7 +66,9 @@ const App: React.FC = () => {
   };
 
   return (
-    <div className="app-shell">
+    <div className="app-shell bg-stone-950 text-stone-100">
+      <LiveSystemBar />
+
       {activeTab !== TabId.HALLWAY && (
         <button
           className="hall-back-float"
