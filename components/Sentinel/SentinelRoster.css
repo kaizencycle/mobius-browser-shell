@@ -1,0 +1,78 @@
+.sentinel-roster {
+  margin: 1.5rem 0;
+  padding: 1rem;
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 16px;
+  background: rgba(8, 10, 20, 0.82);
+}
+
+.sentinel-roster__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+}
+
+.sentinel-roster__header h2 {
+  margin: 0;
+  font-size: 0.95rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.sentinel-roster__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 0.75rem;
+}
+
+.sentinel-card {
+  border-radius: 14px;
+  padding: 0.85rem;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.06);
+}
+
+.sentinel-card.is-active {
+  border-color: rgba(16, 185, 129, 0.35);
+}
+
+.sentinel-card.is-dormant {
+  opacity: 0.7;
+}
+
+.sentinel-card__top,
+.sentinel-card__meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.sentinel-card__dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  background: #10b981;
+  box-shadow: 0 0 12px rgba(16,185,129,0.7);
+}
+
+.sentinel-card.is-dormant .sentinel-card__dot {
+  background: #6b7280;
+  box-shadow: none;
+}
+
+.sentinel-card__name {
+  font-weight: 700;
+  letter-spacing: 0.08em;
+}
+
+.sentinel-card__role {
+  margin: 0.65rem 0;
+  font-size: 0.84rem;
+  color: rgba(255,255,255,0.7);
+}
+
+.sentinel-card__meta {
+  font-size: 0.78rem;
+  color: rgba(255,255,255,0.6);
+}
