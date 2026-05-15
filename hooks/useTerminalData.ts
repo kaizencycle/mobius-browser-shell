@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 
 interface TerminalDataState<T> {
   data: T | null;
@@ -10,57 +10,28 @@ interface TerminalDataState<T> {
 export function useTerminalData<T>(
   fetcher: () => Promise<T>,
   interval = 60_000,
-  deps: unknown[] = [],
-): TerminalDataState<T> {
+): TerminalDataState<T> & { refresh: () => void } {
   const [state, setState] = useState<TerminalDataState<T>>({
-    data: null,
-    loading: true,
-    error: null,
-    lastUpdated: null,
+    data: null, loading: true, error: null, lastUpdated: null,
   });
+  const fetcherRef = useRef(fetcher);
+  fetcherRef.current = fetcher;
+
+  const run = useCallback(async () => {
+    try {
+      const data = await fetcherRef.current();
+      setState({ data, loading: false, error: null, lastUpdated: new Date() });
+    } catch (e) {
+      setState(s => ({ ...s, loading: false, error: e instanceof Error ? e : new Error(String(e)) }));
+    }
+  }, []);
 
   useEffect(() => {
-    let mounted = true;
-
-    async function run() {
-      try {
-        const data = await fetcher();
-
-        if (!mounted) {
-          return;
-        }
-
-        setState({
-          data,
-          loading: false,
-          error: null,
-          lastUpdated: new Date(),
-        });
-      } catch (error) {
-        if (!mounted) {
-          return;
-        }
-
-        setState((previous) => ({
-          ...previous,
-          loading: false,
-          error: error instanceof Error ? error : new Error('Unknown terminal error'),
-        }));
-      }
-    }
-
     void run();
+    if (interval <= 0) return;
+    const id = setInterval(() => void run(), interval);
+    return () => clearInterval(id);
+  }, [run, interval]);
 
-    const id = window.setInterval(() => {
-      void run();
-    }, interval);
-
-    return () => {
-      mounted = false;
-      window.clearInterval(id);
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, deps);
-
-  return state;
+  return { ...state, refresh: run };
 }

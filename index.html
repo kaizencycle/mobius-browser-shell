@@ -3,20 +3,35 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Mobius Substrate</title>
+    <title>Mobius Browser Shell — School of Chambers</title>
 
-    <!-- SEO & Crawler Hygiene -->
-    <meta name="description" content="Mobius Browser — A constitutional AI interface for learning, reflection, and civic resilience. OAA Learning Hub, Citizen Shield, and more." />
-    <meta name="keywords" content="AI, browser, learning, civic technology, security, privacy, Mobius Substrate" />
-    <meta name="author" content="Mobius Substrate" />
+    <link rel="manifest" href="/manifest.json" />
+    <meta name="theme-color" content="#1c1917" />
+
+    <!-- SEO -->
+    <meta name="description" content="Mobius Browser — A constitutional AI interface for learning, reflection, and civic resilience. OAA Learning Hub, Citizen Shield, EPICON intent feed, and more." />
+    <meta name="keywords" content="AI, browser, learning, civic technology, security, privacy, Mobius, EPICON, GI gauge" />
+    <meta name="author" content="Mobius Civic Infrastructure" />
+
+    <!-- Open Graph -->
+    <meta property="og:title" content="Mobius Browser Shell — School of Chambers" />
+    <meta property="og:description" content="Constitutional AI interface for civic learning, reflection, and resilience." />
+    <meta property="og:type" content="website" />
+
+    <!-- JSON-LD -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebApplication",
+      "name": "Mobius Browser Shell",
+      "description": "Constitutional AI interface for civic learning, reflection, and resilience.",
+      "applicationCategory": "EducationApplication",
+      "operatingSystem": "Web"
+    }
+    </script>
 
     <!-- robots handled by /public/robots.txt + vercel.json headers -->
     <!-- CSP handled server-side in vercel.json — do not duplicate here -->
-
-    <!-- Open Graph -->
-    <meta property="og:title" content="Mobius Substrate | AI Browser" />
-    <meta property="og:description" content="Constitutional AI interface for learning, reflection, and civic resilience." />
-    <meta property="og:type" content="website" />
 
     <!--
       EPICON: Removed CDN Tailwind (cdn.tailwindcss.com).

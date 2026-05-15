@@ -1,103 +1,80 @@
 import { env } from '../config/env';
 
-const DEFAULT_TTL_MS = 30_000;
-const TERMINAL_BASE = env.terminalOrigin.replace(/\/+$/, '');
+const BASE = env.terminalOrigin;
 
-type CacheEntry<T> = {
-  data: T;
-  ts: number;
-};
+interface CacheEntry { data: unknown; ts: number }
+const cache = new Map<string, CacheEntry>();
 
-const cache = new Map<string, CacheEntry<unknown>>();
-
-async function fetchJSON<T>(path: string, ttl = DEFAULT_TTL_MS): Promise<T> {
-  const normalizedPath = path.startsWith('/') ? path : `/${path}`;
-  const url = `${TERMINAL_BASE}${normalizedPath}`;
-  const cached = cache.get(url) as CacheEntry<T> | undefined;
-
-  if (cached && Date.now() - cached.ts < ttl) {
-    return cached.data;
-  }
-
-  const response = await fetch(url, {
-    headers: { Accept: 'application/json' },
-    cache: 'no-store',
-    signal: AbortSignal.timeout(8_000),
-  });
-
-  if (!response.ok) {
-    throw new Error(`Terminal request failed: ${response.status} ${response.statusText}`);
-  }
-
-  const data = (await response.json()) as T;
+async function fetchJSON<T>(url: string, ttl = 30_000): Promise<T> {
+  const cached = cache.get(url);
+  if (cached && Date.now() - cached.ts < ttl) return cached.data as T;
+  const res = await fetch(url, { signal: AbortSignal.timeout(8000) });
+  if (!res.ok) throw new Error(`${url} → ${res.status}`);
+  const data = await res.json() as T;
   cache.set(url, { data, ts: Date.now() });
   return data;
 }
 
-export interface TerminalSnapshotLite {
-  cycle?: string;
-  gi?: number;
-  mode?: 'green' | 'yellow' | 'red' | string;
+export interface SnapshotLite {
+  gi: number | null;
+  cycle: string;
+  mode: 'green' | 'yellow' | 'red' | null;
+  degraded?: boolean;
   vault_balance?: number;
   agent_count?: number;
-  heartbeat?: unknown;
-  [key: string]: unknown;
+  mii?: number;
 }
 
-export interface TerminalSentinelStatus {
+export interface SentinelEntry {
   id?: string;
   name?: string;
-  status?: string;
   active?: boolean;
   heartbeatOk?: boolean;
-  last_seen?: string;
-  lastSeen?: string;
   confidence?: number;
   score?: number;
-  role?: string;
-  [key: string]: unknown;
 }
 
-export interface TerminalIntegrityStatus {
-  gi?: number;
-  mode?: string;
-  alert?: {
-    id?: string;
-    title?: string;
-    severity?: string;
-  };
-  sentinels?: TerminalSentinelStatus[];
-  agents?: TerminalSentinelStatus[];
-  [key: string]: unknown;
+export interface IntegrityStatus {
+  global_integrity: number | null;
+  mode: 'green' | 'yellow' | 'red' | null;
+  degraded?: boolean;
+  gi_age_seconds?: number;
+  terminal_status?: string;
+  agents?: SentinelEntry[];
+  sentinels?: SentinelEntry[];
 }
 
-export interface TerminalEpiconEntry {
-  id?: string;
+export interface EPICONEntry {
+  id: string;
   intent?: string;
+  action?: string;
   cycle?: string;
   status?: string;
   agent?: string;
   timestamp?: string;
-  created_at?: string;
-  [key: string]: unknown;
+  ts?: string;
+  type?: string;
+}
+
+interface EPICONFeedResponse {
+  ok: boolean;
+  items: EPICONEntry[];
+  count: number;
+  total: number;
+  hasMore: boolean;
+  degraded?: boolean;
 }
 
 export const terminalBridge = {
-  baseUrl: TERMINAL_BASE,
-
-  snapshotLite(ttl?: number) {
-    return fetchJSON<TerminalSnapshotLite>('/api/terminal/snapshot-lite', ttl);
+  baseUrl: BASE,
+  snapshotLite: () => fetchJSON<SnapshotLite>(`${BASE}/api/terminal/snapshot-lite`, 30_000),
+  integrityStatus: () => fetchJSON<IntegrityStatus>(`${BASE}/api/integrity-status`, 30_000),
+  epiconFeed: async (limit = 20): Promise<EPICONEntry[]> => {
+    const res = await fetchJSON<EPICONFeedResponse>(
+      `${BASE}/api/epicon/feed?limit=${limit}`,
+      60_000,
+    );
+    return res.items ?? [];
   },
-
-  integrityStatus(ttl?: number) {
-    return fetchJSON<TerminalIntegrityStatus>('/api/integrity-status', ttl);
-  },
-
-  epiconFeed(limit = 20, ttl?: number) {
-    return fetchJSON<TerminalEpiconEntry[]>(`/api/epicon/feed?limit=${limit}`, ttl);
-  },
+  vaultStatus: () => fetchJSON<unknown>(`${BASE}/api/vault/status`, 60_000),
 };
-
-export function clearTerminalBridgeCache(): void {
-  cache.clear();
-}

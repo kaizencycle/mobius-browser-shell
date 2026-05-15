@@ -8,6 +8,7 @@ export enum TabId {
   WALLET = 'WALLET',
   KNOWLEDGE_GRAPH = 'KNOWLEDGE_GRAPH',
   VAULT = 'VAULT',
+  EPICON = 'EPICON',
 }
 
 // ── Vault types ───────────────────────────────────────────────────────────────

@@ -2,6 +2,7 @@ import './SentinelRoster.css';
 
 import { terminalBridge } from '../../services/terminalBridge';
 import { useTerminalData } from '../../hooks/useTerminalData';
+import type { SentinelEntry } from '../../services/terminalBridge';
 
 const SENTINEL_DEFS = [
   { id: 'ATLAS', role: 'Architectural Review' },
@@ -31,7 +32,7 @@ export function SentinelRoster() {
 
       <div className="sentinel-roster__grid">
         {SENTINEL_DEFS.map((sentinel) => {
-          const live = liveAgents.find((entry) => {
+          const live = liveAgents.find((entry: SentinelEntry) => {
             const candidate = String(entry?.id ?? entry?.name ?? '').toUpperCase();
             return candidate === sentinel.id;
           });

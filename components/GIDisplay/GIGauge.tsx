@@ -1,98 +1,65 @@
 import React from 'react';
 
-interface GIGaugeProps {
-  score: number | null | undefined;
+interface Props {
+  score: number | null;
   size?: 'compact' | 'full';
 }
 
-function getZone(score: number | null | undefined) {
-  if (score == null) {
-    return {
-      label: 'unknown',
-      color: '#78716c',
-    };
-  }
-
-  if (score >= 0.7) {
-    return {
-      label: 'healthy',
-      color: '#10b981',
-    };
-  }
-
-  if (score >= 0.4) {
-    return {
-      label: 'caution',
-      color: '#f59e0b',
-    };
-  }
-
-  return {
-    label: 'critical',
-    color: '#ef4444',
-  };
+function zone(score: number | null): { label: string; color: string; stroke: string } {
+  if (score === null) return { label: 'Unknown', color: 'text-stone-400', stroke: '#a8a29e' };
+  if (score >= 0.7)   return { label: 'Healthy',  color: 'text-emerald-600', stroke: '#10b981' };
+  if (score >= 0.4)   return { label: 'Caution',  color: 'text-amber-500',   stroke: '#f59e0b' };
+  return { label: 'Critical', color: 'text-rose-600', stroke: '#ef4444' };
 }
 
-export function GIGauge({ score, size = 'full' }: GIGaugeProps) {
-  const compact = size === 'compact';
-  const dimension = compact ? 48 : 140;
-  const strokeWidth = compact ? 5 : 10;
-  const radius = compact ? 18 : 52;
-  const center = dimension / 2;
-  const circumference = Math.PI * radius;
-  const normalized = Math.max(0, Math.min(1, score ?? 0));
-  const dashOffset = circumference * (1 - normalized);
+export const GIGauge: React.FC<Props> = ({ score, size = 'full' }) => {
+  const { label, color, stroke } = zone(score);
+  const pct = score ?? 0;
 
-  const zone = getZone(score);
+  if (size === 'compact') {
+    return (
+      <span className={`font-mono text-xs font-semibold ${color}`}>
+        GI {score !== null ? score.toFixed(3) : '—'}
+      </span>
+    );
+  }
+
+  // Full SVG arc gauge
+  const R = 52;
+  const cx = 64, cy = 72;
+  const startAngle = 200, endAngle = 340;
+  const sweep = endAngle - startAngle; // 140°
+
+  function arcPath(pctFill: number) {
+    const angle = (startAngle + sweep * pctFill) * (Math.PI / 180);
+    const startRad = startAngle * (Math.PI / 180);
+    const x1 = cx + R * Math.cos(startRad);
+    const y1 = cy + R * Math.sin(startRad);
+    const x2 = cx + R * Math.cos(angle);
+    const y2 = cy + R * Math.sin(angle);
+    const large = sweep * pctFill > 180 ? 1 : 0;
+    return `M ${x1} ${y1} A ${R} ${R} 0 ${large} 1 ${x2} ${y2}`;
+  }
 
   return (
-    <div className="flex flex-col items-center justify-center gap-1">
-      <svg width={dimension} height={compact ? dimension / 1.5 : dimension / 1.2} viewBox={`0 0 ${dimension} ${dimension / 1.2}`}>
-        <path
-          d={`M ${center - radius} ${center} A ${radius} ${radius} 0 0 1 ${center + radius} ${center}`}
-          fill="none"
-          stroke="#292524"
-          strokeWidth={strokeWidth}
-          strokeLinecap="round"
-        />
-
-        <path
-          d={`M ${center - radius} ${center} A ${radius} ${radius} 0 0 1 ${center + radius} ${center}`}
-          fill="none"
-          stroke={zone.color}
-          strokeWidth={strokeWidth}
-          strokeLinecap="round"
-          strokeDasharray={circumference}
-          strokeDashoffset={dashOffset}
-          style={{ transition: 'stroke-dashoffset 400ms ease' }}
-        />
-
-        <text
-          x={center}
-          y={center - (compact ? 2 : 6)}
-          textAnchor="middle"
-          fontSize={compact ? 11 : 24}
-          fill="#fafaf9"
-          fontFamily="monospace"
-          fontWeight="bold"
-        >
-          {score == null ? '—' : score.toFixed(2)}
-        </text>
-
-        {!compact && (
-          <text
-            x={center}
-            y={center + 22}
-            textAnchor="middle"
-            fontSize={11}
-            fill={zone.color}
-            fontFamily="monospace"
-            style={{ textTransform: 'uppercase', letterSpacing: '0.12em' }}
-          >
-            {zone.label}
-          </text>
+    <div className="flex flex-col items-center gap-1">
+      <svg viewBox="0 0 128 96" className="w-32 h-24">
+        {/* Track */}
+        <path d={arcPath(1)} fill="none" stroke="#e7e5e4" strokeWidth="10" strokeLinecap="round" />
+        {/* Fill */}
+        {score !== null && (
+          <path d={arcPath(pct)} fill="none" stroke={stroke} strokeWidth="10" strokeLinecap="round"
+            style={{ transition: 'stroke-dashoffset 0.6s ease' }} />
         )}
+        {/* Score text */}
+        <text x={cx} y={cy - 4} textAnchor="middle" className="font-mono" fontSize="18" fontWeight="700" fill={stroke}>
+          {score !== null ? score.toFixed(2) : '—'}
+        </text>
+        <text x={cx} y={cy + 14} textAnchor="middle" fontSize="9" fill="#a8a29e" fontFamily="monospace">
+          GI SCORE
+        </text>
       </svg>
+      <span className={`text-xs font-mono font-semibold ${color}`}>{label}</span>
     </div>
   );
-}
+};

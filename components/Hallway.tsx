@@ -38,6 +38,7 @@ const DOORS: Door[] = [
   { id: TabId.JADE,            room: '06', slug: 'SENTINEL', icon: '🍵', title: 'JADE Tea Room',      role: 'The room that asks why. Socratic UX.',                  dClass: 'd-jade'    },
   { id: TabId.WALLET,          room: '07', slug: 'TREASURY', icon: '◎',  title: 'MIC Vault',          role: 'Wallet, shards, ledger. Provenance over balance.',       dClass: 'd-wallet'  },
   { id: TabId.VAULT,           room: '08', slug: 'CIVIC',    icon: '🔐', title: 'Reserve Vault',       role: 'Seal records, attestations, hash chain. Read-only.',     dClass: 'd-vault'   },
+  { id: TabId.EPICON,          room: '09', slug: 'RECORD',   icon: '📋', title: 'Intent Feed',         role: 'Live EPICON — every action declared before executed.',   dClass: 'd-epicon'  },
   { id: null,                  room: 'FACULTY', slug: 'MII 0.95', icon: '⬢', title: 'ATLAS · AUREA · EVE · JADE', role: 'Four sentinels watching the school. All green.', dClass: 'd-mii', disabled: true },
 ];
 

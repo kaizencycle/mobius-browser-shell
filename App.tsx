@@ -11,6 +11,9 @@ import { AtlasChamber } from './components/chambers/AtlasChamber';
 import { JadeChamber } from './components/chambers/JadeChamber';
 import { WalletChamber } from './components/chambers/WalletChamber';
 import { VaultChamber } from './components/chambers/VaultChamber';
+import { EPICONChamber } from './components/chambers/EPICONChamber';
+import { ReturnCitizenDashboard } from './components/onboarding/ReturnCitizenDashboard';
+import { CivicAlertBanner } from './components/Notifications/CivicAlertBanner';
 import { LiveSystemBar } from './components/Header/LiveSystemBar';
 import { useAuth } from './contexts/AuthContext';
 import { useSessionHeartbeat } from './hooks/useSessionHeartbeat';
@@ -32,7 +35,9 @@ const App: React.FC = () => {
   const renderContent = () => {
     switch (activeTab) {
       case TabId.HALLWAY:
-        return <Hallway onEnter={setActiveTab} onOpenProfile={profile.open} />;
+        return citizen
+          ? <ReturnCitizenDashboard onSelectTab={setActiveTab} />
+          : <Hallway onEnter={setActiveTab} onOpenProfile={profile.open} />;
       case TabId.OAA:
         return <OAAChamber onNavigateToKnowledgeGraph={goToKnowledgeGraph} />;
       case TabId.HIVE:
@@ -54,6 +59,8 @@ const App: React.FC = () => {
         return <WalletChamber onNavigateToOaa={() => setActiveTab(TabId.OAA)} />;
       case TabId.VAULT:
         return <VaultChamber />;
+      case TabId.EPICON:
+        return <EPICONChamber />;
       default:
         return <OAAChamber />;
     }
@@ -73,6 +80,7 @@ const App: React.FC = () => {
         </button>
       )}
 
+      <CivicAlertBanner />
       <main className="app-main">
         <Suspense fallback={activeTab !== TabId.HALLWAY ? <LabSkeleton /> : null}>
           {renderContent()}
