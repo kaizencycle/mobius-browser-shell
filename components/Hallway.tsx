@@ -3,7 +3,6 @@ import { TabId } from '../types';
 import { SENTINELS } from '../constants';
 import { SentinelStatus } from './SentinelStatus';
 import { CitizenProfileButton } from './CitizenProfile/CitizenProfileButton';
-import { MeshFacultyStrip } from './MeshFacultyStrip';
 import { Coffee, CheckCircle } from 'lucide-react';
 import { useTerminal } from '../contexts/TerminalContext';
 import { useWallet } from '../contexts/WalletContext';
@@ -145,9 +144,6 @@ export const Hallway: React.FC<HallwayProps> = ({ onEnter, onOpenProfile }) => {
             <span className="q">Step in to see each room's native voice.</span>
           </p>
         </div>
-
-        {/* ── Mesh Faculty ─────────────────────────────────────── */}
-        <MeshFacultyStrip />
 
         {/* ── Door grid ────────────────────────────────────────── */}
         <div className="hallway-doors">
