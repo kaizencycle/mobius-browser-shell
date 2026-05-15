@@ -36,7 +36,8 @@ const DOORS: Door[] = [
   { id: TabId.SHIELD,          room: '04', slug: 'LAB 6',    icon: '🛡', title: 'Shield War Room',    role: 'Civic radar + ECHO threat intel.',                      dClass: 'd-shield'  },
   { id: TabId.KNOWLEDGE_GRAPH, room: '05', slug: 'SENTINEL', icon: '⬡', title: 'ATLAS Observatory',  role: 'Knowledge graph. Concepts, intents, time.',             dClass: 'd-atlas'   },
   { id: TabId.JADE,            room: '06', slug: 'SENTINEL', icon: '🍵', title: 'JADE Tea Room',      role: 'The room that asks why. Socratic UX.',                  dClass: 'd-jade'    },
-  { id: TabId.WALLET,          room: '07', slug: 'TREASURY', icon: '◎', title: 'MIC Vault',           role: 'Wallet, shards, ledger. Provenance over balance.',      dClass: 'd-wallet'  },
+  { id: TabId.WALLET,          room: '07', slug: 'TREASURY', icon: '◎',  title: 'MIC Vault',          role: 'Wallet, shards, ledger. Provenance over balance.',       dClass: 'd-wallet'  },
+  { id: TabId.VAULT,           room: '08', slug: 'CIVIC',    icon: '🔐', title: 'Reserve Vault',       role: 'Seal records, attestations, hash chain. Read-only.',     dClass: 'd-vault'   },
   { id: null,                  room: 'FACULTY', slug: 'MII 0.95', icon: '⬢', title: 'ATLAS · AUREA · EVE · JADE', role: 'Four sentinels watching the school. All green.', dClass: 'd-mii', disabled: true },
 ];
 

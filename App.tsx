@@ -10,6 +10,7 @@ import { ShieldChamber } from './components/chambers/ShieldChamber';
 import { AtlasChamber } from './components/chambers/AtlasChamber';
 import { JadeChamber } from './components/chambers/JadeChamber';
 import { WalletChamber } from './components/chambers/WalletChamber';
+import { VaultChamber } from './components/chambers/VaultChamber';
 import { useAuth } from './contexts/AuthContext';
 import { useSessionHeartbeat } from './hooks/useSessionHeartbeat';
 import { InquiryChatModal } from './components/InquiryChatModal';
@@ -50,6 +51,8 @@ const App: React.FC = () => {
         );
       case TabId.WALLET:
         return <WalletChamber onNavigateToOaa={() => setActiveTab(TabId.OAA)} />;
+      case TabId.VAULT:
+        return <VaultChamber />;
       default:
         return <OAAChamber />;
     }
