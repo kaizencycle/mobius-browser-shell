@@ -7,6 +7,10 @@ import { MOBIUS_OPEN_INQUIRY_EVENT } from '../InquiryChatModal';
 import { Map, Compass, Plus, Atom, Calculator, Dna, Code, FlaskConical, Cpu, Globe, Rocket, ArrowRight, ArrowLeft, Send, X, BookOpen, ChevronDown, GraduationCap, Award } from 'lucide-react';
 import { LearningProgressTracker } from '../Learning';
 import { OAALearnToEarn } from './OAALearnToEarn';
+import { AtlasChamberHeader } from './AtlasChamberHeader';
+import { CitizenOnboardingStepper } from './CitizenOnboardingStepper';
+import { useWallet } from '../../contexts/WalletContext';
+import { useTerminal } from '../../contexts/TerminalContext';
 
 export interface OAALabProps {
   onNavigateToKnowledgeGraph?: () => void;
@@ -43,20 +47,27 @@ const SUBJECTS: Subject[] = [
 // View mode for OAA Lab
 type OAAView = 'subjects' | 'learning';
 
+const XP_TO_MIC_THRESHOLD = 50;
+
 export const OAALab: React.FC<OAALabProps> = ({ onNavigateToKnowledgeGraph }) => {
   const lab = getLabById(TabId.OAA);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  
+  const { wallet } = useWallet();
+  const { state: terminalState } = useTerminal();
+  const [sessionXp, setSessionXp] = useState(0);
+
   // State for view mode
   const [currentView, setCurrentView] = useState<OAAView>('subjects');
-  
+
   // State for subject selection and chat
   const [selectedSubject, setSelectedSubject] = useState<Subject | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
-  
+
+  const ribbonPct = Math.min(100, Math.round((sessionXp % XP_TO_MIC_THRESHOLD) / XP_TO_MIC_THRESHOLD * 100));
+
   // If live mode is enabled and URL exists, show iframe
   if (lab && shouldUseLiveMode(lab.url)) {
     return (
@@ -69,7 +80,26 @@ export const OAALab: React.FC<OAALabProps> = ({ onNavigateToKnowledgeGraph }) =>
   }
 
   // Demo mode — show the Claude Design Learn-to-Earn experience
-  return <OAALearnToEarn onNavigateToKnowledgeGraph={onNavigateToKnowledgeGraph} />;
+  return (
+    <div className="flex flex-col h-full overflow-hidden">
+      <AtlasChamberHeader />
+      {/* XP→MIC Progress Ribbon */}
+      <div className="flex items-center gap-2 px-4 py-1.5 bg-stone-800 border-b border-stone-700 flex-shrink-0">
+        <span className="text-[10px] font-mono text-stone-400 flex-shrink-0">XP → MIC</span>
+        <div className="flex-1 h-1.5 rounded-full bg-stone-700 overflow-hidden">
+          <div
+            className="h-full bg-amber-400 rounded-full transition-all duration-500"
+            style={{ width: `${ribbonPct}%` }}
+          />
+        </div>
+        <span className="text-[10px] font-mono text-amber-400 flex-shrink-0">{sessionXp} XP</span>
+      </div>
+      <CitizenOnboardingStepper />
+      <div className="flex-1 min-h-0">
+        <OAALearnToEarn onNavigateToKnowledgeGraph={onNavigateToKnowledgeGraph} />
+      </div>
+    </div>
+  );
 
   // Handle subject selection
   const handleSubjectSelect = (subject: Subject) => {
@@ -171,8 +201,8 @@ export const OAALab: React.FC<OAALabProps> = ({ onNavigateToKnowledgeGraph }) =>
 
   // If a subject is selected, show the tutor interface
   if (selectedSubject) {
-    const Icon = selectedSubject.icon;
-    
+    const Icon = selectedSubject!.icon;
+
     return (
       <div
         className="h-full flex flex-col lg:flex-row bg-stone-50"
@@ -188,11 +218,11 @@ export const OAALab: React.FC<OAALabProps> = ({ onNavigateToKnowledgeGraph }) =>
             >
               <ArrowLeft className="w-5 h-5" />
             </button>
-            <div className={`w-9 h-9 ${selectedSubject.bg} ${selectedSubject.color} rounded-lg flex items-center justify-center`}>
+            <div className={`w-9 h-9 ${selectedSubject!.bg} ${selectedSubject!.color} rounded-lg flex items-center justify-center`}>
               <Icon className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="font-semibold text-stone-900 text-sm">{selectedSubject.title}</h3>
+              <h3 className="font-semibold text-stone-900 text-sm">{selectedSubject!.title}</h3>
               <p className="text-[10px] text-stone-500">AI Tutor</p>
             </div>
           </div>
@@ -207,7 +237,7 @@ export const OAALab: React.FC<OAALabProps> = ({ onNavigateToKnowledgeGraph }) =>
         {/* Left Sidebar - Subject Info & Navigation (Desktop always visible, Mobile slide-down) */}
         <div className={`
           ${isMobileSidebarOpen ? 'block' : 'hidden'} lg:block
-          lg:w-72 bg-white border-b lg:border-b-0 lg:border-r border-stone-200 
+          lg:w-72 bg-white border-b lg:border-b-0 lg:border-r border-stone-200
           flex flex-col
           lg:flex-shrink-0
           max-h-[40vh] lg:max-h-none overflow-y-auto lg:overflow-visible
@@ -222,21 +252,21 @@ export const OAALab: React.FC<OAALabProps> = ({ onNavigateToKnowledgeGraph }) =>
               <span>All Subjects</span>
             </button>
           </div>
-          
+
           {/* Current Subject - Desktop only */}
           <div className="hidden lg:block p-6 border-b border-stone-100">
-            <div className={`w-14 h-14 ${selectedSubject.bg} ${selectedSubject.color} rounded-xl flex items-center justify-center mb-4`}>
+            <div className={`w-14 h-14 ${selectedSubject!.bg} ${selectedSubject!.color} rounded-xl flex items-center justify-center mb-4`}>
               <Icon className="w-7 h-7" />
             </div>
-            <h2 className="text-xl font-bold text-stone-900">{selectedSubject.title}</h2>
+            <h2 className="text-xl font-bold text-stone-900">{selectedSubject!.title}</h2>
             <p className="text-sm text-stone-500 mt-1">AI Tutor Session</p>
           </div>
-          
+
           {/* Topics */}
           <div className="flex-1 overflow-y-auto p-3 lg:p-4">
             <h3 className="text-xs font-semibold text-stone-400 uppercase tracking-wider mb-2 lg:mb-3">Quick Topics</h3>
             <div className="flex flex-wrap lg:flex-col gap-2 lg:space-y-2 lg:gap-0">
-              {selectedSubject.topics.map((topic) => (
+              {selectedSubject!.topics.map((topic) => (
                 <button
                   key={topic}
                   onClick={() => {
@@ -250,7 +280,7 @@ export const OAALab: React.FC<OAALabProps> = ({ onNavigateToKnowledgeGraph }) =>
               ))}
             </div>
           </div>
-          
+
           {/* Session Info - Desktop only */}
           <div className="hidden lg:block p-4 border-t border-stone-100">
             <div className="flex items-center space-x-2">
@@ -259,17 +289,17 @@ export const OAALab: React.FC<OAALabProps> = ({ onNavigateToKnowledgeGraph }) =>
             </div>
           </div>
         </div>
-        
+
         {/* Right Panel - Chat Interface */}
         <div className="flex-1 flex flex-col min-h-0">
           {/* Chat Header - Desktop only */}
           <div className="hidden lg:flex bg-white border-b border-stone-200 px-6 py-4 items-center justify-between">
             <div className="flex items-center space-x-3">
-              <div className={`w-10 h-10 ${selectedSubject.bg} ${selectedSubject.color} rounded-lg flex items-center justify-center`}>
+              <div className={`w-10 h-10 ${selectedSubject!.bg} ${selectedSubject!.color} rounded-lg flex items-center justify-center`}>
                 <Icon className="w-5 h-5" />
               </div>
               <div>
-                <h3 className="font-semibold text-stone-900">{selectedSubject.title} Tutor</h3>
+                <h3 className="font-semibold text-stone-900">{selectedSubject!.title} Tutor</h3>
                 <p className="text-xs text-stone-500">Ask anything • Learn at your pace</p>
               </div>
             </div>
@@ -281,7 +311,7 @@ export const OAALab: React.FC<OAALabProps> = ({ onNavigateToKnowledgeGraph }) =>
               <X className="w-5 h-5" />
             </button>
           </div>
-          
+
           {/* Messages Area */}
           <div
             className="flex-1 overflow-y-auto p-3 sm:p-4 lg:p-6 space-y-3 lg:space-y-4"
@@ -296,10 +326,10 @@ export const OAALab: React.FC<OAALabProps> = ({ onNavigateToKnowledgeGraph }) =>
                 <div
                   className={`max-w-[85%] sm:max-w-[75%] lg:max-w-2xl rounded-2xl px-3 py-2 sm:px-4 sm:py-3 ${
                     message.role === 'user'
-                      ? `${selectedSubject.bg} ${selectedSubject.color.replace('text-', 'bg-').replace('-600', '-600')} text-white`
+                      ? `${selectedSubject!.bg} ${selectedSubject!.color.replace('text-', 'bg-').replace('-600', '-600')} text-white`
                       : 'bg-white border border-stone-200 text-stone-800'
                   }`}
-                  style={message.role === 'user' ? { backgroundColor: getSubjectBgColor(selectedSubject.id) } : {}}
+                  style={message.role === 'user' ? { backgroundColor: getSubjectBgColor(selectedSubject!.id) } : {}}
                 >
                   <div className="text-sm whitespace-pre-wrap leading-relaxed">
                     {message.content}
@@ -307,7 +337,7 @@ export const OAALab: React.FC<OAALabProps> = ({ onNavigateToKnowledgeGraph }) =>
                 </div>
               </div>
             ))}
-            
+
             {/* Loading indicator */}
             {isLoading && (
               <div className="flex justify-start">
@@ -325,12 +355,12 @@ export const OAALab: React.FC<OAALabProps> = ({ onNavigateToKnowledgeGraph }) =>
             )}
             <div ref={messagesEndRef} />
           </div>
-          
+
           {/* Input Area */}
           <div className="bg-white border-t border-stone-200 p-3 sm:p-4">
             <div className="max-w-4xl mx-auto">
               <label htmlFor="oaa-tutor-composer" className="sr-only">
-                Message to tutor about {selectedSubject.title}
+                Message to tutor about {selectedSubject!.title}
               </label>
               <div className="flex space-x-2 sm:space-x-3 items-end">
                 <textarea
@@ -339,7 +369,7 @@ export const OAALab: React.FC<OAALabProps> = ({ onNavigateToKnowledgeGraph }) =>
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
                   onKeyDown={handleComposerKeyDown}
-                  placeholder={`Ask about ${selectedSubject.title}…`}
+                  placeholder={`Ask about ${selectedSubject!.title}…`}
                   disabled={isLoading}
                   className="flex-1 min-h-[44px] max-h-40 px-3 py-2.5 sm:px-4 sm:py-3 border border-stone-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-stone-400 focus:border-transparent disabled:bg-stone-50 disabled:text-stone-400 text-sm resize-y"
                 />

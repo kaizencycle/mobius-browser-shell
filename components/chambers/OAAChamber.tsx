@@ -14,22 +14,17 @@ interface OAAChamberProps {
 export const OAAChamber: React.FC<OAAChamberProps> = ({ onNavigateToKnowledgeGraph }) => {
   const logToAtlas = useAtlasErrorLog();
   return (
-    <div className="ch-oaa-room">
-      <div className="ch-oaa">
-        {/* Chalkboard header */}
-        <div className="ch-oaa__head">
-          <div className="ch-oaa__head-l">
-            <div className="ch-oaa__label">ROOM 01 · OAA · Today's Lesson Plan</div>
-            <h2 className="ch-oaa__title">
-              OAA Library
-              <small>learn to earn</small>
-            </h2>
+    <div className="oaa-room">
+      <div className="oaa-frame">
+        <div className="oaa-head">
+          <div>
+            <div className="label">ROOM 01 · OAA · Today's Lesson Plan</div>
+            <h2>OAA Library<small>learn to earn</small></h2>
           </div>
-          <div className="ch-oaa__head-r">Period 3</div>
+          <div className="date">Period 3<b>Mon — Fri</b></div>
         </div>
 
-        {/* Lab content */}
-        <div className="ch-oaa__content">
+        <div className="oaa-content">
           <ShellErrorBoundary
             appName="OAA Learning Hub"
             appIcon="📚"
@@ -42,9 +37,13 @@ export const OAAChamber: React.FC<OAAChamberProps> = ({ onNavigateToKnowledgeGra
           </ShellErrorBoundary>
         </div>
 
-        {/* Chalk + eraser props */}
-        <div className="ch-oaa__chalk" aria-hidden />
-        <div className="ch-oaa__eraser" aria-hidden />
+        <div className="oaa-foot">
+          <div>Sub: Mrs. ATLAS</div>
+          <div>Class dismissed when MIC rate &gt; 0.</div>
+        </div>
+
+        <div className="oaa-chalk" aria-hidden />
+        <div className="oaa-eraser" aria-hidden />
       </div>
     </div>
   );

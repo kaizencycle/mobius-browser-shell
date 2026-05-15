@@ -150,7 +150,7 @@ export const OAALearnToEarn: React.FC<OAALearnToEarnProps> = ({ onNavigateToKnow
     if (locked) return;
     setLocked(true);
     setChosen(i);
-    const Q = QUESTIONS[qi];
+    const Q = QUESTIONS[qi]!;
     if (i === Q.ans) {
       const newEarned = earned + 0.5;
       setScore(s => s + 1);
@@ -169,12 +169,12 @@ export const OAALearnToEarn: React.FC<OAALearnToEarnProps> = ({ onNavigateToKnow
       setLocked(false);
       setChosen(null);
     } else {
-      setFinalScore(score + (chosen === QUESTIONS[qi].ans ? 1 : 0));
+      setFinalScore(score + (chosen === QUESTIONS[qi]!.ans ? 1 : 0));
       setScreen('results');
     }
   }, [qi, score, chosen]);
 
-  const Q = QUESTIONS[qi];
+  const Q = QUESTIONS[qi]!;
   const sessionAcc = locked ? `${score + (chosen === Q.ans ? 1 : 0)}/${qi + 1} · ${Math.round((score + (chosen === Q.ans ? 1 : 0)) / (qi + 1) * 100)}%` : '—';
 
   return (

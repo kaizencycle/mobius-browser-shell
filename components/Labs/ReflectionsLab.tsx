@@ -16,6 +16,12 @@ import {
 import { useKnowledgeGraph } from '../../contexts/KnowledgeGraphContext';
 import { useWallet } from '../../contexts/WalletContext';
 import { useAuth } from '../../contexts/AuthContext';
+import { EveChamberHeader } from './EveChamberHeader';
+import { EveSignalSidebar } from './EveSignalSidebar';
+import { ReflectionArchiveLane, archiveReflection } from './ReflectionArchiveLane';
+import { emitReflectionEpicon, hashReflectionBody } from '../../hooks/useEveEpicon';
+import { useDailyPrompt } from '../../hooks/useDailyPrompt';
+import { useTerminal } from '../../contexts/TerminalContext';
 
 type PhaseId = 'raw' | 'mirror' | 'reframe' | 'recode';
 type ReflectionRewardId = 'spark' | 'geist_mode' | 'epiphany';
@@ -152,7 +158,7 @@ function secureRandom01(): number {
   if (typeof crypto !== 'undefined' && typeof crypto.getRandomValues === 'function') {
     const randomArray = new Uint32Array(1);
     crypto.getRandomValues(randomArray);
-    return randomArray[0] / 0xffffffff;
+    return randomArray[0]! / 0xffffffff;
   }
   return Math.random();
 }
@@ -187,21 +193,7 @@ function rollHiddenReward(entry: ReflectionEntry, analysis: ReflectionAnalysis) 
 
 function createDefaultSkillMarkdown(name: string): string {
   const safeName = name.trim() || 'Unnamed Agent';
-  return `# ${safeName} — Skill Profile
-
-## Core Mission
-Support human reflection, learning, and ethical action with calm, precise guidance.
-
-## Operational Strengths
-- Active listening and synthesis
-- Clarifying ambiguous goals
-- Translating intent into concrete next actions
-
-## Constraints
-- Never manipulate, coerce, or exploit attention.
-- Preserve user agency and dignity.
-- Prioritize integrity over speed.
-`;
+  return `# ${safeName} — Skill Profile\n\n## Core Mission\nSupport human reflection, learning, and ethical action with calm, precise guidance.\n\n## Operational Strengths\n- Active listening and synthesis\n- Clarifying ambiguous goals\n- Translating intent into concrete next actions\n\n## Constraints\n- Never manipulate, coerce, or exploit attention.\n- Preserve user agency and dignity.\n- Prioritize integrity over speed.\n`;
 }
 
 function createDefaultBiodnaJson(name: string): string {
@@ -275,6 +267,8 @@ export const ReflectionsLab: React.FC<ReflectionsLabProps> = ({
   const { extractAndAddConcepts, stats } = useKnowledgeGraph();
   const { user } = useAuth();
   const { wallet, earnMIC, burnMIC, getChainBalance, getChainTransactions } = useWallet();
+  const { state: terminalState } = useTerminal();
+  const dailyPrompt = useDailyPrompt();
 
   // Load from localStorage on mount
   useEffect(() => {
@@ -296,7 +290,7 @@ export const ReflectionsLab: React.FC<ReflectionsLabProps> = ({
               : 0,
         }));
         setEntries(normalized);
-        setActiveEntryId(normalized[0].id);
+        setActiveEntryId(normalized[0]!.id);
       }
     } catch (e) {
       console.error('Failed to load reflections from storage', e);
@@ -362,7 +356,7 @@ export const ReflectionsLab: React.FC<ReflectionsLabProps> = ({
     setEntries((prev) => prev.filter((entry) => entry.id !== id));
     if (activeEntryId === id) {
       const remaining = entries.filter((e) => e.id !== id);
-      setActiveEntryId(remaining.length > 0 ? remaining[0].id : null);
+      setActiveEntryId(remaining.length > 0 ? remaining[0]!.id : null);
     }
   };
 
@@ -401,11 +395,35 @@ export const ReflectionsLab: React.FC<ReflectionsLabProps> = ({
 
       if (success) {
         setRewardNotice(`A hidden reflection bonus crystallized: +${reward.mic} MIC XP`);
+        const bodyText = entry.phases.map((p) => p.content).join('\n');
+        void hashReflectionBody(bodyText).then((bodyHash) => {
+          void emitReflectionEpicon({
+            citizenId: user?.id ?? 'guest',
+            entryId: entry.id,
+            bodyHash,
+            wordCount: analysis.totalWords,
+            completedPhases: analysis.completedPhaseCount,
+            rewardTier: reward.id,
+            mic: reward.mic,
+            cycle: terminalState?.cycle ?? null,
+            gi: terminalState?.gi ?? null,
+          });
+          archiveReflection({
+            id: entry.id,
+            title: entry.title,
+            bodyHash,
+            gi: terminalState?.gi ?? null,
+            mode: terminalState?.mode ?? null,
+            cycle: terminalState?.cycle ?? null,
+            timestamp: new Date().toISOString(),
+            wordCount: analysis.totalWords,
+          });
+        });
       } else {
         setRewardNotice('A hidden reflection bonus was detected, but minting failed. Try again soon.');
       }
     },
-    [earnMIC]
+    [earnMIC, user, terminalState]
   );
 
   const handlePhaseChange = (phaseId: PhaseId, content: string) => {
@@ -631,17 +649,18 @@ export const ReflectionsLab: React.FC<ReflectionsLabProps> = ({
 
   const goNextPhase = () => {
     if (activePhaseIndex < PHASE_TEMPLATE.length - 1) {
-      setActivePhaseId(PHASE_TEMPLATE[activePhaseIndex + 1].id);
+      setActivePhaseId(PHASE_TEMPLATE[activePhaseIndex + 1]!.id);
     }
   };
   const goPrevPhase = () => {
     if (activePhaseIndex > 0) {
-      setActivePhaseId(PHASE_TEMPLATE[activePhaseIndex - 1].id);
+      setActivePhaseId(PHASE_TEMPLATE[activePhaseIndex - 1]!.id);
     }
   };
 
   return (
     <div className="h-full flex flex-col bg-stone-50 overflow-hidden relative">
+      <EveChamberHeader />
       <a
         href="#reflection-editor"
         className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-20 focus:z-50 focus:px-3 focus:py-2 focus:bg-stone-900 focus:text-white focus:rounded-md"
@@ -659,7 +678,7 @@ export const ReflectionsLab: React.FC<ReflectionsLabProps> = ({
               Reflections Lab
             </div>
             <div className="text-xs text-stone-500 hidden sm:block">
-              Intent & Horizon Loop — daily kaizen through awareness
+              Intent &amp; Horizon Loop — daily kaizen through awareness
             </div>
           </div>
         </div>
@@ -686,7 +705,7 @@ export const ReflectionsLab: React.FC<ReflectionsLabProps> = ({
         </div>
       </div>
 
-      {/* Body: sidebar + editor */}
+      {/* Body: sidebar + editor + EVE signal panel */}
       <div className="flex-1 flex min-h-0 flex-col md:flex-row">
         {/* Left: entries list */}
         <aside className="w-64 border-r border-stone-200 bg-stone-100/60 flex-col hidden md:flex">
@@ -793,7 +812,7 @@ export const ReflectionsLab: React.FC<ReflectionsLabProps> = ({
             <div className="h-full flex flex-col items-center justify-center text-center px-6">
               <Sparkles className="w-8 h-8 text-stone-300 mb-3" />
               <div className="text-sm font-semibold text-stone-800">
-                Start an Intent & Horizon Loop
+                Start an Intent &amp; Horizon Loop
               </div>
               <p className="text-xs text-stone-500 mt-2 max-w-sm">
                 Each entry walks through four phases: Today → Worldview →
@@ -893,7 +912,7 @@ export const ReflectionsLab: React.FC<ReflectionsLabProps> = ({
                   <button
                     onClick={() =>
                       activePhaseIndex > 0 &&
-                      setActivePhaseId(PHASE_TEMPLATE[activePhaseIndex - 1].id)
+                      setActivePhaseId(PHASE_TEMPLATE[activePhaseIndex - 1]!.id)
                     }
                     disabled={activePhaseIndex <= 0}
                     className="inline-flex items-center justify-center gap-1 px-3 py-2 text-xs font-medium rounded-md border border-stone-200 bg-stone-50 text-stone-700 disabled:opacity-50 disabled:cursor-not-allowed"
@@ -907,7 +926,7 @@ export const ReflectionsLab: React.FC<ReflectionsLabProps> = ({
                   <button
                     onClick={() =>
                       activePhaseIndex < PHASE_TEMPLATE.length - 1 &&
-                      setActivePhaseId(PHASE_TEMPLATE[activePhaseIndex + 1].id)
+                      setActivePhaseId(PHASE_TEMPLATE[activePhaseIndex + 1]!.id)
                     }
                     disabled={activePhaseIndex >= PHASE_TEMPLATE.length - 1}
                     className="inline-flex items-center justify-center gap-1 px-3 py-2 text-xs font-medium rounded-md border border-stone-200 bg-stone-50 text-stone-700 disabled:opacity-50 disabled:cursor-not-allowed"
@@ -937,6 +956,13 @@ export const ReflectionsLab: React.FC<ReflectionsLabProps> = ({
                     {activePhase.prompt}
                   </p>
                 </div>
+
+                {/* EVE E-4: Daily Prompt */}
+                {activePhase.id === 'raw' && dailyPrompt && (
+                  <div className="rounded-md border border-stone-200 bg-stone-50 px-3 py-2 text-xs text-stone-600 font-medium italic">
+                    ⬡ {dailyPrompt}
+                  </div>
+                )}
 
                 <textarea
                   id={`reflection-phase-${activePhase.id}`}
@@ -1146,7 +1172,9 @@ export const ReflectionsLab: React.FC<ReflectionsLabProps> = ({
             </>
           )}
         </section>
+        <EveSignalSidebar />
       </div>
+      <ReflectionArchiveLane />
     </div>
   );
 };

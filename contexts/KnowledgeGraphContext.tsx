@@ -180,8 +180,8 @@ function calculateCoOccurrences(concepts: string[]): Array<{ source: string; tar
   for (let i = 0; i < concepts.length; i++) {
     for (let j = i + 1; j < concepts.length; j++) {
       pairs.push({
-        source: generateNodeId(concepts[i]),
-        target: generateNodeId(concepts[j]),
+        source: generateNodeId(concepts[i]!),
+        target: generateNodeId(concepts[j]!),
       });
     }
   }

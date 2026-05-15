@@ -14,32 +14,31 @@ interface ReflectionsChamberProps {
 export const ReflectionsChamber: React.FC<ReflectionsChamberProps> = ({ onNavigateToKnowledgeGraph }) => {
   const logToAtlas = useAtlasErrorLog();
   return (
-    <div className="ch-reflect">
-      {/* Left: candlelit oval mirror column */}
-      <div className="ch-reflect__mirror-col" aria-hidden>
-        <div className="ch-reflect__mirror">
-          <div className="ch-reflect__mirror-haze" />
-          <div className="ch-reflect__mirror-role">Room 03 · Reflections</div>
-          <div className="ch-reflect__mirror-title">The mirror<br />asks softly.</div>
-        </div>
-        <div className="ch-reflect__candle" />
-        <div className="ch-reflect__label">ROOM 03 · CANDLELIGHT</div>
+    <div className="ref-room">
+      {/* Left: oval candlelit mirror */}
+      <div className="ref-mirror">
+        <div className="haze" aria-hidden />
+        <div className="role">Room 03 · Reflections</div>
+        <h2>The mirror<br />asks softly.</h2>
+        <p className="obs">
+          It's the biggest lab in the shell — rich mood vocabulary, and a space
+          that invites you to slow down.
+        </p>
+        <div className="ref-candle" aria-hidden />
       </div>
-      {/* Right: journal paper wrapping the lab */}
-      <div className="ch-reflect__journal">
-        <div className="ch-reflect__journal-lines" aria-hidden />
-        <div className="ch-reflect__journal-content">
-          <ShellErrorBoundary
-            appName="Reflections Lab"
-            appIcon="🪞"
-            errorCode={ErrorCodes.REFL_MIRROR_SYNC}
-            onError={logToAtlas}
-          >
-            <Suspense fallback={null}>
-              <ReflectionsLab onNavigateToKnowledgeGraph={onNavigateToKnowledgeGraph} />
-            </Suspense>
-          </ShellErrorBoundary>
-        </div>
+
+      {/* Right: lined journal paper wrapping the lab */}
+      <div className="ref-journal">
+        <ShellErrorBoundary
+          appName="Reflections Lab"
+          appIcon="🪞"
+          errorCode={ErrorCodes.REFL_MIRROR_SYNC}
+          onError={logToAtlas}
+        >
+          <Suspense fallback={null}>
+            <ReflectionsLab onNavigateToKnowledgeGraph={onNavigateToKnowledgeGraph} />
+          </Suspense>
+        </ShellErrorBoundary>
       </div>
     </div>
   );

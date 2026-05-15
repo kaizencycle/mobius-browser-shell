@@ -47,8 +47,8 @@ export function GuestNudge() {
   if (!nudgeVisible) return null;
 
   const message = nudgeAction
-    ? (ACTION_MESSAGES[nudgeAction] ?? ACTION_MESSAGES.default)
-    : ACTION_MESSAGES.default;
+    ? (ACTION_MESSAGES[nudgeAction] ?? ACTION_MESSAGES['default']!)
+    : ACTION_MESSAGES['default']!;
 
   return (
     <>

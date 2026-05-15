@@ -170,11 +170,6 @@ export interface GameLogEntry {
 
 /**
  * HiveCharacterSnapshot - Portable character format
- * 
- * Use this to:
- * - Export/import character sheets between sessions
- * - Attach characters to future MIC wallets
- * - Share characters between players or devices
  */
 export interface HiveCharacterSnapshot {
   version: "hive-character.v1";
@@ -220,13 +215,7 @@ export function parseCharacterSnapshot(
     name: snapshot.name ?? "Unnamed Citizen",
     order: snapshot.order ?? "CITIZEN",
     shardValues: {
-      ASH: 1,
-      VEILS: 1,
-      FROST: 1,
-      SONG: 1,
-      STONE: 1,
-      ECHOES: 1,
-      DAWN: 1,
+      ...{ ASH: 1, VEILS: 1, FROST: 1, SONG: 1, STONE: 1, ECHOES: 1, DAWN: 1 },
       ...snapshot.shardValues,
     },
     civicMemory: [], // Civic memory string is informational only for now
@@ -239,31 +228,8 @@ export function parseCharacterSnapshot(
 
 // ============================================
 // EPICON-Style Roll Event
-// For future Mobius/EPICON integration
 // ============================================
 
-/**
- * HiveRollEvent - Canonical roll event format
- * 
- * This is the structure for logging dice rolls as EPICON events.
- * Ready for future POST to Mobius / EPICON endpoints.
- * 
- * Example API payload (for later):
- * ```json
- * {
- *   "type": "epicon.hive.roll",
- *   "version": "1.0.0",
- *   "mic_wallet_id": "mic_abc123",
- *   "character": { "name": "Liora", "order": "SCOUT" },
- *   "intent": "Shut down the reactor...",
- *   "shard": "FROST",
- *   "shard_value": 3,
- *   "dice": { "raw_roll": 9, "total": 12, "band": "RECONCILE" },
- *   "narrative": "You succeed and heal something...",
- *   "meta": { "scene_id": "scene_001", "client": "mobius-browser-shell" }
- * }
- * ```
- */
 export interface HiveRollEvent {
   eventType: "hive.roll";
   version: "hive-roll.v1";

@@ -2120,8 +2120,8 @@ export const LearningProgressTracker: React.FC = () => {
 
       for (let i = 0; i < activeModule.topics.length; i++) {
         for (let j = i + 1; j < activeModule.topics.length; j++) {
-          const sourceId = activeModule.topics[i].toLowerCase().replace(/[^a-z0-9]+/g, '-');
-          const targetId = activeModule.topics[j].toLowerCase().replace(/[^a-z0-9]+/g, '-');
+          const sourceId = activeModule.topics[i]!.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+          const targetId = activeModule.topics[j]!.toLowerCase().replace(/[^a-z0-9]+/g, '-');
           addEdge(sourceId, targetId, 'co-occurs', `learning-${activeModule.id}`);
         }
       }
