@@ -77,6 +77,10 @@
     {
       "source": "/api/mic/genesis-grant",
       "destination": "/api/mic/genesis-grant"
+    },
+    {
+      "source": "/api/terminal/:path*",
+      "destination": "https://mobius-civic-ai-terminal.vercel.app/api/:path*"
     }
   ]
 }

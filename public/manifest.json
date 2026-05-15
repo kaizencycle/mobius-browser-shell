@@ -1,0 +1,21 @@
+{
+  "name": "Mobius Browser Shell",
+  "short_name": "Mobius",
+  "description": "Constitutional AI interface for civic learning, reflection, and resilience.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#fafaf9",
+  "theme_color": "#1c1917",
+  "icons": [
+    {
+      "src": "/world/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/world/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
