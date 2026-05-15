@@ -35,7 +35,7 @@ export const ReturnCitizenDashboard: React.FC<Props> = ({ onSelectTab }) => {
     60_000,
   );
 
-  const gi = integrity?.gi ?? terminal?.gi ?? null;
+  const gi = integrity?.global_integrity ?? terminal?.gi ?? null;
   const cycle = terminal?.cycle ?? '—';
 
   return (
@@ -75,7 +75,7 @@ export const ReturnCitizenDashboard: React.FC<Props> = ({ onSelectTab }) => {
                 e.status === 'pending'  ? 'text-amber-600 bg-amber-50' :
                 'text-stone-500 bg-stone-50'
               }`}>{e.status}</span>
-              <p className="text-[11px] text-stone-600 leading-snug line-clamp-1">{e.intent}</p>
+              <p className="text-[11px] text-stone-600 leading-snug line-clamp-1">{e.intent ?? e.action ?? '—'}</p>
             </div>
           ))}
           {epicon && (

@@ -3,12 +3,15 @@ import { useTerminalData } from '../../hooks/useTerminalData';
 import { terminalBridge } from '../../services/terminalBridge';
 import type { EPICONEntry } from '../../services/terminalBridge';
 
-const STATUS_COLOR: Record<EPICONEntry['status'], string> = {
+const STATUS_COLOR: Record<string, string> = {
   pending:    'text-amber-600 bg-amber-50 border-amber-200',
   executed:   'text-emerald-700 bg-emerald-50 border-emerald-200',
+  verified:   'text-emerald-700 bg-emerald-50 border-emerald-200',
   failed:     'text-rose-700 bg-rose-50 border-rose-200',
   superseded: 'text-stone-500 bg-stone-50 border-stone-200',
+  contradicted: 'text-rose-700 bg-rose-50 border-rose-200',
 };
+const DEFAULT_STATUS_COLOR = 'text-stone-500 bg-stone-50 border-stone-200';
 
 export const EPICONFeed: React.FC = () => {
   const { data: entries, loading, error, refresh } = useTerminalData(
@@ -66,14 +69,16 @@ export const EPICONFeed: React.FC = () => {
                   </span>
                 )}
               </div>
-              <p className="text-xs text-stone-700 mt-0.5 leading-snug">{e.intent}</p>
+              <p className="text-xs text-stone-700 mt-0.5 leading-snug">{e.intent ?? e.action ?? '—'}</p>
               {e.cycle && (
                 <p className="text-[10px] text-stone-400 font-mono mt-0.5">{e.cycle}</p>
               )}
             </div>
-            <span className={`text-[9px] font-mono font-bold px-1.5 py-0.5 rounded border uppercase tracking-wide shrink-0 ${STATUS_COLOR[e.status] ?? STATUS_COLOR.pending}`}>
-              {e.status}
-            </span>
+            {e.status && (
+              <span className={`text-[9px] font-mono font-bold px-1.5 py-0.5 rounded border uppercase tracking-wide shrink-0 ${STATUS_COLOR[e.status] ?? DEFAULT_STATUS_COLOR}`}>
+                {e.status}
+              </span>
+            )}
           </div>
         ))}
       </div>

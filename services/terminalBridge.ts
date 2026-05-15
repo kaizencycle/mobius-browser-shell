@@ -16,33 +16,53 @@ async function fetchJSON<T>(url: string, ttl = 30_000): Promise<T> {
 }
 
 export interface SnapshotLite {
-  gi: number;
+  gi: number | null;
   cycle: string;
-  mode: 'green' | 'yellow' | 'red';
+  mode: 'green' | 'yellow' | 'red' | null;
+  degraded?: boolean;
   vault_balance?: number;
   agent_count?: number;
   mii?: number;
 }
 
 export interface IntegrityStatus {
-  gi: number;
-  mode: 'green' | 'yellow' | 'red';
-  alert?: { id: string; title: string; severity: 'warning' | 'critical' };
-  agents?: Array<{ id: string; status: 'active' | 'thinking' | 'idle' | 'warning'; last_seen: string | null }>;
+  global_integrity: number | null;
+  mode: 'green' | 'yellow' | 'red' | null;
+  degraded?: boolean;
+  gi_age_seconds?: number;
+  terminal_status?: string;
 }
 
 export interface EPICONEntry {
   id: string;
-  intent: string;
-  cycle: string;
-  status: 'pending' | 'executed' | 'failed' | 'superseded';
+  intent?: string;
+  action?: string;
+  cycle?: string;
+  status?: string;
   agent?: string;
+  timestamp?: string;
   ts?: string;
+  type?: string;
+}
+
+interface EPICONFeedResponse {
+  ok: boolean;
+  items: EPICONEntry[];
+  count: number;
+  total: number;
+  hasMore: boolean;
+  degraded?: boolean;
 }
 
 export const terminalBridge = {
   snapshotLite: () => fetchJSON<SnapshotLite>(`${BASE}/api/terminal/snapshot-lite`, 30_000),
   integrityStatus: () => fetchJSON<IntegrityStatus>(`${BASE}/api/integrity-status`, 30_000),
-  epiconFeed: (limit = 20) => fetchJSON<EPICONEntry[]>(`${BASE}/api/epicon/feed?limit=${limit}`, 60_000),
+  epiconFeed: async (limit = 20): Promise<EPICONEntry[]> => {
+    const res = await fetchJSON<EPICONFeedResponse>(
+      `${BASE}/api/epicon/feed?limit=${limit}`,
+      60_000,
+    );
+    return res.items ?? [];
+  },
   vaultStatus: () => fetchJSON<unknown>(`${BASE}/api/vault/status`, 60_000),
 };
