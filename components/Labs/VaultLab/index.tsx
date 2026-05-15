@@ -3,6 +3,7 @@ import { useVaultState } from '../../../hooks/useVaultState';
 import { VaultHeader } from './VaultHeader';
 import { VaultMetricsBar } from './VaultMetricsBar';
 import { ReserveBlockCard } from './ReserveBlockCard';
+import { MobiusWalletOverview } from './MobiusWalletOverview';
 import type { VaultSealStatus } from '../../../types';
 
 type FilterValue = VaultSealStatus | 'all';
@@ -53,6 +54,12 @@ export const VaultLab: React.FC = () => {
         onRefresh={() => void refresh()}
         loading={loading}
       />
+
+      <MobiusWalletOverview
+        metrics={state?.metrics ?? null}
+        ledgerOk={state?.ledger_ok ?? false}
+      />
+
       {state?.metrics && <VaultMetricsBar metrics={state.metrics} />}
 
       {/* Filter tabs */}
