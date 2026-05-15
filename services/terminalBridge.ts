@@ -44,11 +44,57 @@ export interface TerminalSnapshotLite {
   [key: string]: unknown;
 }
 
+export interface TerminalSentinelStatus {
+  id?: string;
+  name?: string;
+  status?: string;
+  active?: boolean;
+  heartbeatOk?: boolean;
+  last_seen?: string;
+  lastSeen?: string;
+  confidence?: number;
+  score?: number;
+  role?: string;
+  [key: string]: unknown;
+}
+
+export interface TerminalIntegrityStatus {
+  gi?: number;
+  mode?: string;
+  alert?: {
+    id?: string;
+    title?: string;
+    severity?: string;
+  };
+  sentinels?: TerminalSentinelStatus[];
+  agents?: TerminalSentinelStatus[];
+  [key: string]: unknown;
+}
+
+export interface TerminalEpiconEntry {
+  id?: string;
+  intent?: string;
+  cycle?: string;
+  status?: string;
+  agent?: string;
+  timestamp?: string;
+  created_at?: string;
+  [key: string]: unknown;
+}
+
 export const terminalBridge = {
   baseUrl: TERMINAL_BASE,
 
   snapshotLite(ttl?: number) {
     return fetchJSON<TerminalSnapshotLite>('/api/terminal/snapshot-lite', ttl);
+  },
+
+  integrityStatus(ttl?: number) {
+    return fetchJSON<TerminalIntegrityStatus>('/api/integrity-status', ttl);
+  },
+
+  epiconFeed(limit = 20, ttl?: number) {
+    return fetchJSON<TerminalEpiconEntry[]>(`/api/epicon/feed?limit=${limit}`, ttl);
   },
 };
 
