@@ -11,6 +11,7 @@ import { AtlasChamber } from './components/chambers/AtlasChamber';
 import { JadeChamber } from './components/chambers/JadeChamber';
 import { WalletChamber } from './components/chambers/WalletChamber';
 import { VaultChamber } from './components/chambers/VaultChamber';
+import { LiveSystemBar } from './components/Header/LiveSystemBar';
 import { useAuth } from './contexts/AuthContext';
 import { useSessionHeartbeat } from './hooks/useSessionHeartbeat';
 import { InquiryChatModal } from './components/InquiryChatModal';
@@ -59,7 +60,9 @@ const App: React.FC = () => {
   };
 
   return (
-    <div className="app-shell">
+    <div className="app-shell bg-stone-950 text-stone-100">
+      <LiveSystemBar />
+
       {activeTab !== TabId.HALLWAY && (
         <button
           className="hall-back-float"
