@@ -3,6 +3,7 @@ import { TabId } from '../types';
 import { SENTINELS } from '../constants';
 import { SentinelStatus } from './SentinelStatus';
 import { CitizenProfileButton } from './CitizenProfile/CitizenProfileButton';
+import { MeshFacultyStrip } from './MeshFacultyStrip';
 import { Coffee, CheckCircle } from 'lucide-react';
 import { useTerminal } from '../contexts/TerminalContext';
 import { useWallet } from '../contexts/WalletContext';
@@ -145,8 +146,11 @@ export const Hallway: React.FC<HallwayProps> = ({ onEnter, onOpenProfile }) => {
           </p>
         </div>
 
-        {/* ── Door grid ───────────────────────────────────────── */}
-        <div className="doors">
+        {/* ── Mesh Faculty ─────────────────────────────────────── */}
+        <MeshFacultyStrip />
+
+        {/* ── Door grid ────────────────────────────────────────── */}
+        <div className="hallway-doors">
           {DOORS.map((door) => (
             <button
               key={door.room}
