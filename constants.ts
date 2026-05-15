@@ -1,44 +1,18 @@
-import { Sentinel, LearningThread, ReflectionEntry, ShieldAlert, LabDefinition, TabId } from './types';
+import { Sentinel, LabDefinition, TabId } from './types';
 import { env } from './config/env';
 
+// FIX-03: Full 8-sentinel roster with roles matching Terminal canon
 export const SENTINELS: Sentinel[] = [
-  { id: 'atlas', name: 'ATLAS', role: 'Context & Memory', status: 'active', integrity: 0.99 },
-  { id: 'aurea', name: 'AUREA', role: 'Integrity Custodian', status: 'idle', integrity: 1.0 },
-  { id: 'echo', name: 'ECHO', role: 'Threat Intelligence', status: 'active', integrity: 0.98 },
-  { id: 'jade', name: 'JADE', role: 'Pattern & Narrative', status: 'thinking', integrity: 0.99 },
-  { id: 'eve', name: 'EVE', role: 'Ethics & Values', status: 'active', integrity: 0.99 },
+  { id: 'atlas',    name: 'ATLAS',    role: 'Architectural Review',  status: 'active',   integrity: 0.99 },
+  { id: 'zeus',     name: 'ZEUS',     role: 'Verification Sweep',    status: 'active',   integrity: 0.97 },
+  { id: 'eve',      name: 'EVE',      role: 'Global News Synthesis', status: 'active',   integrity: 0.99 },
+  { id: 'jade',     name: 'JADE',     role: 'UX Validation',         status: 'thinking', integrity: 0.99 },
+  { id: 'aurea',    name: 'AUREA',    role: 'Strategic Review',      status: 'idle',     integrity: 1.0  },
+  { id: 'hermes',   name: 'HERMES',   role: 'Narrative Signals',     status: 'idle',     integrity: 0.95 },
+  { id: 'echo',     name: 'ECHO',     role: 'Signal Amplification',  status: 'active',   integrity: 0.98 },
+  { id: 'daedalus', name: 'DAEDALUS', role: 'Infrastructure Watch',  status: 'idle',     integrity: 0.96 },
 ];
 
-export const MOCK_THREADS: LearningThread[] = [
-  { id: '1', title: 'Thermodynamics & Information Theory', progress: 45, lastActive: '2 hours ago', tags: ['Physics', 'Systems'] },
-  { id: '2', title: 'The History of Banking Systems', progress: 12, lastActive: 'Yesterday', tags: ['Economics', 'History'] },
-  { id: '3', title: 'Regenerative Agriculture Models', progress: 88, lastActive: '3 days ago', tags: ['Ecology', 'Design'] },
-];
-
-export const MOCK_REFLECTIONS: ReflectionEntry[] = [
-  { id: 'r1', date: 'Oct 24, 2025', preview: 'Realized today that optimization often kills resilience. The HIVE simulation showed...', mood: 'Curious', tags: ['Systems', 'Philosophy'] },
-  { id: 'r2', date: 'Oct 23, 2025', preview: 'Felt resistance to starting the new module. Why? Perhaps fear of failing the...', mood: 'Anxious', tags: ['Personal', 'Growth'] },
-];
-
-export const MOCK_ALERTS: ShieldAlert[] = [
-  { id: 'a1', level: 'medium', message: 'Unusual data egress pattern detected on port 8080.', source: 'Network Monitor' },
-  { id: 'a2', level: 'low', message: '3 days since last local backup verification.', source: 'Data Hygiene' },
-];
-
-/**
- * Lab definitions for the Mobius Browser Shell
- * 
- * Each lab can operate in two modes:
- * 1. Live mode: Embeds the real deployed app via iframe
- * 2. Demo mode: Shows the local mock UI
- * 
- * Set VITE_USE_LIVE_LABS=true and provide URLs to enable live mode
- * 
- * Real Render Endpoints:
- * - OAA Learning Hub: https://lab7-proof.onrender.com
- * - Reflections: https://hive-api-2le8.onrender.com
- * - Citizen Shield: https://lab6-proof-api.onrender.com
- */
 export const LABS: LabDefinition[] = [
   {
     id: TabId.OAA,
@@ -63,33 +37,31 @@ export const LABS: LabDefinition[] = [
     name: 'HIVE (16-bit JRPG)',
     description: 'Collaborative governance JRPG – built by the community.',
     url: env.labs.hive,
-    comingSoon: !env.labs.hive, // Coming soon unless URL is provided
+    comingSoon: !env.labs.hive,
   },
   {
     id: TabId.WALLET,
     name: 'Fractal Wallet',
     description: 'Your MIC balance, shards, and integrity ledger.',
-    useDemo: true, // Wallet is always local UI
+    useDemo: true,
+  },
+  // FIX-14: KnowledgeGraph registered — getLabById(TabId.KNOWLEDGE_GRAPH) now resolves
+  {
+    id: TabId.KNOWLEDGE_GRAPH,
+    name: 'ATLAS Knowledge Graph',
+    description: 'Temporal epistemic graph of your learning journey.',
+    useDemo: true,
   },
 ];
 
-/**
- * Get a lab definition by TabId
- */
 export function getLabById(id: TabId): LabDefinition | undefined {
   return LABS.find(lab => lab.id === id);
 }
 
-/**
- * Get all labs that have live URLs
- */
 export function getActiveLabs(): LabDefinition[] {
   return LABS.filter(lab => lab.url && !lab.comingSoon);
 }
 
-/**
- * Get all labs that are coming soon
- */
 export function getComingSoonLabs(): LabDefinition[] {
   return LABS.filter(lab => lab.comingSoon);
 }

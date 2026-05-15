@@ -72,8 +72,10 @@ export interface Sentinel {
   id: string;
   name: string;
   role: string;
-  status: 'active' | 'thinking' | 'idle' | 'warning';
+  status: 'active' | 'thinking' | 'idle' | 'warning' | 'error' | 'offline';
   integrity: number;
+  lastSeen?: string;
+  cycleCount?: number;
 }
 
 export interface LearningThread {

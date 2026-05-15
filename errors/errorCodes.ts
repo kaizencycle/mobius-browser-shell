@@ -75,6 +75,8 @@ export const ErrorCodes = {
   SHELL_LAB_IFRAME_TIMEOUT: 'ERR-SHL-601',
   SHELL_ROUTER_FAIL: 'ERR-SHL-602',
   ENV_VAR_MISSING: 'ERR-SHL-603',
+  WAKE_SERVICE_FAILED: 'ERR-SHL-604',
+  UNKNOWN_TAB: 'ERR-SHL-605',
 
   // ═══════════════════════════════════════════════════════════
   // UNKNOWN / FALLBACK (900-999)
@@ -257,6 +259,18 @@ export const ErrorRegistry: Record<ErrorCode, ErrorMetadata> = {
     severity: 'critical',
     retryable: false,
     alertChannel: 'pagerduty',
+  },
+  [ErrorCodes.WAKE_SERVICE_FAILED]: {
+    code: ErrorCodes.WAKE_SERVICE_FAILED,
+    severity: 'medium',
+    retryable: true,
+    alertChannel: 'none',
+  },
+  [ErrorCodes.UNKNOWN_TAB]: {
+    code: ErrorCodes.UNKNOWN_TAB,
+    severity: 'low',
+    retryable: false,
+    alertChannel: 'none',
   },
   [ErrorCodes.UNKNOWN_ERROR]: {
     code: ErrorCodes.UNKNOWN_ERROR,

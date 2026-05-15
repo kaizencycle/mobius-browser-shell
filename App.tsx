@@ -1,4 +1,4 @@
-import React, { Suspense, useState } from 'react';
+import React, { Suspense, useState, useEffect } from 'react';
 import { TabId } from './types';
 import { LabSkeleton } from './components/Labs/LabSkeleton';
 
@@ -20,6 +20,7 @@ import { useSessionHeartbeat } from './hooks/useSessionHeartbeat';
 import { InquiryChatModal } from './components/InquiryChatModal';
 import { CitizenProfile } from './components/CitizenProfile/CitizenProfile';
 import { useCitizenProfile } from './hooks/useCitizenProfile';
+import { useDocumentTitle } from './hooks/useDocumentTitle';
 
 const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<TabId>(TabId.HALLWAY);
@@ -28,6 +29,19 @@ const App: React.FC = () => {
   const profile = useCitizenProfile();
 
   useSessionHeartbeat();
+  useDocumentTitle(activeTab);
+
+  // FIX-20: Cmd+P → citizen profile
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'p' && citizen) {
+        e.preventDefault();
+        profile.isOpen ? profile.close() : profile.open();
+      }
+    };
+    document.addEventListener('keydown', onKeyDown);
+    return () => document.removeEventListener('keydown', onKeyDown);
+  }, [citizen, profile]);
 
   const goToKnowledgeGraph = React.useCallback(() => setActiveTab(TabId.KNOWLEDGE_GRAPH), []);
   const goToReflections = React.useCallback(() => setActiveTab(TabId.REFLECTIONS), []);
@@ -62,6 +76,7 @@ const App: React.FC = () => {
       case TabId.EPICON:
         return <EPICONChamber />;
       default:
+        console.warn(`[Shell] Unhandled TabId: ${String(activeTab)} — falling back to OAA`);
         return <OAAChamber />;
     }
   };
@@ -83,7 +98,9 @@ const App: React.FC = () => {
       <CivicAlertBanner />
       <main className="app-main">
         <Suspense fallback={activeTab !== TabId.HALLWAY ? <LabSkeleton /> : null}>
-          {renderContent()}
+          <div key={activeTab} className="h-full animate-stepIn">
+            {renderContent()}
+          </div>
         </Suspense>
       </main>
 
