@@ -2,6 +2,15 @@
  * PR-002 · OAAClient
  * HMAC-authenticated file-based key-value store with file-locking.
  * Acts as the persistent memory layer for all SWARM-18 agents.
+ *
+ * Concurrency guarantees:
+ *  - Writes use atomic tmp-file + fs.rename so a crash mid-write never
+ *    leaves a partially-written store file.
+ *  - proper-lockfile provides cross-process mutual exclusion; stale locks
+ *    (left by crashed processes) are automatically cleaned up via the
+ *    stale: true option.
+ *  - The in-memory cache is invalidated on every lock acquisition so a
+ *    multi-process deployment always reads fresh state before mutating.
  */
 import * as fs from 'fs/promises';
 import * as path from 'path';
@@ -59,22 +68,41 @@ export class OAAClient {
 
   private async writeStore(store: KVStore): Promise<void> {
     this.cache = store;
-    await fs.writeFile(this.storePath, JSON.stringify(store, null, 2), 'utf8');
+    // Atomic write: write to a sibling .tmp file then rename over the target.
+    // fs.rename is atomic on POSIX (same filesystem) so a crash mid-write
+    // never leaves the store in a partially-written state.
+    const tmp = `${this.storePath}.tmp`;
+    await fs.writeFile(tmp, JSON.stringify(store, null, 2), 'utf8');
+    await fs.rename(tmp, this.storePath);
   }
 
   private async withLock<T>(fn: () => Promise<T>): Promise<T> {
     await this.ensureFile();
     let release: (() => Promise<void>) | null = null;
     try {
-      release = await lockfile.lock(this.storePath, { retries: { retries: 5, minTimeout: 50 } });
-      // Invalidate in-memory cache so the locked section always reads the
-      // latest state from disk — required for correctness in multi-process
-      // deployments where another process may have written since our last read.
+      release = await lockfile.lock(this.storePath, {
+        retries: { retries: 8, minTimeout: 50, maxTimeout: 500 },
+        // stale:true removes locks left by crashed processes (mtime > 30s old)
+        stale: 30_000,
+      });
+      // Invalidate in-memory cache so every locked section reads the
+      // latest state from disk — required in multi-process deployments.
       this.cache = null;
       return await fn();
     } finally {
       if (release) await release();
     }
+  }
+
+  /** Attempt to remove a stale lockfile left by a crashed process. */
+  async cleanStaleLock(): Promise<void> {
+    try {
+      const lockPath = `${this.storePath}.lock`;
+      const stat = await fs.stat(lockPath).catch(() => null);
+      if (stat && Date.now() - stat.mtimeMs > 30_000) {
+        await fs.rm(lockPath, { force: true });
+      }
+    } catch { /* best-effort */ }
   }
 
   // ── Public API ────────────────────────────────────────────────────────────

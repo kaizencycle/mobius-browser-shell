@@ -25,15 +25,36 @@ interface RateLimitEntry {
   windowStart: number;
 }
 
-const BLOCKED_PATTERNS = [
-  /process\.exit/,
-  /require\s*\(\s*['"`]child_process/,
-  /eval\s*\(/,
-  /Function\s*\(/,
-  /\bexec\s*\(/,
-  /\bspawn\s*\(/,
-  /fs\.rmdir|fs\.unlink|fs\.rm\b/,
-  /delete\s+require\.cache/,
+const BLOCKED_PATTERNS: { re: RegExp; category: string }[] = [
+  // Direct execution
+  { re: /process\.exit/,                          category: 'process_control' },
+  { re: /eval\s*\(/,                              category: 'dynamic_eval' },
+  { re: /new\s+Function\s*\(/,                    category: 'dynamic_eval' },
+  { re: /Function\s*\(\s*['"`]/,                  category: 'dynamic_eval' },
+  // Dynamic import / require abuse
+  { re: /require\s*\(\s*['"`]child_process/,      category: 'child_process' },
+  { re: /import\s*\(\s*['"`]child_process/,       category: 'child_process' },
+  { re: /require\s*\(\s*['"`]cluster/,            category: 'child_process' },
+  { re: /\bexec\s*\(/,                            category: 'child_process' },
+  { re: /\bspawn\s*\(/,                           category: 'child_process' },
+  { re: /\bfork\s*\(/,                            category: 'child_process' },
+  // Destructive filesystem
+  { re: /fs\.(rmdir|unlink|rm|rmSync|unlinkSync)/, category: 'filesystem' },
+  { re: /require\s*\(\s*['"`]fs['"`]\s*\)/,       category: 'filesystem' },
+  // Module cache poisoning
+  { re: /delete\s+require\.cache/,                category: 'module_cache' },
+  { re: /require\.cache\s*\[/,                    category: 'module_cache' },
+  // Prototype pollution
+  { re: /__proto__/,                              category: 'prototype_pollution' },
+  { re: /Object\.prototype\s*\[/,                 category: 'prototype_pollution' },
+  { re: /prototype\.constructor/,                 category: 'prototype_pollution' },
+  // Serialization gadget attacks (JSON.parse of untrusted data in key positions)
+  { re: /JSON\.parse\s*\(\s*process\./,           category: 'serialization_gadget' },
+  // VM escape
+  { re: /require\s*\(\s*['"`]vm['"`]/,            category: 'vm_escape' },
+  { re: /vm\.(runInNewContext|runInThisContext)/,  category: 'vm_escape' },
+  // Event bus flooding guard (ThoughtBroker wildcard poisoning)
+  { re: /broker\.subscribe\s*\(\s*['"]\*/,        category: 'event_bus_abuse' },
 ];
 
 export class CitizenShield {
@@ -48,15 +69,51 @@ export class CitizenShield {
 
   /** Scan a code string for unsafe patterns before execution. */
   scanCode(agentId: string, code: string): ShieldViolation | null {
-    for (const pattern of BLOCKED_PATTERNS) {
-      if (pattern.test(code)) {
+    for (const { re, category } of BLOCKED_PATTERNS) {
+      if (re.test(code)) {
         return this.record({
           type: 'unsafe_code',
           agentId,
-          detail: `Blocked pattern: ${pattern.source}`,
+          detail: `Blocked pattern [${category}]: ${re.source}`,
           severity: 'critical',
         });
       }
+    }
+    return null;
+  }
+
+  /**
+   * Guard ThoughtBroker wildcard subscriptions.
+   * Wildcard ('*') subscriptions are a legitimate feature but become an attack
+   * surface when an agent registers an unbounded number of them. Allow at most
+   * maxWildcards per agentId.
+   */
+  checkWildcardSubscription(agentId: string, topic: string, maxWildcards = 3): ShieldViolation | null {
+    if (topic !== '*') return null;
+    const key = `wildcard:${agentId}`;
+    const count = (this.rateLimits.get(key)?.count ?? 0) + 1;
+    this.rateLimits.set(key, { count, windowStart: Date.now() });
+    if (count > maxWildcards) {
+      return this.record({
+        type: 'unauthorized_action',
+        agentId,
+        detail: `Wildcard subscription limit exceeded (${count} > ${maxWildcards})`,
+        severity: 'high',
+      });
+    }
+    return null;
+  }
+
+  /** Validate a JSON-parsed payload for prototype pollution keys. */
+  scanPayload(agentId: string, payload: unknown): ShieldViolation | null {
+    const json = JSON.stringify(payload);
+    if (json.includes('__proto__') || json.includes('constructor') && json.includes('prototype')) {
+      return this.record({
+        type: 'data_exfiltration',
+        agentId,
+        detail: 'Payload contains prototype pollution keys (__proto__ / constructor)',
+        severity: 'critical',
+      });
     }
     return null;
   }

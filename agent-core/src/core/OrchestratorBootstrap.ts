@@ -11,6 +11,7 @@ import { HiveSubstrateBridge } from '../bridge/HiveSubstrateBridge';
 import { CivicDAO } from '../governance/CivicDAO';
 import { SentinelCore } from '../sentinel/SentinelCore';
 import { DVA } from '../integrity/DVA';
+import { OperatorTruth, PHASE_A_EXPERIMENTAL } from '../integrity/OperatorTruth';
 import { ThoughtBroker } from '../substrate/ThoughtBroker';
 import { GIAggregator } from '../substrate/GIAggregator';
 import { MICIndexer } from '../substrate/MICIndexer';
@@ -25,6 +26,7 @@ import { JADE } from '../jade/JADE';
 export interface SystemHealth {
   status: 'healthy' | 'degraded' | 'critical';
   uptime: number;
+  phaseA: boolean;
   components: Record<string, { status: 'ok' | 'degraded' | 'error'; lastCheck: number }>;
   metrics: {
     agentsActive: number;
@@ -33,6 +35,7 @@ export interface SystemHealth {
     anomalies: number;
     violations: number;
     gi: number;
+    deniedAttestations: number;
   };
 }
 
@@ -43,6 +46,7 @@ export class OrchestratorBootstrap extends EventEmitter {
   readonly giAggregator: GIAggregator;
   readonly micIndexer: MICIndexer;
   readonly dva: DVA;
+  readonly operatorTruth: OperatorTruth;
   readonly shield: CitizenShield;
   readonly dao: CivicDAO;
   readonly swarm: SwarmOrchestrator;
@@ -77,6 +81,7 @@ export class OrchestratorBootstrap extends EventEmitter {
     this.giAggregator = new GIAggregator(this.oaa);
     this.micIndexer   = new MICIndexer(this.oaa);
     this.dva          = new DVA(this.oaa, config.dvKey);
+    this.operatorTruth = new OperatorTruth(this.oaa, config.dvKey);
     this.shield       = new CitizenShield();
     this.dao          = new CivicDAO(this.oaa);
     this.swarm        = new SwarmOrchestrator({ oaa: this.oaa, broker: this.broker, dva: this.dva });
@@ -124,6 +129,14 @@ export class OrchestratorBootstrap extends EventEmitter {
 
     this.startTime = Date.now();
     this.isActive  = true;
+
+    if (PHASE_A_EXPERIMENTAL) {
+      this.emit('bootstrap:phase_a_warning', {
+        message: 'SWARM-18 running in PHASE A (experimental substrate). ' +
+          'code_mutation and governance_mutation actions are blocked. ' +
+          'Complete Phase B hardening before connecting live civic continuity.',
+      });
+    }
 
     // Heartbeat health check every 30s
     this.healthTimer = setInterval(() => void this.healthCheck(), 30_000);
@@ -198,6 +211,20 @@ export class OrchestratorBootstrap extends EventEmitter {
       handler: async () => { await this.sentinel.runChecks(); },
       enabled: true,
     });
+
+    // Governance expiry reaper — every 30 minutes
+    this.scheduler.schedule({
+      id: 'governance-reap',
+      cron: '*/30 * * * *',
+      agentType: 'sentinel',
+      handler: async () => {
+        const reaped = await this.dao.reapExpired();
+        if (reaped.length > 0) {
+          this.emit('bootstrap:proposals_expired', { count: reaped.length });
+        }
+      },
+      enabled: true,
+    });
   }
 
   async healthCheck(): Promise<SystemHealth> {
@@ -226,17 +253,20 @@ export class OrchestratorBootstrap extends EventEmitter {
     components['bridge'] = { status: 'ok', lastCheck: Date.now() };
 
     const gi = this.giAggregator.computeGI().gi;
+    const deniedAttestations = await this.operatorTruth.getDeniedCount();
     const health: SystemHealth = {
       status: degraded ? (gi < 0.4 ? 'critical' : 'degraded') : 'healthy',
       uptime: Date.now() - this.startTime,
+      phaseA: PHASE_A_EXPERIMENTAL,
       components,
       metrics: {
-        agentsActive:      swarmStatus.active,
-        tasksCompleted:    swarmStatus.tasksCompleted,
-        proposalsPending:  this.dao.listProposals('pending').length,
-        anomalies:         this.sentinel.getAnomalies().length,
-        violations:        this.shield.getViolations().length,
+        agentsActive:       swarmStatus.active,
+        tasksCompleted:     swarmStatus.tasksCompleted,
+        proposalsPending:   this.dao.listProposals('pending').length,
+        anomalies:          this.sentinel.getAnomalies().length,
+        violations:         this.shield.getViolations().length,
         gi,
+        deniedAttestations,
       },
     };
 

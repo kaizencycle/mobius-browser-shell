@@ -28,6 +28,10 @@ export class WallClockScheduler extends EventEmitter {
   private timer: NodeJS.Timeout | null = null;
   private readonly tickMs: number;
   private running = false;
+  // Single-flight guard: tracks which task IDs are currently executing.
+  // A task is skipped on the next tick if it is still running from a previous
+  // invocation — prevents overlapping executions under heavy load.
+  private readonly activeTasks = new Set<string>();
 
   constructor(opts: { tickMs?: number } = {}) {
     super();
@@ -63,19 +67,38 @@ export class WallClockScheduler extends EventEmitter {
     const now = Date.now();
     for (const task of this.tasks.values()) {
       if (!task.enabled || !task.nextRunAt || now < task.nextRunAt) continue;
+
+      // Single-flight: skip this tick if a previous invocation is still running.
+      // This prevents overlapping executions and backpressure cascade under load.
+      if (this.activeTasks.has(task.id)) {
+        this.emit('task:skipped', { id: task.id, reason: 'still_running' });
+        continue;
+      }
+
       task.lastRunAt = now;
       task.nextRunAt = this.computeNextRun(task.cron, now);
       task.runCount = (task.runCount ?? 0) + 1;
 
+      this.activeTasks.add(task.id);
       this.emit('task:running', { id: task.id, runCount: task.runCount });
-      try {
-        await task.handler();
-        this.emit('task:complete', { id: task.id });
-      } catch (err) {
-        task.errorCount = (task.errorCount ?? 0) + 1;
-        this.emit('task:error', { id: task.id, error: err });
-      }
+
+      // Run asynchronously so one slow task does not block others in the same tick.
+      void (async () => {
+        try {
+          await task.handler();
+          this.emit('task:complete', { id: task.id });
+        } catch (err) {
+          task.errorCount = (task.errorCount ?? 0) + 1;
+          this.emit('task:error', { id: task.id, error: err });
+        } finally {
+          this.activeTasks.delete(task.id);
+        }
+      })();
     }
+  }
+
+  isTaskActive(id: string): boolean {
+    return this.activeTasks.has(id);
   }
 
   // Parse a single cron field: '*' = wildcard, '*/N' = interval, 'N' = exact
