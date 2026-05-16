@@ -822,10 +822,8 @@ const RPGEngine: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    canvas.addEventListener('keydown', handleKeyDown as unknown as EventListener);
-    canvas.addEventListener('keyup', handleKeyUp as unknown as EventListener);
+    // Register on window only — canvas would receive the same bubbled event,
+    // causing every keypress to fire the handler twice and breaking dialogue/movement.
     window.addEventListener('keydown', handleKeyDown);
     window.addEventListener('keyup', handleKeyUp);
     stateRef.current.lastTime = performance.now();
