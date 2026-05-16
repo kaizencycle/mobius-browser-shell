@@ -76,13 +76,29 @@ async function safeFetch<T>(url: string, signal: AbortSignal): Promise<T | null>
   }
 }
 
-async function loadWorld(signal: AbortSignal): Promise<HiveWorldData> {
-  const base = getHiveWorldBaseUrl();
-  const cycleUrl = `${base}/world/current-cycle.json`;
+/** Try remote base first; fall back to bundled /world/ files served by the shell. */
+async function resolveCycle(signal: AbortSignal): Promise<{ cycle: HiveCycleData; base: string }> {
+  const remoteBase = getHiveWorldBaseUrl();
+  const remoteUrl  = `${remoteBase}/world/current-cycle.json`;
+  const localBase  = '';          // relative — Vite serves public/world/ at /world/
+  const localUrl   = '/world/current-cycle.json';
 
-  const cycle = await fetch(cycleUrl, { cache: 'no-store', signal }).then(
-    (r) => (r.ok ? (r.json() as Promise<HiveCycleData>) : Promise.reject(new Error(`HTTP ${r.status}`))),
-  );
+  // Try remote
+  try {
+    const res = await fetch(remoteUrl, { cache: 'no-store', signal });
+    if (res.ok) {
+      return { cycle: (await res.json()) as HiveCycleData, base: remoteBase };
+    }
+  } catch { /* fall through to bundled copy */ }
+
+  // Fall back to bundled public/world/ files
+  const res = await fetch(localUrl, { cache: 'no-store', signal });
+  if (!res.ok) throw new Error(`HIVE world state unavailable (HTTP ${res.status})`);
+  return { cycle: (await res.json()) as HiveCycleData, base: localBase };
+}
+
+async function loadWorld(signal: AbortSignal): Promise<HiveWorldData> {
+  const { cycle, base } = await resolveCycle(signal);
 
   const [event, quest, sentinelIndex] = await Promise.all([
     cycle.active_event_id
@@ -106,7 +122,7 @@ async function loadWorld(signal: AbortSignal): Promise<HiveWorldData> {
     quest,
     sentinels,
     activeSentinelId: cycle.active_sentinel_id,
-    sourceUrl: cycleUrl,
+    sourceUrl: `${base}/world/current-cycle.json`,
   };
 }
 
