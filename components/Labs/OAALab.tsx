@@ -11,6 +11,7 @@ import { AtlasChamberHeader } from './AtlasChamberHeader';
 import { CitizenOnboardingStepper } from './CitizenOnboardingStepper';
 import { useWallet } from '../../contexts/WalletContext';
 import { useTerminal } from '../../contexts/TerminalContext';
+import { StreakDisplay, LevelBar, StatsRow, OAASkeleton } from './OAAEnhancements';
 
 export interface OAALabProps {
   onNavigateToKnowledgeGraph?: () => void;

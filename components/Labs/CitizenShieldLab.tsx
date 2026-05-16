@@ -7,6 +7,13 @@ import { Shield, CheckCircle, Wifi, Lock, Eye, AlertOctagon, Radio } from 'lucid
 import { CivicRadar, EchoThreatAgent, ThreatFeed, ShieldTerminalPanel } from '../CitizenShield';
 import { useTerminal } from '../../contexts/TerminalContext';
 import { computeDigitalHygieneScore, isCyberRelevantSignal } from '../../src/lib/terminal-bridge';
+import {
+  SeveritySummary,
+  EchoAgentPanel,
+  HygieneChecklist,
+  PracticeMode,
+  ShieldSkeleton,
+} from './ShieldEnhancements';
 
 export interface CitizenShieldLabProps {
   onNavigateToHive?: () => void;
@@ -102,6 +109,21 @@ export const CitizenShieldLab: React.FC<CitizenShieldLabProps> = ({ onNavigateTo
                 <EchoThreatAgent onFeedUpdate={setThreatFeed} />
             </div>
 
+            {/* ECHO Agent Panel + Severity Summary */}
+            {threatFeed ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 mb-6 sm:mb-8">
+                <EchoAgentPanel agentState={threatFeed.agentState} />
+                <div className="bg-white p-4 sm:p-5 rounded-xl border border-slate-200 shadow-sm">
+                  <h3 className="font-semibold text-slate-700 text-sm mb-3">Threat Severity Breakdown</h3>
+                  <SeveritySummary feed={threatFeed} />
+                </div>
+              </div>
+            ) : (
+              <div className="mb-6 sm:mb-8 bg-white rounded-xl border border-slate-200 shadow-sm">
+                <ShieldSkeleton />
+              </div>
+            )}
+
             {/* Shield Module Grid */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-6 sm:mb-8">
                 
@@ -183,6 +205,12 @@ export const CitizenShieldLab: React.FC<CitizenShieldLabProps> = ({ onNavigateTo
                         </p>
                     </div>
                 </div>
+            </div>
+
+            {/* Hygiene Checklist + Practice Mode */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mb-6 sm:mb-8">
+              <HygieneChecklist />
+              <PracticeMode />
             </div>
 
             {/* ECHO Threat Intelligence Feed — RAG Results */}
