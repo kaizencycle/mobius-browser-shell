@@ -30,6 +30,22 @@ import { NodeDetailsPanel } from './NodeDetailsPanel';
 import { IntentHorizonPanel } from './IntentHorizonPanel';
 import { TimelineSlider } from './TimelineSlider';
 import { GraphStats } from './GraphStats';
+import {
+  DomainFilterBar,
+  GraphStatsBar,
+  NodeSearch,
+  EdgeLegend,
+  FitToScreenButton,
+  KnowledgeGapAlert,
+  GraphEmptyState,
+  KnowledgeGraphSkeleton,
+  CrossLinkToOAA,
+  CrossLinkToReflections,
+  GraphMinimap,
+  TemporalFilterBadge,
+  NodeSizeLegend,
+  AddIntentHorizonForm,
+} from './KGEnhancements';
 
 export interface KnowledgeGraphLabProps {
   onNavigateToReflections?: () => void;
@@ -48,6 +64,7 @@ export const KnowledgeGraphLab: React.FC<KnowledgeGraphLabProps> = ({
     setTimeRange,
     getDominantThemes,
     analyzeWithJADE,
+    addIntent,
   } = useKnowledgeGraph();
 
   // Local state
@@ -59,6 +76,9 @@ export const KnowledgeGraphLab: React.FC<KnowledgeGraphLabProps> = ({
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [highlightNodes, setHighlightNodes] = useState<Set<string>>(new Set());
   const [hoverNode, setHoverNode] = useState<GraphNode | null>(null);
+  const [showMinimap, setShowMinimap] = useState(true);
+  const [showAddIntent, setShowAddIntent] = useState(false);
+  const [isLoading] = useState(false);
   
   const graphRef = useRef<any>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -215,22 +235,17 @@ export const KnowledgeGraphLab: React.FC<KnowledgeGraphLabProps> = ({
           </div>
         </div>
 
-        {/* Empty state */}
+        {/* Empty state — KG-18 enhanced */}
         <div
           id="kg-graph-region"
           className="flex-1 flex flex-col items-center justify-center text-center px-6 scroll-mt-4"
         >
-          <div className="w-24 h-24 rounded-full bg-slate-800/50 border border-slate-700 flex items-center justify-center mb-6">
-            <Brain className="w-12 h-12 text-slate-600" />
-          </div>
-          <h2 className="text-xl font-semibold text-slate-200 mb-2">
-            Your Knowledge Graph Awaits
-          </h2>
-          <p className="text-sm text-slate-400 max-w-md mb-6">
-            Begin your journey by writing reflections, completing learning modules,
-            or setting intent horizons. Your conceptual network will grow as you explore.
-          </p>
-          <div className="flex flex-col sm:flex-row gap-3">
+          {isLoading ? (
+            <KnowledgeGraphSkeleton />
+          ) : (
+            <GraphEmptyState onNavigateToReflections={onNavigateToReflections} />
+          )}
+          <div className="flex flex-col sm:flex-row gap-3 mt-4">
             <button
               type="button"
               onClick={() => setShowIntentPanel(true)}
@@ -239,20 +254,6 @@ export const KnowledgeGraphLab: React.FC<KnowledgeGraphLabProps> = ({
               <Target className="w-4 h-4" />
               Set an Intent
             </button>
-            {onNavigateToReflections && (
-              <button
-                type="button"
-                onClick={onNavigateToReflections}
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-slate-600 text-slate-200 text-sm font-medium hover:bg-slate-800/80 focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-400"
-              >
-                <Sparkles className="w-4 h-4" />
-                Open Reflections
-              </button>
-            )}
-            <div className="text-xs text-slate-500 flex items-center gap-1">
-              <Sparkles className="w-3 h-3" />
-              Or write a reflection to seed your graph
-            </div>
           </div>
         </div>
 
@@ -329,43 +330,51 @@ export const KnowledgeGraphLab: React.FC<KnowledgeGraphLabProps> = ({
             <Target className="w-3.5 h-3.5" />
             <span className="hidden sm:inline">Intent</span>
           </button>
+
+          {/* Quick-add intent */}
+          <button
+            type="button"
+            onClick={() => setShowAddIntent(v => !v)}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 ${
+              showAddIntent
+                ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30'
+                : 'bg-slate-800 text-slate-400 border-slate-700 hover:border-slate-600'
+            }`}
+            aria-label="Toggle quick add intent form"
+          >
+            <Plus className="w-3.5 h-3.5" />
+          </button>
+
+          {/* KG-10: Fit to screen */}
+          <FitToScreenButton graphRef={graphRef} />
+
+          {/* KG-04: Node search */}
+          <NodeSearch
+            nodes={graphData.nodes}
+            graphRef={graphRef}
+            onSelect={setSelectedNodeId}
+          />
         </div>
       </div>
 
-      {/* Filter Bar (expandable) */}
+      {/* KG-03: Stats bar */}
+      <div className="px-4 sm:px-6 py-2 border-b border-slate-700/30 bg-slate-900/60 flex-none">
+        <div className="flex flex-wrap items-center gap-3">
+          <GraphStatsBar
+            totalNodes={stats.totalNodes}
+            totalEdges={stats.totalEdges}
+            graph={graph}
+            dominantDomain={stats.dominantDomain}
+          />
+          {/* KG-16: Gap alert */}
+          <KnowledgeGapAlert nodes={graphData.nodes} links={graphData.links} />
+        </div>
+      </div>
+
+      {/* KG-01: Domain filter bar (expandable) */}
       {showFilters && (
         <div className="px-4 sm:px-6 py-3 border-b border-slate-700/50 bg-slate-900/60 flex-none">
-          <div className="flex flex-wrap items-center gap-3">
-            <span className="text-xs text-slate-500 uppercase tracking-wider">Domains:</span>
-            {(Object.keys(DOMAIN_COLORS) as KnowledgeDomain[]).map(domain => (
-              <button
-                key={domain}
-                onClick={() => toggleDomainFilter(domain)}
-                className={`px-2.5 py-1 rounded-full text-xs font-medium transition-colors ${
-                  domainFilter.length === 0 || domainFilter.includes(domain)
-                    ? 'opacity-100'
-                    : 'opacity-40'
-                }`}
-                style={{
-                  backgroundColor: `${DOMAIN_COLORS[domain]}20`,
-                  color: DOMAIN_COLORS[domain],
-                  borderWidth: 1,
-                  borderColor: domainFilter.includes(domain) ? DOMAIN_COLORS[domain] : 'transparent',
-                }}
-              >
-                {domain.charAt(0).toUpperCase() + domain.slice(1)}
-              </button>
-            ))}
-            
-            {domainFilter.length > 0 && (
-              <button
-                onClick={() => setDomainFilter([])}
-                className="px-2 py-1 text-xs text-slate-500 hover:text-slate-300 transition-colors"
-              >
-                Clear
-              </button>
-            )}
-          </div>
+          <DomainFilterBar domainFilter={domainFilter} setDomainFilter={setDomainFilter} />
         </div>
       )}
 
@@ -423,6 +432,18 @@ export const KnowledgeGraphLab: React.FC<KnowledgeGraphLabProps> = ({
             </div>
           )}
 
+          {/* KG-14: Minimap */}
+          <GraphMinimap
+            nodes={graphData.nodes}
+            links={graphData.links}
+            visible={showMinimap}
+          />
+
+          {/* KG-07: Edge legend */}
+          <div className="absolute top-4 right-4 hidden lg:block">
+            <EdgeLegend />
+          </div>
+
           {/* Quick Stats Overlay */}
           <div className="absolute bottom-4 left-4 hidden sm:block">
             <GraphStats stats={stats} compact />
@@ -453,24 +474,66 @@ export const KnowledgeGraphLab: React.FC<KnowledgeGraphLabProps> = ({
 
         {/* Node Details Panel (slides in from right) */}
         {selectedNodeId && (
-          <div className="w-80 border-l border-slate-700/50 bg-slate-900/90 backdrop-blur-sm flex-none overflow-hidden">
+          <div className="w-80 border-l border-slate-700/50 bg-slate-900/90 backdrop-blur-sm flex-none overflow-hidden flex flex-col">
             <NodeDetailsPanel
               nodeId={selectedNodeId}
               onClose={() => setSelectedNodeId(null)}
               onNodeClick={setSelectedNodeId}
             />
+            {/* KG-12 + KG-13: Cross-link actions */}
+            <div className="flex flex-col gap-2 px-4 pb-4 pt-2 border-t border-slate-700/30">
+              <CrossLinkToOAA
+                nodeType={
+                  graph.nodes.find(n => n.id === selectedNodeId)?.type ?? 'concept'
+                }
+              />
+              <CrossLinkToReflections
+                onNavigateToReflections={onNavigateToReflections}
+              />
+            </div>
           </div>
         )}
       </div>
 
-      {/* Timeline Slider */}
+      {/* Timeline Slider + KG-05 temporal badge */}
       <div className="border-t border-slate-700/50 bg-slate-900/80 px-4 sm:px-6 py-3 flex-none">
-        <TimelineSlider
-          timeRange={timeRange}
-          onTimeRangeChange={setTimeRange}
-          graph={graph}
-        />
+        <div className="flex items-center gap-3 flex-wrap">
+          <div className="flex-1 min-w-0">
+            <TimelineSlider
+              timeRange={timeRange}
+              onTimeRangeChange={setTimeRange}
+              graph={graph}
+            />
+          </div>
+          <TemporalFilterBadge timeRange={timeRange} />
+        </div>
       </div>
+
+      {/* KG-08: Quick-add intent form (collapsible) */}
+      {showAddIntent && (
+        <div className="border-t border-slate-700/50 bg-slate-900/90 px-4 sm:px-6 py-4 flex-none">
+          <div className="max-w-md">
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-xs font-medium text-slate-300 uppercase tracking-wider">
+                Quick Add Intent
+              </span>
+              <button
+                type="button"
+                onClick={() => setShowAddIntent(false)}
+                className="text-slate-500 hover:text-slate-300 text-xs transition-colors"
+              >
+                ✕
+              </button>
+            </div>
+            <AddIntentHorizonForm
+              onAdd={(goal, horizon) => {
+                addIntent({ goal, horizon, relatedConcepts: [] });
+                setShowAddIntent(false);
+              }}
+            />
+          </div>
+        </div>
+      )}
 
       {/* Intent Horizon Panel (modal) */}
       {showIntentPanel && (

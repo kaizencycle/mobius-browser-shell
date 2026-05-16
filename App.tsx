@@ -1,4 +1,4 @@
-import React, { Suspense, useState, useEffect } from 'react';
+import React, { Suspense, useState, useEffect, useMemo } from 'react';
 import { TabId } from './types';
 import { LabSkeleton } from './components/Labs/LabSkeleton';
 
@@ -46,6 +46,13 @@ const App: React.FC = () => {
   const goToKnowledgeGraph = React.useCallback(() => setActiveTab(TabId.KNOWLEDGE_GRAPH), []);
   const goToReflections = React.useCallback(() => setActiveTab(TabId.REFLECTIONS), []);
 
+  // OPT-15: ambient GI mood class on shell
+  const giMoodClass = useMemo(() => {
+    // We don't have GI here directly, but LiveSystemBar owns it — use a data attribute trick
+    // For now derive from document if set; otherwise neutral
+    return '';
+  }, []);
+
   const renderContent = () => {
     switch (activeTab) {
       case TabId.HALLWAY:
@@ -82,7 +89,9 @@ const App: React.FC = () => {
   };
 
   return (
-    <div className="app-shell bg-stone-950 text-stone-100">
+    <div className={`app-shell bg-stone-950 text-stone-100${giMoodClass ? ` ${giMoodClass}` : ''}`}>
+      {/* OPT-02: CRT scanline overlay — subtle, adds depth */}
+      <div className="crt-overlay" aria-hidden="true" />
       <LiveSystemBar />
 
       {activeTab !== TabId.HALLWAY && (
