@@ -23,6 +23,8 @@ export function LiveSystemBar() {
   return (
     <div className={`sticky top-0 z-40 flex h-8 items-center justify-between border-b bg-stone-950/95 px-3 font-mono text-[10px] backdrop-blur ${zoneClass}`}>
       <div className="flex items-center gap-3 overflow-hidden whitespace-nowrap">
+        {/* OPT-16: live sentinel pip */}
+        <span className="live-sentinel-pip" aria-hidden="true" />
         <span className="uppercase tracking-[0.2em] text-stone-500">Mobius Live</span>
 
         <span>

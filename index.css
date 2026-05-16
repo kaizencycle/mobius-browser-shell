@@ -2,6 +2,251 @@
 
 
 /* ═══════════════════════════════════════════════════════════════
+   C-313 OPTIMIZATIONS · 20 UI/UX enhancements
+   ─────────────────────────────────────────────────────────────── */
+
+/* OPT-01: Global ambient pulse — shell breathing effect */
+@keyframes shell-breathe {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.92; }
+}
+
+/* OPT-02: Scanline shimmer global overlay */
+.crt-overlay {
+  pointer-events: none;
+  position: fixed;
+  inset: 0;
+  z-index: 9997;
+  background: repeating-linear-gradient(
+    0deg,
+    rgba(0,0,0,0) 0px,
+    rgba(0,0,0,0) 3px,
+    rgba(0,0,0,0.04) 3px,
+    rgba(0,0,0,0.04) 4px
+  );
+  mix-blend-mode: multiply;
+  animation: crt-flicker 8s ease-in-out infinite;
+}
+@keyframes crt-flicker {
+  0%, 100% { opacity: 0.6; }
+  48% { opacity: 0.6; }
+  50% { opacity: 0.3; }
+  52% { opacity: 0.6; }
+  78% { opacity: 0.6; }
+  80% { opacity: 0.2; }
+  82% { opacity: 0.6; }
+}
+
+/* OPT-03: Enhanced door hover depth — multi-layer shadow */
+/* OPT-04: Door stagger entrance animation */
+@keyframes door-enter {
+  from { opacity: 0; transform: translateY(14px) scale(0.97); }
+  to   { opacity: 1; transform: none; }
+}
+.doors .door:nth-child(1) { animation: door-enter 0.45s cubic-bezier(.2,.8,.2,1) 0.05s both; }
+.doors .door:nth-child(2) { animation: door-enter 0.45s cubic-bezier(.2,.8,.2,1) 0.10s both; }
+.doors .door:nth-child(3) { animation: door-enter 0.45s cubic-bezier(.2,.8,.2,1) 0.15s both; }
+.doors .door:nth-child(4) { animation: door-enter 0.45s cubic-bezier(.2,.8,.2,1) 0.20s both; }
+.doors .door:nth-child(5) { animation: door-enter 0.45s cubic-bezier(.2,.8,.2,1) 0.25s both; }
+.doors .door:nth-child(6) { animation: door-enter 0.45s cubic-bezier(.2,.8,.2,1) 0.30s both; }
+.doors .door:nth-child(7) { animation: door-enter 0.45s cubic-bezier(.2,.8,.2,1) 0.35s both; }
+.doors .door:nth-child(8) { animation: door-enter 0.45s cubic-bezier(.2,.8,.2,1) 0.40s both; }
+.doors .door:nth-child(9) { animation: door-enter 0.45s cubic-bezier(.2,.8,.2,1) 0.45s both; }
+.doors .door:nth-child(10) { animation: door-enter 0.45s cubic-bezier(.2,.8,.2,1) 0.50s both; }
+
+/* OPT-05: Door icon hover pop */
+.door:hover .icon {
+  animation: icon-pop 0.3s cubic-bezier(.2,.8,.2,1);
+}
+@keyframes icon-pop {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.25) rotate(-4deg); }
+  100% { transform: scale(1.08); }
+}
+
+/* OPT-06: GI chip glow ring when active */
+.hall-gi--green {
+  box-shadow: 0 0 12px rgba(52,211,153,.25), 0 0 24px rgba(52,211,153,.10);
+  transition: box-shadow .3s, opacity .15s;
+}
+.hall-gi--yellow {
+  box-shadow: 0 0 12px rgba(251,191,36,.25), 0 0 24px rgba(251,191,36,.10);
+  transition: box-shadow .3s, opacity .15s;
+}
+.hall-gi--red {
+  box-shadow: 0 0 12px rgba(248,113,113,.3), 0 0 24px rgba(248,113,113,.12);
+  transition: box-shadow .3s, opacity .15s;
+  animation: gi-red-pulse 2s ease-in-out infinite;
+}
+@keyframes gi-red-pulse {
+  0%, 100% { box-shadow: 0 0 12px rgba(248,113,113,.3), 0 0 24px rgba(248,113,113,.12); }
+  50% { box-shadow: 0 0 20px rgba(248,113,113,.55), 0 0 40px rgba(248,113,113,.22); }
+}
+
+/* OPT-07: MIC chip shimmer */
+.hall-chip--mic {
+  position: relative;
+  overflow: hidden;
+}
+.hall-chip--mic::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(105deg, transparent 40%, rgba(255,255,255,.15) 50%, transparent 60%);
+  transform: translateX(-100%);
+  animation: chip-shimmer 4s ease-in-out infinite 1.5s;
+}
+@keyframes chip-shimmer {
+  0%, 100% { transform: translateX(-100%); }
+  30% { transform: translateX(100%); }
+}
+
+/* OPT-08: Pip sentinel dot super-pulse */
+.hall-head .pip {
+  animation: super-pip 1.8s ease-in-out infinite !important;
+}
+@keyframes super-pip {
+  0%, 100% { opacity: 1; box-shadow: 0 0 8px #10b981, 0 0 16px rgba(16,185,129,.4); }
+  50% { opacity: 0.5; box-shadow: 0 0 4px #10b981; }
+}
+
+/* OPT-09: Back button glow on hover */
+.hall-back-float {
+  transition: background .18s, border-color .18s, color .18s, box-shadow .25s;
+}
+.hall-back-float:hover {
+  box-shadow: 0 0 0 2px rgba(255,255,255,.12), 0 8px 24px rgba(0,0,0,.45);
+}
+
+/* OPT-10: Room transition — smoother step-in */
+@keyframes stepIn {
+  from { opacity: 0; transform: translateX(16px) scale(0.99); }
+  to   { opacity: 1; transform: none; }
+}
+.animate-stepIn { animation: stepIn 0.28s cubic-bezier(.2,.8,.2,1) both; }
+
+/* OPT-11: Door gradient art — more vivid with animated depth */
+.d-oaa .lit     { background: linear-gradient(160deg,#065f46 0%,#0f4a3a 60%,#082f25 100%); }
+.d-hive .lit    { background: linear-gradient(160deg,#4f1d40 0%,#2a1025 60%,#1a0616 100%); }
+.d-reflect .lit { background: linear-gradient(160deg,#3730a3 0%,#211e81 60%,#12104a 100%); }
+.d-shield .lit  { background: linear-gradient(160deg,#1e3a5f 0%,#0f2545 60%,#050d1a 100%); }
+.d-atlas .lit   { background: linear-gradient(160deg,#9a4e0e 0%,#6b3008 60%,#3b1a03 100%); }
+.d-jade .lit    { background: linear-gradient(160deg,#164e4a 0%,#0a3835 60%,#021e1d 100%); }
+.d-wallet .lit  { background: linear-gradient(160deg,#5521a3 0%,#3b1575 60%,#1e0852 100%); }
+.d-mii .lit     { background: linear-gradient(160deg,#2a2523 0%,#1a1614 60%,#0c0a09 100%); }
+.d-vault .lit   { background: linear-gradient(160deg,#1a2e1a 0%,#0f1e0f 60%,#040a04 100%); }
+.d-epicon .lit  { background: linear-gradient(160deg,#1e2240 0%,#111830 60%,#060912 100%); }
+
+/* OPT-12: Door focus ring */
+.door:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(255,255,255,.5), 0 0 0 4px rgba(255,255,255,.15), 0 18px 48px rgba(0,0,0,.55);
+}
+
+/* OPT-13: Hero title shimmer text */
+.hall-title h1 {
+  background: linear-gradient(95deg, #fafaf9 30%, #e8e4e0 50%, #fafaf9 70%);
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: title-shimmer 6s linear infinite;
+}
+.hall-title h1 em {
+  background: linear-gradient(95deg, #a8a29e 30%, #c4c0bc 50%, #a8a29e 70%);
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: title-shimmer 6s linear infinite 1s;
+}
+@keyframes title-shimmer {
+  0% { background-position: 0% center; }
+  100% { background-position: 200% center; }
+}
+
+/* OPT-14: Noise grain texture helper */
+.noise-grain::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence baseFrequency='.75' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.04'/%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* OPT-15: Ambient GI mood border on app shell */
+.app-shell {
+  transition: border-color .8s ease;
+}
+.app-shell--gi-green { border: 1px solid rgba(52,211,153,.12); }
+.app-shell--gi-yellow { border: 1px solid rgba(251,191,36,.12); }
+.app-shell--gi-red {
+  border: 1px solid rgba(248,113,113,.15);
+  animation: shell-red-pulse 4s ease-in-out infinite;
+}
+@keyframes shell-red-pulse {
+  0%, 100% { border-color: rgba(248,113,113,.15); }
+  50% { border-color: rgba(248,113,113,.30); }
+}
+
+/* OPT-16: LiveSystemBar enhanced sentinel dot + MIC glow */
+.live-sentinel-pip {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #10b981;
+  box-shadow: 0 0 6px #10b981, 0 0 12px rgba(16,185,129,.4);
+  animation: live-pip 2s ease-in-out infinite;
+  margin-right: 4px;
+  vertical-align: middle;
+}
+@keyframes live-pip {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(0.85); }
+}
+
+/* OPT-17: Eyebrow text reveal animation */
+@keyframes eyebrow-reveal {
+  from { opacity: 0; letter-spacing: 0.4em; }
+  to   { opacity: 1; letter-spacing: 0.2em; }
+}
+.hall-title .eyebrow {
+  animation: eyebrow-reveal 0.6s cubic-bezier(.2,.8,.2,1) 0.1s both;
+}
+
+/* OPT-18: Lede text fade-up */
+@keyframes lede-up {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: none; }
+}
+.hall-title .lede {
+  animation: lede-up 0.5s cubic-bezier(.2,.8,.2,1) 0.3s both;
+}
+
+/* OPT-19: Door role text truncate with fade */
+.door .role {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* OPT-20: Wake button ring pulse */
+.hall-wake:not(:disabled):hover {
+  background: rgba(255,255,255,.08) !important;
+  color: rgba(255,255,255,.9) !important;
+  box-shadow: 0 0 0 2px rgba(16,185,129,.3);
+  animation: wake-ring 1.2s ease-in-out infinite;
+}
+@keyframes wake-ring {
+  0%, 100% { box-shadow: 0 0 0 2px rgba(16,185,129,.3); }
+  50% { box-shadow: 0 0 0 4px rgba(16,185,129,.15); }
+}
+
+/* ═══════════════════════════════════════════════════════════════
    HALLWAY — full-screen entrance corridor
    ─────────────────────────────────────────────────────────────── */
 
