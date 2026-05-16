@@ -34,10 +34,10 @@ export const LABS: LabDefinition[] = [
   },
   {
     id: TabId.HIVE,
-    name: 'HIVE (16-bit JRPG)',
-    description: 'Collaborative governance JRPG – built by the community.',
+    name: 'HIVE (Open World MMO)',
+    description: 'Open-world RPG — 8 sentinel NPCs, procedural map, day/night, quests.',
     url: env.labs.hive,
-    comingSoon: !env.labs.hive,
+    useDemo: true,
   },
   {
     id: TabId.WALLET,
