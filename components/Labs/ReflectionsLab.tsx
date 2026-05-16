@@ -1,5 +1,5 @@
 // components/Labs/ReflectionsLab.tsx
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import {
   Plus,
   BookOpen,
@@ -22,6 +22,22 @@ import { ReflectionArchiveLane, archiveReflection } from './ReflectionArchiveLan
 import { emitReflectionEpicon, hashReflectionBody } from '../../hooks/useEveEpicon';
 import { useDailyPrompt } from '../../hooks/useDailyPrompt';
 import { useTerminal } from '../../contexts/TerminalContext';
+import { useAutoSave } from '../../hooks/useAutoSave';
+import {
+  EOMMCycleTracker,
+  DailyPromptBanner,
+  WordCountBar,
+  EditorToolbar,
+  ReflectionStreak,
+  MoodBorderCard,
+  MarkdownExportButton,
+  ViewToggle,
+  ReflectionsView,
+  EntrySearch,
+  Highlight,
+  TagCloud,
+  ReflectionCalendar,
+} from './ReflectionsEnhancements';
 
 type PhaseId = 'raw' | 'mirror' | 'reframe' | 'recode';
 type ReflectionRewardId = 'spark' | 'geist_mode' | 'epiphany';
@@ -262,6 +278,10 @@ export const ReflectionsLab: React.FC<ReflectionsLabProps> = ({
   const [agentError, setAgentError] = useState<string | null>(null);
   const [agentNotice, setAgentNotice] = useState<string | null>(null);
   const [creatingAgent, setCreatingAgent] = useState(false);
+
+  // Enhancement state (REF-11, REF-16)
+  const [searchQuery, setSearchQuery] = useState('');
+  const [currentView, setCurrentView] = useState<ReflectionsView>('list');
   
   // Knowledge Graph integration
   const { extractAndAddConcepts, stats } = useKnowledgeGraph();
@@ -269,6 +289,15 @@ export const ReflectionsLab: React.FC<ReflectionsLabProps> = ({
   const { wallet, earnMIC, burnMIC, getChainBalance, getChainTransactions } = useWallet();
   const { state: terminalState } = useTerminal();
   const dailyPrompt = useDailyPrompt();
+
+  // REF-08: Auto-save (1200ms debounce) — persists silently without user action
+  const autoSaveStatus = useAutoSave({
+    value: entries,
+    onSave: useCallback((value: ReflectionEntry[]) => {
+      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(value));
+    }, []),
+    debounceMs: 1200,
+  });
 
   // Load from localStorage on mount
   useEffect(() => {
@@ -658,6 +687,26 @@ export const ReflectionsLab: React.FC<ReflectionsLabProps> = ({
     }
   };
 
+  // Derived state for enhancements
+  const completedPhaseIds = (activeEntry?.phases ?? [])
+    .filter((p) => p.content.trim().length > 0)
+    .map((p) => p.id as PhaseId);
+
+  const allTags = useMemo(
+    () => [...new Set(entries.flatMap((e) => []))],
+    [entries]
+  );
+
+  const filteredEntries = useMemo(() => {
+    if (!searchQuery.trim()) return entries;
+    const lower = searchQuery.toLowerCase();
+    return entries.filter(
+      (e) =>
+        e.title.toLowerCase().includes(lower) ||
+        e.phases.some((p) => p.content.toLowerCase().includes(lower))
+    );
+  }, [entries, searchQuery]);
+
   return (
     <div className="h-full flex flex-col bg-stone-50 overflow-hidden relative">
       <EveChamberHeader />
@@ -684,6 +733,8 @@ export const ReflectionsLab: React.FC<ReflectionsLabProps> = ({
         </div>
 
         <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+          {/* REF-16: View toggle */}
+          <ViewToggle view={currentView} onChange={setCurrentView} />
           <button
             type="button"
             onClick={handleNewEntry}
@@ -709,52 +760,77 @@ export const ReflectionsLab: React.FC<ReflectionsLabProps> = ({
       <div className="flex-1 flex min-h-0 flex-col md:flex-row">
         {/* Left: entries list */}
         <aside className="w-64 border-r border-stone-200 bg-stone-100/60 flex-col hidden md:flex">
-          <div className="px-4 py-2 flex items-center justify-between">
-            <span className="text-xs font-semibold text-stone-600 tracking-wide">
-              ENTRIES
-            </span>
-            {entries.length > 0 && (
-              <span className="text-[10px] text-stone-400">
-                {entries.length} saved
+          <div className="px-3 pt-2 pb-1 space-y-2">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-semibold text-stone-600 tracking-wide">
+                ENTRIES
               </span>
-            )}
+              <div className="flex items-center gap-2">
+                {/* REF-14: Reflection streak */}
+                <ReflectionStreak entries={entries} />
+                {entries.length > 0 && (
+                  <span className="text-[10px] text-stone-400">
+                    {entries.length} saved
+                  </span>
+                )}
+              </div>
+            </div>
+            {/* REF-11: Entry search */}
+            <EntrySearch
+              value={searchQuery}
+              onChange={setSearchQuery}
+              placeholder="Search entries…"
+            />
           </div>
 
+          {/* REF-09: Calendar view */}
+          {currentView === 'calendar' && (
+            <div className="px-3 py-2 border-b border-stone-200">
+              <ReflectionCalendar entries={entries} weeks={8} />
+            </div>
+          )}
+
+          {/* REF-18: Tag cloud view */}
+          {currentView === 'moods' && (
+            <div className="px-3 py-2 border-b border-stone-200">
+              <TagCloud entries={entries.map((e) => ({ tags: [], mood: undefined }))} maxTags={15} />
+            </div>
+          )}
+
           <div className="flex-1 overflow-auto px-2 pb-2 space-y-1">
-            {entries.length === 0 && (
+            {filteredEntries.length === 0 && (
               <div className="text-xs text-stone-400 px-2 py-4">
-                No reflections yet.
-                <br />
-                Click <span className="font-semibold">New entry</span> to
-                begin the loop.
+                {searchQuery ? (
+                  <>No matches for <span className="font-semibold">"{searchQuery}"</span></>
+                ) : (
+                  <>No reflections yet.<br />Click <span className="font-semibold">New entry</span> to begin the loop.</>
+                )}
               </div>
             )}
 
-            {entries.map((entry) => {
+            {filteredEntries.map((entry) => {
               const date = new Date(entry.createdAt);
               const isActive = entry.id === activeEntryId;
-
               const progress =
                 entry.phases.filter((p) => p.content.trim().length > 0)
                   .length / entry.phases.length;
 
               return (
-                <button
+                /* REF-20: Mood border card */
+                <MoodBorderCard
                   key={entry.id}
+                  isActive={isActive}
                   onClick={() => handleSelectEntry(entry.id)}
-                  className={`w-full text-left px-3 py-2 rounded-md border text-xs mb-1 flex flex-col space-y-1 ${
-                    isActive
-                      ? 'border-stone-900 bg-white shadow-sm'
-                      : 'border-stone-200 bg-white/60 hover:border-stone-400'
-                  }`}
                 >
                   <div className="flex items-center justify-between">
-                    <span className="font-semibold text-[11px] text-stone-900 truncate mr-2">
-                      {entry.title || 'Untitled reflection'}
-                    </span>
-                    <ChevronRight className="w-3 h-3 text-stone-300" />
+                    <Highlight
+                      text={entry.title || 'Untitled reflection'}
+                      query={searchQuery}
+                      className="font-semibold text-[11px] text-stone-900 truncate mr-2"
+                    />
+                    <ChevronRight className="w-3 h-3 text-stone-300 flex-shrink-0" />
                   </div>
-                  <div className="flex items-center justify-between">
+                  <div className="flex items-center justify-between mt-1">
                     <span className="text-[10px] text-stone-400">
                       {date.toLocaleDateString(undefined, {
                         month: 'short',
@@ -773,7 +849,7 @@ export const ReflectionsLab: React.FC<ReflectionsLabProps> = ({
                       </span>
                     </div>
                   </div>
-                </button>
+                </MoodBorderCard>
               );
             })}
           </div>
@@ -840,6 +916,15 @@ export const ReflectionsLab: React.FC<ReflectionsLabProps> = ({
                     onChange={(e) => handleTitleChange(e.target.value)}
                     placeholder="Give this reflection a name…"
                     aria-label="Reflection title"
+                  />
+                  {/* REF-15: Enhanced markdown export */}
+                  <MarkdownExportButton
+                    entry={{
+                      id: activeEntry.id,
+                      title: activeEntry.title,
+                      createdAt: activeEntry.createdAt,
+                      phases: activeEntry.phases,
+                    }}
                   />
                   <button
                     type="button"
@@ -948,6 +1033,13 @@ export const ReflectionsLab: React.FC<ReflectionsLabProps> = ({
                     {rewardNotice}
                   </div>
                 )}
+
+                {/* REF-01: EOMM Cycle Tracker */}
+                <EOMMCycleTracker
+                  activePhase={activePhaseId}
+                  completedPhases={completedPhaseIds}
+                />
+
                 <div>
                   <div className="text-xs font-semibold text-stone-700 tracking-wide">
                     {activePhase.label}
@@ -957,23 +1049,46 @@ export const ReflectionsLab: React.FC<ReflectionsLabProps> = ({
                   </p>
                 </div>
 
-                {/* EVE E-4: Daily Prompt */}
+                {/* REF-07: Daily Prompt Banner */}
                 {activePhase.id === 'raw' && dailyPrompt && (
-                  <div className="rounded-md border border-stone-200 bg-stone-50 px-3 py-2 text-xs text-stone-600 font-medium italic">
-                    ⬡ {dailyPrompt}
-                  </div>
+                  <DailyPromptBanner
+                    prompt={dailyPrompt}
+                    onUse={(p) => handlePhaseChange(activePhase.id, activePhase.content ? `${activePhase.content}\n\n${p}` : p)}
+                  />
                 )}
 
-                <textarea
-                  id={`reflection-phase-${activePhase.id}`}
-                  role="tabpanel"
-                  aria-labelledby={`phase-tab-${activePhase.id}`}
-                  className="flex-1 w-full min-h-[42vh] md:min-h-[200px] resize-y rounded-md border border-stone-200 bg-white px-3 py-3 text-sm text-stone-900 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-stone-900/25 focus:border-stone-900/40"
-                  value={activePhase.content}
-                  onChange={(e) =>
-                    handlePhaseChange(activePhase.id, e.target.value)
-                  }
-                  placeholder={activePhase.helper}
+                {/* REF-04: Editor Toolbar */}
+                <div>
+                  <EditorToolbar
+                    onInsert={(syntax, wrap) => {
+                      const ta = document.getElementById(`reflection-phase-${activePhase.id}`) as HTMLTextAreaElement | null;
+                      if (!ta) return;
+                      const start = ta.selectionStart;
+                      const end = ta.selectionEnd;
+                      const selected = ta.value.slice(start, end);
+                      const newText = wrap
+                        ? `${ta.value.slice(0, start)}${syntax}${selected || 'text'}${syntax}${ta.value.slice(end)}`
+                        : `${ta.value.slice(0, start)}${syntax}${selected}${ta.value.slice(end)}`;
+                      handlePhaseChange(activePhase.id, newText);
+                    }}
+                  />
+                  <textarea
+                    id={`reflection-phase-${activePhase.id}`}
+                    role="tabpanel"
+                    aria-labelledby={`phase-tab-${activePhase.id}`}
+                    className="flex-1 w-full min-h-[42vh] md:min-h-[200px] resize-y rounded-b-md rounded-t-none border border-t-0 border-stone-200 bg-white px-3 py-3 text-sm text-stone-900 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-stone-900/25 focus:border-stone-900/40"
+                    value={activePhase.content}
+                    onChange={(e) =>
+                      handlePhaseChange(activePhase.id, e.target.value)
+                    }
+                    placeholder={activePhase.helper}
+                  />
+                </div>
+
+                {/* REF-05: Word count + auto-save indicator */}
+                <WordCountBar
+                  wordCount={countWords(activePhase.content)}
+                  saveStatus={autoSaveStatus}
                 />
                 <p className="text-[11px] text-stone-500">
                   {countWords(activePhase.content)} words in this phase ·{' '}
