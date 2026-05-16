@@ -143,22 +143,29 @@
   box-shadow: 0 0 0 2px rgba(255,255,255,.5), 0 0 0 4px rgba(255,255,255,.15), 0 18px 48px rgba(0,0,0,.55);
 }
 
-/* OPT-13: Hero title shimmer text */
-.hall-title h1 {
-  background: linear-gradient(95deg, #fafaf9 30%, #e8e4e0 50%, #fafaf9 70%);
-  background-size: 200% auto;
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  animation: title-shimmer 6s linear infinite;
+/* OPT-13: Hero title shimmer text — desktop only */
+@media (min-width: 601px) {
+  .hall-title h1 {
+    background: linear-gradient(95deg, #fafaf9 30%, #e8e4e0 50%, #fafaf9 70%);
+    background-size: 200% auto;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    animation: title-shimmer 6s linear infinite;
+  }
+  .hall-title h1 em {
+    background: linear-gradient(95deg, #a8a29e 30%, #c4c0bc 50%, #a8a29e 70%);
+    background-size: 200% auto;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    animation: title-shimmer 6s linear infinite 1s;
+  }
 }
-.hall-title h1 em {
-  background: linear-gradient(95deg, #a8a29e 30%, #c4c0bc 50%, #a8a29e 70%);
-  background-size: 200% auto;
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  animation: title-shimmer 6s linear infinite 1s;
+/* Mobile: plain text (avoids invisible-text bug on iOS Safari with background-clip) */
+@media (max-width: 600px) {
+  .hall-title h1 { color: #fafaf9; }
+  .hall-title h1 em { color: #a8a29e; }
 }
 @keyframes title-shimmer {
   0% { background-position: 0% center; }
@@ -558,15 +565,59 @@
 
 /* Hallway responsive */
 @media (max-width: 980px) {
-  .doors { grid-template-columns: repeat(2,1fr); grid-template-rows: repeat(4,minmax(140px,1fr)); }
+  /* Tablet: 2-col grid, auto-height rows so content can scroll rather than shrink */
+  .doors {
+    grid-template-columns: repeat(2, 1fr);
+    grid-template-rows: none;
+    grid-auto-rows: minmax(140px, auto);
+  }
   .hall-title h1 { font-size: 54px; }
 }
 @media (max-width: 600px) {
-  .hall-inner { padding: 16px 16px 20px; }
-  .hall-title h1 { font-size: 38px; }
-  .hall-title { padding: 32px 0 20px; }
-  .hall-head .right { gap: 8px; }
+  /* ── Mobile scroll fix ─────────────────────────────────────────
+     hall-root becomes the scroll container.
+     hall-inner switches from absolute (locked to viewport height)
+     to relative (grows with content) so the grid never gets squeezed.
+  ── */
+  .hall-root {
+    overflow-y: auto;
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
+  }
+  .hall-inner {
+    position: relative;
+    inset: auto;
+    width: 100%;
+    min-height: 100%;
+    height: auto;
+    padding: 16px 16px 40px;
+  }
+  .hall-title { padding: 20px 0 14px; }
+  .hall-title h1 { font-size: 30px; }
+  .hall-title .lede { font-size: 13px; margin-top: 10px; }
+  .hall-title .eyebrow { margin-bottom: 8px; }
+  .hall-head { padding-bottom: 10px; }
+  .hall-head .right { gap: 6px; flex-wrap: nowrap; }
+  .hall-head .right .hall-chip--mic { display: none; }
   .hall-sentinel-row { display: none; }
+  /* Doors: natural auto-height rows — content determines height, not viewport */
+  .doors {
+    flex: none;
+    grid-template-columns: repeat(2, 1fr);
+    grid-template-rows: none;
+    grid-auto-rows: minmax(130px, auto);
+    gap: 10px;
+    padding-bottom: 8px;
+    min-height: 0;
+  }
+  .door { padding: 12px 14px; border-radius: 11px; min-height: 130px; }
+  .door .door-title { font-size: 17px; }
+  .door .icon { font-size: 20px; }
+  .door .num { font-size: 8px; }
+  .door .role { font-size: 10px; -webkit-line-clamp: 2; }
+  .door .enter { font-size: 9px; }
+  /* Disable stagger animation on mobile (saves battery, avoids jank) */
+  .doors .door { animation: none !important; opacity: 1 !important; transform: none !important; }
 }
 
 /* ═══════════════════════════════════════════════════════════════
