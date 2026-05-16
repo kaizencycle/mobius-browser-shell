@@ -22,27 +22,28 @@ export function LiveSystemBar() {
 
   return (
     <div className={`sticky top-0 z-40 flex h-8 items-center justify-between border-b bg-stone-950/95 px-3 font-mono text-[10px] backdrop-blur ${zoneClass}`}>
-      <div className="flex items-center gap-3 overflow-hidden whitespace-nowrap">
+      <div className="flex items-center gap-2 sm:gap-3 overflow-hidden whitespace-nowrap min-w-0">
         {/* OPT-16: live sentinel pip */}
-        <span className="live-sentinel-pip" aria-hidden="true" />
-        <span className="uppercase tracking-[0.2em] text-stone-500">Mobius Live</span>
+        <span className="live-sentinel-pip shrink-0" aria-hidden="true" />
+        <span className="uppercase tracking-[0.2em] text-stone-500 hidden xs:inline">Mobius Live</span>
 
-        <span>
-          Cycle <span className="font-bold text-stone-100">{data?.cycle ?? '—'}</span>
+        <span className="shrink-0">
+          <span className="text-stone-500 hidden sm:inline">Cycle </span>
+          <span className="font-bold text-stone-100">{data?.cycle ?? '—'}</span>
         </span>
 
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-1 shrink-0">
           <GIGauge score={gi} size="compact" />
           <span>
             GI <span className="font-bold text-stone-100">{gi?.toFixed(2) ?? '—'}</span>
           </span>
         </div>
 
-        <span>
+        <span className="shrink-0 hidden sm:inline">
           ◎ <span className="font-bold text-stone-100">{data?.vault_balance?.toFixed?.(2) ?? '—'}</span> MIC
         </span>
 
-        <span>
+        <span className="shrink-0 hidden md:inline">
           <span className="font-bold text-stone-100">{data?.agent_count ?? 8}</span> sentinels
         </span>
       </div>
