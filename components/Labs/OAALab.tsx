@@ -11,6 +11,7 @@ import { AtlasChamberHeader } from './AtlasChamberHeader';
 import { CitizenOnboardingStepper } from './CitizenOnboardingStepper';
 import { useWallet } from '../../contexts/WalletContext';
 import { useTerminal } from '../../contexts/TerminalContext';
+import { StreakDisplay, LevelBar, StatsRow, OAASkeleton } from './OAAEnhancements';
 
 export interface OAALabProps {
   onNavigateToKnowledgeGraph?: () => void;
@@ -79,23 +80,54 @@ export const OAALab: React.FC<OAALabProps> = ({ onNavigateToKnowledgeGraph }) =>
     );
   }
 
+  // Derived progress snapshot for enhancement components
+  const mockProgress = {
+    totalMicEarned: (wallet?.total_earned ?? 0) + sessionXp * 0.1,
+    modulesCompleted: wallet?.total_earned ? Math.floor(wallet.total_earned / 3) : 0,
+    currentStreak: 12,
+    bestStreak: 18,
+    totalLearningMinutes: 142,
+    totalCorrect: 47,
+    totalQuestions: 55,
+    level: Math.min(7, Math.floor(((wallet?.total_earned ?? 0) + sessionXp * 0.1) / 5) + 1),
+    lastActivityDate: new Date().toISOString(),
+  };
+
   // Demo mode — show the Claude Design Learn-to-Earn experience
   return (
     <div className="flex flex-col h-full overflow-hidden">
       <AtlasChamberHeader />
-      {/* XP→MIC Progress Ribbon */}
-      <div className="flex items-center gap-2 px-4 py-1.5 bg-stone-800 border-b border-stone-700 flex-shrink-0">
-        <span className="text-[10px] font-mono text-stone-400 flex-shrink-0">XP → MIC</span>
-        <div className="flex-1 h-1.5 rounded-full bg-stone-700 overflow-hidden">
-          <div
-            className="h-full bg-amber-400 rounded-full transition-all duration-500"
-            style={{ width: `${ribbonPct}%` }}
-          />
+      {/* XP→MIC Progress Ribbon with streak + level bar */}
+      <div className="px-4 py-2 bg-stone-800 border-b border-stone-700 flex-shrink-0 space-y-1.5">
+        <div className="flex items-center gap-2">
+          <span className="text-[10px] font-mono text-stone-400 flex-shrink-0">XP → MIC</span>
+          <div className="flex-1 h-1.5 rounded-full bg-stone-700 overflow-hidden">
+            <div
+              className="h-full bg-amber-400 rounded-full transition-all duration-500"
+              style={{ width: `${ribbonPct}%` }}
+            />
+          </div>
+          <span className="text-[10px] font-mono text-amber-400 flex-shrink-0">{sessionXp} XP</span>
         </div>
-        <span className="text-[10px] font-mono text-amber-400 flex-shrink-0">{sessionXp} XP</span>
+        <div className="flex items-center gap-3">
+          <StreakDisplay
+            currentStreak={mockProgress.currentStreak}
+            bestStreak={mockProgress.bestStreak}
+          />
+          <div className="flex-1">
+            <LevelBar
+              totalMicEarned={mockProgress.totalMicEarned}
+              level={mockProgress.level}
+            />
+          </div>
+        </div>
       </div>
       <CitizenOnboardingStepper />
-      <div className="flex-1 min-h-0">
+      <div className="flex-1 min-h-0 overflow-auto">
+        {/* Stats row above learn-to-earn content */}
+        <div className="px-4 pt-3 pb-1">
+          <StatsRow progress={mockProgress} />
+        </div>
         <OAALearnToEarn onNavigateToKnowledgeGraph={onNavigateToKnowledgeGraph} />
       </div>
     </div>
