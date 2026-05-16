@@ -218,7 +218,9 @@ export class OrchestratorBootstrap extends EventEmitter {
     if (!swarmOk) degraded = true;
 
     // Scheduler
-    components['scheduler'] = { status: this.scheduler.isRunning() ? 'ok' : 'error', lastCheck: Date.now() };
+    const schedulerOk = this.scheduler.isRunning();
+    components['scheduler'] = { status: schedulerOk ? 'ok' : 'error', lastCheck: Date.now() };
+    if (!schedulerOk) degraded = true;
 
     // Bridge
     components['bridge'] = { status: 'ok', lastCheck: Date.now() };

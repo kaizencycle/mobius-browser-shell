@@ -67,6 +67,10 @@ export class OAAClient {
     let release: (() => Promise<void>) | null = null;
     try {
       release = await lockfile.lock(this.storePath, { retries: { retries: 5, minTimeout: 50 } });
+      // Invalidate in-memory cache so the locked section always reads the
+      // latest state from disk — required for correctness in multi-process
+      // deployments where another process may have written since our last read.
+      this.cache = null;
       return await fn();
     } finally {
       if (release) await release();

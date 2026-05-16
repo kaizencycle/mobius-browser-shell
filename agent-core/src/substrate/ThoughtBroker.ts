@@ -32,13 +32,15 @@ export class ThoughtBroker extends EventEmitter {
       this.subscriptions.set(topic, new Set());
     }
     this.subscriptions.get(topic)!.add(handler);
-    this.on(topic, handler);
+    // Do NOT call this.on() here — publish() drives delivery via the explicit
+    // subscriptions map only. Mixing EventEmitter.on + manual map iteration
+    // would invoke every handler twice per message.
     return () => this.unsubscribe(topic, handler);
   }
 
   unsubscribe(topic: string, handler: TopicHandler): void {
     this.subscriptions.get(topic)?.delete(handler);
-    this.off(topic, handler);
+    // Mirror removal from map only — no EventEmitter registration to clean up.
   }
 
   async publish(topic: string, agentId: string, payload: unknown): Promise<void> {
@@ -53,19 +55,19 @@ export class ThoughtBroker extends EventEmitter {
     // Persist to OAA for audit trail
     await this.oaa.append(`broker:log:${topic}`, msg);
 
-    // Fan-out to subscribers
+    // Fan-out to explicit subscribers (topic-specific then wildcard).
+    // Use the subscriptions map as the single delivery mechanism — do NOT
+    // also call this.emit(), which would fire the same handlers a second time
+    // for any consumer who subscribed via subscribe().
     const handlers = this.subscriptions.get(topic);
     if (handlers) {
       await Promise.allSettled([...handlers].map(h => Promise.resolve(h(msg))));
     }
 
-    // Wildcard handlers
     const wildcardHandlers = this.subscriptions.get('*');
     if (wildcardHandlers) {
       await Promise.allSettled([...wildcardHandlers].map(h => Promise.resolve(h(msg))));
     }
-
-    this.emit(topic, msg);
   }
 
   async getRecentMessages(topic: string, limit = 20): Promise<ThoughtMessage[]> {
