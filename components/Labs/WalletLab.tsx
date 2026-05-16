@@ -1,11 +1,21 @@
 
 import React, { useState } from 'react';
-import { Wallet, ShieldCheck, Activity, Zap, Hexagon, TrendingUp, History, Lock, ChevronRight, Fingerprint, AlertTriangle, ExternalLink, Link2, Layers } from 'lucide-react';
+import { Wallet, ShieldCheck, Activity, Zap, Hexagon, TrendingUp, History, ChevronRight, Fingerprint, AlertTriangle, ExternalLink, Link2 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useWallet } from '../../contexts/WalletContext';
 import { useGuest } from '../../contexts/GuestContext';
 import { env } from '../../config/env';
+import { TabId } from '../../types';
 import { MICBlockchainExplorer } from './MICBlockchainExplorer';
+import {
+  BalanceCard,
+  GenesisGrantBanner,
+  EarnOpportunities,
+  StreakBonusIndicator,
+  MICConstitutionLink,
+  CycleEarnings,
+  WalletSkeleton,
+} from './WalletEnhancements';
 
 const SHARD_ARCHETYPES = [
   { id: 'CIV', name: 'Civic', weight: 0.25, score: 12, color: 'text-amber-600', bg: 'bg-amber-100', bar: 'bg-amber-500' },
@@ -144,6 +154,12 @@ export const WalletLab: React.FC<WalletLabProps> = ({ onNavigateToOaa }) => {
   const displayTotalEarned = wallet?.total_earned ?? 1240.50;
   const displayEventCount = wallet?.event_count ?? 47;
   const hasRealData = !!wallet;
+
+  const handleNavigate = (tab: TabId) => {
+    if (tab === TabId.OAA && onNavigateToOaa) {
+      onNavigateToOaa();
+    }
+  };
 
   return (
     <div className="h-full overflow-y-auto bg-stone-50 p-4 sm:p-6 lg:p-10 font-sans text-stone-900 relative">
