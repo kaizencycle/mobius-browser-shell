@@ -1,0 +1,19 @@
+<svg xmlns='http://www.w3.org/2000/svg' width='1200' height='630'>
+  <defs>
+    <linearGradient id='bg' x1='0' y1='0' x2='1' y2='1'>
+      <stop offset='0%' stop-color='#14110f'/>
+      <stop offset='100%' stop-color='#0c0a09'/>
+    </linearGradient>
+    <linearGradient id='glow' x1='0.5' y1='0' x2='0.5' y2='1'>
+      <stop offset='0%' stop-color='#3b332b' stop-opacity='0.6'/>
+      <stop offset='100%' stop-color='transparent'/>
+    </linearGradient>
+  </defs>
+  <rect width='1200' height='630' fill='url(#bg)'/>
+  <ellipse cx='600' cy='630' rx='540' ry='300' fill='url(#glow)'/>
+  <text x='600' y='240' text-anchor='middle' font-family='Georgia,serif' font-size='80' font-weight='600' fill='#fafaf9' letter-spacing='-2'>Mobius</text>
+  <text x='600' y='320' text-anchor='middle' font-family='Georgia,serif' font-size='36' font-style='italic' fill='#a8a29e' letter-spacing='-1'>School of Chambers</text>
+  <text x='600' y='420' text-anchor='middle' font-family='Courier New,monospace' font-size='16' fill='#555047' letter-spacing='3'>OAA · HIVE · JADE · SHIELD · REFLECTIONS · WALLET</text>
+  <rect x='540' y='460' width='120' height='1' fill='#3b332b'/>
+  <text x='600' y='500' text-anchor='middle' font-family='Courier New,monospace' font-size='13' fill='#6b6255' letter-spacing='3'>mobius-browser-shell.vercel.app</text>
+</svg>

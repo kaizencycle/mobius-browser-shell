@@ -1,13 +1,27 @@
 # Mobius Browser Shell — robots.txt
-# EPICON PR: Switching from noindex meta tag to proper robots.txt
-#
-# Currently in pre-public phase. Update to "Allow: /" when going live.
+# C-314: Unblocked. Public phase active.
 
 User-agent: *
+Allow: /
 Disallow: /api/
-Disallow: /
 
-# Allow well-known bots access to public pages once live:
-# User-agent: *
-# Allow: /
-# Disallow: /api/
+# AI crawlers — explicitly permitted for GEO visibility
+User-agent: GPTBot
+Allow: /
+
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: anthropic-ai
+Allow: /
+
+User-agent: Googlebot
+Allow: /
+
+User-agent: Applebot
+Allow: /
+
+Sitemap: https://mobius-browser-shell.vercel.app/sitemap.xml

@@ -9,7 +9,8 @@ export function LiveSystemBar() {
     60_000,
   );
 
-  const gi = typeof data?.gi === 'number' ? data.gi : null;
+  const gi  = typeof data?.gi === 'number' ? data.gi : null;
+  const mii = typeof data?.mii === 'number' ? data.mii : null;
 
   const zoneClass =
     gi == null
@@ -19,6 +20,12 @@ export function LiveSystemBar() {
         : gi >= 0.4
           ? 'border-amber-500/30 text-amber-300'
           : 'border-rose-500/30 text-rose-300';
+
+  const miiClass =
+    mii == null ? 'text-stone-400'
+    : mii >= 0.9 ? 'text-indigo-400'
+    : mii >= 0.7 ? 'text-amber-400'
+    : 'text-rose-400';
 
   return (
     <div className={`sticky top-0 z-40 flex h-8 items-center justify-between border-b bg-stone-950/95 px-3 font-mono text-[10px] backdrop-blur ${zoneClass}`}>
@@ -45,6 +52,13 @@ export function LiveSystemBar() {
 
         <span className="shrink-0 hidden md:inline">
           <span className="font-bold text-stone-100">{data?.agent_count ?? 8}</span> sentinels
+        </span>
+
+        <span
+          className={`shrink-0 hidden lg:inline font-bold ${miiClass}`}
+          title={mii !== null ? `MII: ${mii.toFixed(4)}` : 'MII loading'}
+        >
+          MII {mii !== null ? mii.toFixed(2) : '—'}
         </span>
       </div>
 

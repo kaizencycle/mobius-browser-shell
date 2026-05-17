@@ -74,6 +74,21 @@ if (!rootElement) {
 }
 
 const root = ReactDOM.createRoot(rootElement);
+
+// S-09: Service worker registration — enables PWA install prompt + offline shell
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker
+      .register('/sw.js')
+      .then((reg) => {
+        if (import.meta.env.DEV) console.debug('[Shell] SW registered', reg.scope);
+      })
+      .catch((err) => {
+        if (import.meta.env.DEV) console.warn('[Shell] SW registration failed', err);
+      });
+  });
+}
+
 root.render(
   <React.StrictMode>
     <RootErrorBoundary>
