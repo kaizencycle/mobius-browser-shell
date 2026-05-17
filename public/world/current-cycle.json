@@ -1,6 +1,6 @@
 {
   "cycle_id": "C-314",
-  "updated_at": "2026-05-17T16:13:05.021Z",
+  "updated_at": "2026-05-17T17:18:38.182Z",
   "rules_fired": [
     "vault_rising_and_gi"
   ],
@@ -9,8 +9,8 @@
   "active_sentinel_id": "hermes",
   "signals": {
     "kv_status": "unknown",
-    "gi": 0.761,
-    "vault_progress": 0.761
+    "gi": 0.818,
+    "vault_progress": 0.808
   },
   "ingest_health": {
     "terminal_snapshot": true,
