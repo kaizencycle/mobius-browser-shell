@@ -61,6 +61,8 @@ export const ErrorCodes = {
   // ═══════════════════════════════════════════════════════════
   HIVE_SESSION_LOST: 'ERR-HIV-500',
   HIVE_STATE_DESYNC: 'ERR-HIV-501',
+  HIVE_LOAD_FAILED:  'ERR-HIV-502',
+  JADE_LOAD_FAILED:  'ERR-HIV-503',
 
   // ═══════════════════════════════════════════════════════════
   // KNOWLEDGE GRAPH / ATLAS (700-799)
@@ -220,6 +222,18 @@ export const ErrorRegistry: Record<ErrorCode, ErrorMetadata> = {
   },
   [ErrorCodes.HIVE_STATE_DESYNC]: {
     code: ErrorCodes.HIVE_STATE_DESYNC,
+    severity: 'medium',
+    retryable: true,
+    alertChannel: 'none',
+  },
+  [ErrorCodes.HIVE_LOAD_FAILED]: {
+    code: ErrorCodes.HIVE_LOAD_FAILED,
+    severity: 'medium',
+    retryable: true,
+    alertChannel: 'none',
+  },
+  [ErrorCodes.JADE_LOAD_FAILED]: {
+    code: ErrorCodes.JADE_LOAD_FAILED,
     severity: 'medium',
     retryable: true,
     alertChannel: 'none',

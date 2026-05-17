@@ -1,4 +1,4 @@
-import React, { Suspense, useState, useEffect, useMemo } from 'react';
+import React, { Suspense, useEffect, useMemo } from 'react';
 import { TabId } from './types';
 import { LabSkeleton } from './components/Labs/LabSkeleton';
 
@@ -8,10 +8,10 @@ import { HiveChamber } from './components/chambers/HiveChamber';
 import { ReflectionsChamber } from './components/chambers/ReflectionsChamber';
 import { ShieldChamber } from './components/chambers/ShieldChamber';
 import { AtlasChamber } from './components/chambers/AtlasChamber';
-import { JadeChamber } from './components/chambers/JadeChamber';
 import { WalletChamber } from './components/chambers/WalletChamber';
 import { VaultChamber } from './components/chambers/VaultChamber';
 import { EPICONChamber } from './components/chambers/EPICONChamber';
+import { JadeLab } from './components/Labs/JadeLab';
 import { ReturnCitizenDashboard } from './components/onboarding/ReturnCitizenDashboard';
 import { CivicAlertBanner } from './components/Notifications/CivicAlertBanner';
 import { LiveSystemBar } from './components/Header/LiveSystemBar';
@@ -21,9 +21,10 @@ import { InquiryChatModal } from './components/InquiryChatModal';
 import { CitizenProfile } from './components/CitizenProfile/CitizenProfile';
 import { useCitizenProfile } from './hooks/useCitizenProfile';
 import { useDocumentTitle } from './hooks/useDocumentTitle';
+import { useHashTab } from './hooks/useHashTab';
 
 const App: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<TabId>(TabId.HALLWAY);
+  const [activeTab, setActiveTab] = useHashTab(TabId.HALLWAY);
 
   const { citizen } = useAuth();
   const profile = useCitizenProfile();
@@ -70,12 +71,7 @@ const App: React.FC = () => {
       case TabId.SHIELD:
         return <ShieldChamber onNavigateToHive={() => setActiveTab(TabId.HIVE)} />;
       case TabId.JADE:
-        return (
-          <JadeChamber
-            onNavigateToOaa={() => setActiveTab(TabId.OAA)}
-            onNavigateToKnowledgeGraph={goToKnowledgeGraph}
-          />
-        );
+        return <JadeLab />;
       case TabId.WALLET:
         return <WalletChamber onNavigateToOaa={() => setActiveTab(TabId.OAA)} />;
       case TabId.VAULT:

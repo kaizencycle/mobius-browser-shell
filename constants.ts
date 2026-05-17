@@ -34,10 +34,11 @@ export const LABS: LabDefinition[] = [
   },
   {
     id: TabId.HIVE,
-    name: 'HIVE (Open World MMO)',
-    description: 'Open-world RPG — 8 sentinel NPCs, procedural map, day/night, quests.',
+    name: 'HIVE',
+    description: 'Open world civilization simulator — quests, sentinels, MIC earn.',
     url: env.labs.hive,
     useDemo: true,
+    comingSoon: false,
   },
   {
     id: TabId.WALLET,
