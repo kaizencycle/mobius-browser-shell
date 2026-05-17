@@ -47,12 +47,22 @@ self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return;
   if (url.origin !== self.location.origin && !url.hostname.endsWith('vercel.app')) return;
 
-  if (url.pathname.startsWith('/api/')) {
-    // Network-first: API calls should always be fresh; fall back to cache
+  const isApi        = url.pathname.startsWith('/api/');
+  // Navigation requests (HTML documents) must be network-first so users always
+  // get the latest shell after a deploy. Cache-first would pin stale HTML
+  // indefinitely, breaking asset references after content-hash changes.
+  const isNavigation = event.request.mode === 'navigate';
+  // Vite production assets are content-hashed (e.g. /assets/index-AbCd1234.js)
+  // and truly immutable, so cache-first is safe and desirable.
+  const isHashedAsset = url.pathname.startsWith('/assets/');
+
+  if (isApi || isNavigation) {
+    // Network-first: always try live copy; fall back to cache on failure
     event.respondWith(
       fetch(event.request)
         .then((res) => {
-          if (res.ok) {
+          if (res.ok && !isApi) {
+            // Cache successful navigation responses for offline fallback
             const clone = res.clone();
             caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
           }
@@ -60,8 +70,8 @@ self.addEventListener('fetch', (event) => {
         })
         .catch(() => caches.match(event.request))
     );
-  } else {
-    // Cache-first: Vite assets are content-hashed; serve from cache when available
+  } else if (isHashedAsset) {
+    // Cache-first: immutable content-hashed assets never change at a given URL
     event.respondWith(
       caches.match(event.request).then(
         (cached) => cached ?? fetch(event.request).then((res) => {
@@ -72,6 +82,19 @@ self.addEventListener('fetch', (event) => {
           return res;
         })
       )
+    );
+  } else {
+    // Everything else (world JSON, manifest, images): network-first with cache fallback
+    event.respondWith(
+      fetch(event.request)
+        .then((res) => {
+          if (res.ok) {
+            const clone = res.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
+          }
+          return res;
+        })
+        .catch(() => caches.match(event.request))
     );
   }
 });
