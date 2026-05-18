@@ -22,6 +22,7 @@ import { CitizenProfile } from './components/CitizenProfile/CitizenProfile';
 import { useCitizenProfile } from './hooks/useCitizenProfile';
 import { useDocumentTitle } from './hooks/useDocumentTitle';
 import { useHashTab } from './hooks/useHashTab';
+import { useChamberParam } from './hooks/useChamberParam';
 
 const App: React.FC = () => {
   const [activeTab, setActiveTab] = useHashTab(TabId.HALLWAY);
@@ -31,6 +32,9 @@ const App: React.FC = () => {
 
   useSessionHeartbeat();
   useDocumentTitle(activeTab);
+
+  // Bridge: read ?chamber= from HIVE simulator portals and navigate to the matching tab
+  useChamberParam(setActiveTab);
 
   // FIX-20: Cmd+P → citizen profile
   useEffect(() => {

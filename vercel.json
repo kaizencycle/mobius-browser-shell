@@ -81,6 +81,10 @@
     {
       "source": "/api/terminal/:path*",
       "destination": "https://mobius-civic-ai-terminal.vercel.app/api/:path*"
+    },
+    {
+      "source": "/api/hive/world/:path*",
+      "destination": "/api/hive/world"
     }
   ]
 }

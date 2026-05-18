@@ -1,16 +1,41 @@
 import { env } from '../../config/env';
 import type { HiveCurrentCycle, HiveEvent, HiveQuest, HiveSentinel } from './meshWorldTypes';
 
-const DEFAULT_REMOTE_BASE =
-  'https://raw.githubusercontent.com/kaizencycle/mobius-hive/main';
+/**
+ * Default world base hierarchy (in priority order):
+ *
+ *  1. VITE_HIVE_WORLD_BASE_URL env var — explicit override (e.g. staging hive host)
+ *  2. /api/hive/world — in-shell Vercel edge proxy (no GitHub Raw rate limits,
+ *     adds 30s CDN cache, proper CORS; see api/hive/world.ts)
+ *  3. Raw GitHub fallback — direct, no proxy (development / offline fallback)
+ */
+const IN_SHELL_PROXY_BASE = '/api/hive/world';
+const DEFAULT_REMOTE_BASE = 'https://raw.githubusercontent.com/kaizencycle/mobius-hive/main';
 
 function trimSlash(url: string): string {
   return url.replace(/\/+$/, '');
 }
 
 export function getHiveWorldBaseUrl(): string {
-  const raw = env.labs.hiveWorldBaseUrl;
-  return trimSlash((raw && raw.trim()) || DEFAULT_REMOTE_BASE);
+  const override = env.labs.hiveWorldBaseUrl;
+  if (override && override.trim()) return trimSlash(override.trim());
+  // In browser context: prefer the in-shell proxy (avoids raw GitHub rate limits).
+  // In non-browser (CI, SSR) or when window is absent: fall back to direct GitHub.
+  if (typeof window !== 'undefined') return IN_SHELL_PROXY_BASE;
+  return DEFAULT_REMOTE_BASE;
+}
+
+/** Resolve a world-relative path to a full URL under the chosen base. */
+export function hiveWorldUrl(path: string): string {
+  const base = getHiveWorldBaseUrl();
+  const clean = path.replace(/^\/+/, '');
+  // The proxy expects paths rooted at 'world/' — strip it if using proxy.
+  if (base === IN_SHELL_PROXY_BASE) {
+    // Proxy path: /api/hive/world?path=world/current-cycle.json
+    return `${base}?path=${encodeURIComponent(clean.startsWith('world/') ? clean : `world/${clean}`)}`;
+  }
+  // Remote base: append path directly
+  return `${base}/${clean}`;
 }
 
 async function fetchJson<T>(url: string, signal?: AbortSignal): Promise<T> {
