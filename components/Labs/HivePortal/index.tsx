@@ -6,6 +6,7 @@ import { SentinelRail } from './SentinelRail';
 import { EventCard } from './EventCard';
 import { QuestTracker } from './QuestTracker';
 import { ActionRibbon } from './ActionRibbon';
+import { HivePulseBar } from './HivePulseBar';
 
 export const HivePortal: React.FC = () => {
   const { world, loading, error, lastFetched, refresh } = useHiveWorld();
@@ -16,6 +17,7 @@ export const HivePortal: React.FC = () => {
 
   return (
     <div className="flex flex-col h-full bg-gray-950 text-gray-100 overflow-hidden font-mono">
+      <HivePulseBar world={world} lastFetched={lastFetched} onRefresh={refresh} />
       <TopStatusBar cycle={world.cycle} lastFetched={lastFetched} />
       <div className="flex flex-1 overflow-hidden min-h-0">
         <div className="flex flex-col flex-1 overflow-y-auto p-3 gap-3">

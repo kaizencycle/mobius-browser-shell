@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { getHiveWorldBaseUrl } from '../src/lib/meshWorldFetch';
+import { getHiveWorldBaseUrl, hiveWorldUrl } from '../src/lib/meshWorldFetch';
 
 export interface HiveCycleData {
   cycle_id: string;
@@ -76,43 +76,50 @@ async function safeFetch<T>(url: string, signal: AbortSignal): Promise<T | null>
   }
 }
 
-/** Try remote base first; fall back to bundled /world/ files served by the shell. */
-async function resolveCycle(signal: AbortSignal): Promise<{ cycle: HiveCycleData; base: string }> {
-  const remoteBase = getHiveWorldBaseUrl();
-  const remoteUrl  = `${remoteBase}/world/current-cycle.json`;
-  const localBase  = '';          // relative — Vite serves public/world/ at /world/
-  const localUrl   = '/world/current-cycle.json';
+/**
+ * Resolve current-cycle.json with a three-tier priority:
+ *  1. In-shell proxy  /api/hive/world?path=world/current-cycle.json (CDN-cached, no rate limits)
+ *  2. Remote fallback  raw GitHub (if proxy fails — e.g. local dev without edge fn)
+ *  3. Bundled copy     /world/current-cycle.json (public/ — always works offline)
+ */
+async function resolveCycle(signal: AbortSignal): Promise<{ cycle: HiveCycleData; usedProxy: boolean }> {
+  const proxyUrl  = hiveWorldUrl('world/current-cycle.json');
+  const remoteUrl = `https://raw.githubusercontent.com/kaizencycle/mobius-hive/main/world/current-cycle.json`;
+  const localUrl  = '/world/current-cycle.json';
 
-  // Try remote
-  try {
-    const res = await fetch(remoteUrl, { cache: 'no-store', signal });
-    if (res.ok) {
-      return { cycle: (await res.json()) as HiveCycleData, base: remoteBase };
-    }
-  } catch { /* fall through to bundled copy */ }
-
-  // Fall back to bundled public/world/ files
-  const res = await fetch(localUrl, { cache: 'no-store', signal });
-  if (!res.ok) throw new Error(`HIVE world state unavailable (HTTP ${res.status})`);
-  return { cycle: (await res.json()) as HiveCycleData, base: localBase };
+  for (const [url, isProxy] of [[proxyUrl, true], [remoteUrl, false], [localUrl, false]] as const) {
+    try {
+      const res = await fetch(url, { cache: proxyUrl === url ? 'default' : 'no-store', signal });
+      if (res.ok) {
+        return { cycle: (await res.json()) as HiveCycleData, usedProxy: isProxy };
+      }
+    } catch { /* try next */ }
+  }
+  throw new Error('HIVE world state unavailable — all sources failed');
 }
 
 async function loadWorld(signal: AbortSignal): Promise<HiveWorldData> {
-  const { cycle, base } = await resolveCycle(signal);
+  const { cycle, usedProxy } = await resolveCycle(signal);
+
+  // Use proxy-aware URL builder for sub-resources so they also go through the edge
+  const eventUrl = (id: string) => hiveWorldUrl(`world/events/${id}.json`);
+  const questUrl = (id: string) => hiveWorldUrl(`world/quests/${id}.json`);
+  const sentinelUrl = (id: string) => hiveWorldUrl(`world/sentinels/${id}.json`);
+  const sentinelIndexUrl = hiveWorldUrl('world/sentinels/index.json');
 
   const [event, quest, sentinelIndex] = await Promise.all([
     cycle.active_event_id
-      ? safeFetch<HiveEventData>(`${base}/world/events/${cycle.active_event_id}.json`, signal)
+      ? safeFetch<HiveEventData>(eventUrl(cycle.active_event_id), signal)
       : Promise.resolve(null),
     cycle.active_quest_id
-      ? safeFetch<HiveQuestData>(`${base}/world/quests/${cycle.active_quest_id}.json`, signal)
+      ? safeFetch<HiveQuestData>(questUrl(cycle.active_quest_id), signal)
       : Promise.resolve(null),
-    safeFetch<string[]>(`${base}/world/sentinels/index.json`, signal),
+    safeFetch<string[]>(sentinelIndexUrl, signal),
   ]);
 
   const ids = sentinelIndex ?? (cycle.active_sentinel_id ? [cycle.active_sentinel_id] : []);
   const sentinelResults = await Promise.all(
-    ids.map((id) => safeFetch<HiveSentinelData>(`${base}/world/sentinels/${id}.json`, signal)),
+    ids.map((id) => safeFetch<HiveSentinelData>(sentinelUrl(id), signal)),
   );
   const sentinels = sentinelResults.filter((s): s is HiveSentinelData => s !== null);
 
@@ -122,7 +129,7 @@ async function loadWorld(signal: AbortSignal): Promise<HiveWorldData> {
     quest,
     sentinels,
     activeSentinelId: cycle.active_sentinel_id,
-    sourceUrl: `${base}/world/current-cycle.json`,
+    sourceUrl: usedProxy ? '/api/hive/world (proxy)' : 'bundled',
   };
 }
 
