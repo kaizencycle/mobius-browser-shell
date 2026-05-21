@@ -8,20 +8,20 @@
   },
   "canon_rule": "Browser Shell shows world state; it does not canonize world state.",
   "cycle": "C-318",
-  "generated_at": "2026-05-21T21:43:45.902559Z",
-  "idempotency_key": "mobius-browser-shell:HIVE_WORLD_PULSE_V1:C-318:1f98827df7e5e968:fetch-hive-world",
+  "generated_at": "2026-05-21T22:53:57.353584Z",
+  "idempotency_key": "mobius-browser-shell:HIVE_WORLD_PULSE_V1:C-318:1602844a90976dfe:fetch-hive-world",
   "node_id": "mobius-browser-shell",
   "schema": "HIVE_WORLD_PULSE_V1",
-  "source_hash": "1f98827df7e5e968bcfcf9dbc820e02be0e8397a4d0999966e5f1d703c72aa73",
-  "terminal_gi": 0.823,
+  "source_hash": "1602844a90976dfe29d6d1cfb62ba796d2819209489ef224b8f26a4a40879e84",
+  "terminal_gi": 0.829,
   "terminal_snapshot_available": true,
   "terminal_snapshot_error": null,
   "world": {
     "branch": "main",
     "current_cycle": {
-      "active_event_id": "signal-fog",
-      "active_quest_id": "restore-the-beacon",
-      "active_sentinel_id": "zeus",
+      "active_event_id": "fountain-murmur",
+      "active_quest_id": "prepare-the-seal",
+      "active_sentinel_id": "hermes",
       "cycle_id": "C-318",
       "ingest_health": {
         "cycle_state": true,
@@ -30,75 +30,66 @@
         "terminal_snapshot": true
       },
       "rules_fired": [
-        "kv_degraded"
+        "vault_rising_and_gi"
       ],
       "signals": {
-        "gi": 0.816,
-        "kv_status": "degraded",
-        "vault_progress": 0.814
+        "gi": 0.834,
+        "kv_status": "unknown",
+        "vault_progress": 0.823
       },
-      "updated_at": "2026-05-21T19:59:27.917Z"
+      "updated_at": "2026-05-21T21:44:36.178Z"
     },
     "event": {
       "cycle_id": "C-318",
-      "description": "The lattice is visible, but unstable. Memory remains, live sight fades.",
-      "id": "signal-fog",
-      "sentinel_owner": "zeus",
-      "severity": "medium",
-      "summary": "Operator memory lanes are noisy; continuity is at risk.",
-      "title": "Signal Fog",
-      "tone": "warning",
-      "trigger": {
-        "gi_below": 0.8,
-        "kv_status": "degraded"
-      },
+      "description": "The vault deepens and integrity rises; the city hears water again.",
+      "id": "fountain-murmur",
+      "sentinel_owner": "hermes",
+      "severity": "low",
+      "summary": "The vault deepens and integrity rises; the city hears water again.",
+      "title": "Fountain Murmur",
+      "tone": "hope",
       "type": "integrity_event",
       "ui": {
-        "color": "dim",
-        "overlay": "fog",
-        "priority": 1
+        "color": "warm",
+        "overlay": "shimmer",
+        "priority": 2
       },
-      "updated_at": "2026-05-21T19:59:27.917Z"
+      "updated_at": "2026-05-21T21:44:36.178Z"
     },
     "quest": {
-      "assigned_by": "zeus",
+      "assigned_by": "hermes",
       "cycle_id": "C-318",
-      "description": "Re-establish live signal continuity across the Castle.",
-      "id": "restore-the-beacon",
+      "description": "Align proofs and ledger anchors before the next cycle boundary.",
+      "id": "prepare-the-seal",
       "progress": 0,
       "reward_preview": {
         "mic_effect": "none_until_eligible",
-        "vault_effect": "stability_credit"
+        "vault_effect": "seal_readiness"
       },
-      "sentinel_id": "zeus",
+      "sentinel_id": "hermes",
       "status": "active",
       "steps": [
         {
           "completed": false,
-          "id": "inspect",
-          "label": "Inspect Beacon"
+          "id": "gather",
+          "label": "Gather proofs"
         },
         {
           "completed": false,
-          "id": "fallback",
-          "label": "Verify Fallback Path"
-        },
-        {
-          "completed": false,
-          "id": "ack",
-          "label": "Acknowledge Sentinel"
+          "id": "align",
+          "label": "Align anchors"
         }
       ],
-      "title": "Restore the Beacon",
-      "type": "stability_quest",
-      "updated_at": "2026-05-21T19:59:27.917Z"
+      "title": "Prepare the Seal",
+      "type": "governance_quest",
+      "updated_at": "2026-05-21T21:44:36.178Z"
     },
     "repo": "kaizencycle/mobius-hive",
     "sentinel": null
   },
   "world_refs": {
-    "active_event_id": "signal-fog",
-    "active_quest_id": "restore-the-beacon",
+    "active_event_id": "fountain-murmur",
+    "active_quest_id": "prepare-the-seal",
     "assigned_sentinel_id": null
   }
 }
