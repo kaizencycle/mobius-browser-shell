@@ -8,12 +8,12 @@
   },
   "canon_rule": "Browser Shell shows world state; it does not canonize world state.",
   "cycle": "C-318",
-  "generated_at": "2026-05-21T08:23:15.211740Z",
-  "idempotency_key": "mobius-browser-shell:HIVE_WORLD_PULSE_V1:C-318:e1a8dc7b44b201bc:fetch-hive-world",
+  "generated_at": "2026-05-21T11:47:15.152741Z",
+  "idempotency_key": "mobius-browser-shell:HIVE_WORLD_PULSE_V1:C-318:68d90a318c09afd1:fetch-hive-world",
   "node_id": "mobius-browser-shell",
   "schema": "HIVE_WORLD_PULSE_V1",
-  "source_hash": "e1a8dc7b44b201bcb57ce302d700844d4bbd792cae612f65e1f6497858727e45",
-  "terminal_gi": 0.807,
+  "source_hash": "68d90a318c09afd1c0dd4e28df342f4c637a6483e67385ecef8e09089e395799",
+  "terminal_gi": 0.792,
   "terminal_snapshot_available": true,
   "terminal_snapshot_error": null,
   "world": {
@@ -33,11 +33,11 @@
         "vault_rising_and_gi"
       ],
       "signals": {
-        "gi": 0.805,
+        "gi": 0.811,
         "kv_status": "unknown",
-        "vault_progress": 0.804
+        "vault_progress": 0.823
       },
-      "updated_at": "2026-05-21T04:45:50.501Z"
+      "updated_at": "2026-05-21T08:36:02.622Z"
     },
     "event": {
       "cycle_id": "C-318",
@@ -54,7 +54,7 @@
         "overlay": "shimmer",
         "priority": 2
       },
-      "updated_at": "2026-05-21T04:45:50.501Z"
+      "updated_at": "2026-05-21T08:36:02.622Z"
     },
     "quest": {
       "assigned_by": "hermes",
@@ -82,7 +82,7 @@
       ],
       "title": "Prepare the Seal",
       "type": "governance_quest",
-      "updated_at": "2026-05-21T04:45:50.501Z"
+      "updated_at": "2026-05-21T08:36:02.622Z"
     },
     "repo": "kaizencycle/mobius-hive",
     "sentinel": null
