@@ -1,6 +1,6 @@
 {
   "cycle_id": "C-320",
-  "updated_at": "2026-05-23T20:26:44.597Z",
+  "updated_at": "2026-05-23T21:28:54.239Z",
   "rules_fired": [
     "steady_state"
   ],
@@ -10,7 +10,7 @@
   "signals": {
     "kv_status": "unknown",
     "gi": 0.74,
-    "vault_progress": 0.769
+    "vault_progress": 0.798
   },
   "ingest_health": {
     "terminal_snapshot": true,
