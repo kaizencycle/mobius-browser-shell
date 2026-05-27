@@ -1,0 +1,167 @@
+From 982c0fc1b459d316068b9bc69f8bf8cea6bacd34 Mon Sep 17 00:00:00 2001
+From: Cursor Agent <cursoragent@cursor.com>
+Date: Wed, 27 May 2026 02:07:06 +0000
+Subject: [PATCH] =?UTF-8?q?fix(infra):=20C-323=20follow-up=20=E2=80=94=20P?=
+ =?UTF-8?q?AW=20liveness=20KV=20key=20+=20Tripwire=20UI?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+- Read mobius:atlas:paw:liveness via kvGetRaw (matches PAW heartbeat write)
+- TripwireSparkline PAW LIVE/DARK indicator
+- ignore-build: kaizencycle always builds; cursoragent bot gate; [deploy] escape
+- Document redeploy/promote bypass in docs/DEPLOY.md
+---
+ app/api/sentinel/paw-liveness/route.ts        | 27 ++++++++++++++++---
+ .../terminal/chambers/TripwireSparkline.tsx   | 25 +++++++++++++++++
+ docs/DEPLOY.md                                | 13 +++++++++
+ scripts/ignore-build.sh                       | 12 +++++++++
+ 4 files changed, 74 insertions(+), 3 deletions(-)
+ create mode 100644 docs/DEPLOY.md
+
+diff --git a/app/api/sentinel/paw-liveness/route.ts b/app/api/sentinel/paw-liveness/route.ts
+index ac5a3e3..9ade7f0 100644
+--- a/app/api/sentinel/paw-liveness/route.ts
++++ b/app/api/sentinel/paw-liveness/route.ts
+@@ -1,5 +1,8 @@
+ import { NextResponse } from 'next/server';
+-import { kvGetSafe } from '@/lib/kv/store';
++import { kvGetRaw } from '@/lib/kv/store';
++
++/** Written by atlas-paw heartbeat cron at this exact Redis key (no second prefix). */
++const PAW_LIVENESS_RAW_KEY = 'mobius:atlas:paw:liveness';
+ 
+ export const dynamic = 'force-dynamic';
+ 
+@@ -7,10 +10,28 @@ type PawLiveness = {
+   status: 'ok' | 'degraded' | 'down';
+   ts: number;
+   cycle?: string;
++  tripwireCount?: number;
+   message?: string;
+ };
+ 
++const STALE_MS = 25 * 60 * 60 * 1000; // 25h — matches PAW heartbeat TTL
++
+ export async function GET() {
+-  const paw = await kvGetSafe<PawLiveness>('atlas:paw:liveness');
+-  return NextResponse.json(paw ?? null);
++  const paw = await kvGetRaw<PawLiveness>(PAW_LIVENESS_RAW_KEY);
++  if (!paw) {
++    return NextResponse.json({
++      status: 'down' as const,
++      ts: Date.now(),
++      message: 'atlas:paw:liveness missing — heartbeat may have missed',
++    });
++  }
++  const age = Date.now() - paw.ts;
++  if (age > STALE_MS) {
++    return NextResponse.json({
++      ...paw,
++      status: 'degraded' as const,
++      message: `PAW liveness stale (${Math.floor(age / 3_600_000)}h)`,
++    });
++  }
++  return NextResponse.json(paw);
+ }
+diff --git a/components/terminal/chambers/TripwireSparkline.tsx b/components/terminal/chambers/TripwireSparkline.tsx
+index c75c917..4bd29a6 100644
+--- a/components/terminal/chambers/TripwireSparkline.tsx
++++ b/components/terminal/chambers/TripwireSparkline.tsx
+@@ -1,5 +1,14 @@
+ 'use client';
+ 
++import { useEffect, useState } from 'react';
++
++type PawLiveness = {
++  status: 'ok' | 'degraded' | 'down';
++  ts: number;
++  cycle?: string;
++  tripwireCount?: number;
++};
++
+ const CYCLE_HISTORY = [
+   { cycle: 'C-313', count: 3, gi: 0.68 },
+   { cycle: 'C-314', count: 1, gi: 0.74 },
+@@ -18,6 +27,18 @@ const MAX_COUNT = Math.max(...CYCLE_HISTORY.map((c) => c.count), 1);
+ const BAR_H = 48;
+ 
+ export function TripwireSparkline() {
++  const [paw, setPaw] = useState<PawLiveness | null>(null);
++
++  useEffect(() => {
++    fetch('/api/sentinel/paw-liveness', { cache: 'no-store' })
++      .then((r) => (r.ok ? r.json() : null))
++      .then((data) => setPaw(data && typeof data === 'object' ? (data as PawLiveness) : null))
++      .catch(() => setPaw(null));
++  }, []);
++
++  const pawLive = paw?.status === 'ok';
++  const pawCycle = paw?.cycle;
++
+   return (
+     <div className="px-4 py-3 border-b border-zinc-800 bg-zinc-950/60">
+       <div className="text-zinc-500 text-[10px] mb-2 tracking-widest uppercase">
+@@ -50,6 +71,10 @@ export function TripwireSparkline() {
+         <span><span className="inline-block w-2 h-2 bg-amber-500 rounded-sm mr-1 align-middle" />GI 0.65–0.74</span>
+         <span><span className="inline-block w-2 h-2 bg-red-500 rounded-sm mr-1 align-middle" />GI &lt; 0.65</span>
+       </div>
++      <div className="mt-2 flex items-center gap-1.5 text-[10px] text-zinc-600">
++        <span className={`w-1.5 h-1.5 rounded-full ${pawLive ? 'bg-green-500' : 'bg-amber-500'}`} />
++        <span>PAW {pawLive ? 'LIVE' : 'DARK'} · {pawCycle ?? '—'}</span>
++      </div>
+     </div>
+   );
+ }
+diff --git a/docs/DEPLOY.md b/docs/DEPLOY.md
+new file mode 100644
+index 0000000..94c5e4e
+--- /dev/null
++++ b/docs/DEPLOY.md
+@@ -0,0 +1,13 @@
++# Vercel deployment notes
++
++## Ignore build script
++
++`scripts/ignore-build.sh` is wired as `ignoreCommand` in `vercel.json`. Exit **0** skips the build; exit **1** runs it.
++
++- Human commits by `kaizencycle` always build.
++- Bot commits (`mobius-bot`, `cursoragent`, `github-actions[bot]`) skip unless the message contains `[deploy]`.
++- `[skip ci]` and `chore(mesh):` commits skip.
++
++## Dashboard redeploy / promote
++
++Vercel dashboard **Redeploy** and **Promote** actions always trigger a full build regardless of the ignore script. This is platform behavior — use sparingly.
+diff --git a/scripts/ignore-build.sh b/scripts/ignore-build.sh
+index dc34e05..204c26a 100644
+--- a/scripts/ignore-build.sh
++++ b/scripts/ignore-build.sh
+@@ -18,6 +18,17 @@ if [[ -z "$author_name" ]]; then
+   author_name="$(git log -1 --format=%an 2>/dev/null || echo "")"
+ fi
+ 
++# Human operator commits always build (C-323 INFRA-05)
++if [[ "$author_login" == "kaizencycle" ]]; then
++  echo "Building: human commit by kaizencycle"
++  exit 1
++fi
++
++if [[ "$subject" == *"[deploy]"* ]]; then
++  echo "Building: [deploy] flag in commit message"
++  exit 1
++fi
++
+ if [[ "$subject" == *"[skip ci]"* ]] || [[ "$subject" == *"[skip deploy]"* ]]; then
+   echo "Skipping: skip directive in commit message"
+   exit 0
+@@ -49,6 +60,7 @@ done
+ # C-323 INFRA-05: added VERCEL_GIT_COMMIT_AUTHOR_LOGIN check — more reliable than name/email
+ # for GitHub Actions bot (login = "github-actions[bot]") and mobius-bot (login = "mobius-bot").
+ if [[ "$author_login" == "mobius-bot" ]] \
++  || [[ "$author_login" == "cursoragent" ]] \
+   || [[ "$author_login" == "github-actions[bot]" ]] \
+   || [[ "$author_name" == "mobius-bot" ]] \
+   || [[ "$author_name" == "github-actions[bot]" ]] \
+-- 
+2.43.0
+

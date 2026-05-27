@@ -1,0 +1,160 @@
+From 955517145e44b237856df3b6c405f2ad7afb7709 Mon Sep 17 00:00:00 2001
+From: Cursor Agent <cursoragent@cursor.com>
+Date: Wed, 27 May 2026 02:07:06 +0000
+Subject: [PATCH] =?UTF-8?q?feat(infra):=20C-323=20INFRA-07=20=E2=80=94=20h?=
+ =?UTF-8?q?ealth=20probe=20+=20Terminal=20liveness=20KV?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+- /api/health returns status, ts, checks, tripwireCount (200/207)
+- Heartbeat cron writes mobius:atlas:paw:liveness for Terminal cross-read
+- kvPing + writeTerminalLiveness helpers
+---
+ app/api/cron/heartbeat/route.ts | 21 ++++++++++++-
+ app/api/health/route.ts         | 54 ++++++++++++++++++++++++++++-----
+ lib/kv.ts                       | 27 +++++++++++++++++
+ 3 files changed, 94 insertions(+), 8 deletions(-)
+
+diff --git a/app/api/cron/heartbeat/route.ts b/app/api/cron/heartbeat/route.ts
+index bf11030..99afe46 100644
+--- a/app/api/cron/heartbeat/route.ts
++++ b/app/api/cron/heartbeat/route.ts
+@@ -10,7 +10,8 @@
+ 
+ import { NextRequest, NextResponse } from "next/server";
+ import { loadLastSeen } from "@/lib/atlas-gateway-state";
+-import { kvConfigured } from "@/lib/kv";
++import { kvConfigured, writeTerminalLiveness } from "@/lib/kv";
++import { listTripwires } from "@/lib/tripwires/store";
+ 
+ export const dynamic = "force-dynamic";
+ 
+@@ -45,6 +46,24 @@ export async function GET(req: NextRequest) {
+ 
+   const lastSeen = kvConfigured() ? await loadLastSeen() : null;
+   const now = new Date().toISOString();
++  const cycle =
++    process.env.MOBIUS_CURRENT_CYCLE?.trim() ||
++    `C-${new Date().getUTCFullYear() % 100}${String(new Date().getUTCMonth() + 1).padStart(2, "0")}`;
++
++  let tripwireCount = 0;
++  if (kvConfigured()) {
++    try {
++      tripwireCount = (await listTripwires("self")).length;
++    } catch {
++      tripwireCount = 0;
++    }
++    await writeTerminalLiveness({
++      ts: Date.now(),
++      status: "ok",
++      tripwireCount,
++      cycle,
++    });
++  }
+ 
+   const payload = {
+     agent: "ATLAS",
+diff --git a/app/api/health/route.ts b/app/api/health/route.ts
+index 8ceb289..523907c 100644
+--- a/app/api/health/route.ts
++++ b/app/api/health/route.ts
+@@ -1,13 +1,53 @@
+ import { NextResponse } from "next/server";
+-import { checkTunnelHealth } from "@/lib/openclaw";
++import { kvConfigured, kvPing } from "@/lib/kv";
++import { listTripwires } from "@/lib/tripwires/store";
+ 
+ export const dynamic = "force-dynamic";
+ 
+ export async function GET() {
+-  const online = await checkTunnelHealth();
+-  return NextResponse.json({
+-    mode: online ? "full" : "readonly",
+-    tunnelUrl: process.env.OPENCLAW_TUNNEL_URL || null,
+-    checkedAt: new Date().toISOString(),
+-  });
++  const checks: Record<string, string> = {};
++  let status: "ok" | "degraded" = "ok";
++
++  if (!kvConfigured()) {
++    checks.kv = "unconfigured";
++    status = "degraded";
++  } else {
++    try {
++      const pong = await kvPing();
++      checks.kv = pong ? "ok" : "error";
++      if (!pong) status = "degraded";
++    } catch {
++      checks.kv = "error";
++      status = "degraded";
++    }
++  }
++
++  let tripwireCount = 0;
++  try {
++    const tripwires = await listTripwires("self");
++    tripwireCount = tripwires.length;
++    checks.tripwires = `${tripwireCount} registered`;
++  } catch {
++    checks.tripwires = "error";
++    status = "degraded";
++  }
++
++  const tunnelOnline = Boolean(process.env.OPENCLAW_TUNNEL_URL?.trim());
++
++  return NextResponse.json(
++    {
++      status,
++      service: "atlas-paw",
++      ts: Date.now(),
++      checks: {
++        ...checks,
++        tunnel: tunnelOnline ? "configured" : "readonly",
++      },
++      tripwireCount,
++    },
++    {
++      status: status === "ok" ? 200 : 207,
++      headers: { "Cache-Control": "no-store" },
++    },
++  );
+ }
+diff --git a/lib/kv.ts b/lib/kv.ts
+index d58de63..9848042 100644
+--- a/lib/kv.ts
++++ b/lib/kv.ts
+@@ -62,3 +62,30 @@ export async function kvDel(key: string): Promise<boolean> {
+   })) as { result?: number } | null;
+   return (body?.result ?? 0) > 0;
+ }
++
++/** Upstash REST PING — used by /api/health liveness. */
++export async function kvPing(): Promise<boolean> {
++  if (!kvConfigured()) return false;
++  const body = (await kvCall("/ping")) as { result?: string } | null;
++  return body?.result === "PONG";
++}
++
++/**
++ * Terminal cross-read uses mobius-prefixed keys in the civic-ai-terminal KV layer.
++ * PAW writes the shared liveness blob here after each heartbeat.
++ */
++export const TERMINAL_LIVENESS_KEY = "mobius:atlas:paw:liveness";
++
++export type PawLivenessPayload = {
++  ts: number;
++  status: "ok" | "degraded";
++  tripwireCount: number;
++  cycle: string;
++};
++
++export async function writeTerminalLiveness(
++  payload: PawLivenessPayload,
++  ttlSeconds = 90_000,
++): Promise<boolean> {
++  return kvSet(TERMINAL_LIVENESS_KEY, payload, { ex: ttlSeconds });
++}
+-- 
+2.43.0
+
