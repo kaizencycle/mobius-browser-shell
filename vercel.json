@@ -1,4 +1,6 @@
 {
+  "ignoreCommand": "bash scripts/ignore-build.sh",
+  "buildCommand": "npm run build",
   "headers": [
     {
       "source": "/(.*)",
