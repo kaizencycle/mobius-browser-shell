@@ -1,6 +1,6 @@
 {
   "cycle_id": "C-327",
-  "updated_at": "2026-05-30T17:50:21.928Z",
+  "updated_at": "2026-05-30T19:23:45.250Z",
   "rules_fired": [
     "steady_state"
   ],
@@ -10,7 +10,7 @@
   "signals": {
     "kv_status": "unknown",
     "gi": 0.74,
-    "vault_progress": 0.808
+    "vault_progress": 0.81
   },
   "ingest_health": {
     "terminal_snapshot": true,
