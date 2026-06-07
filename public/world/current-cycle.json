@@ -1,6 +1,6 @@
 {
   "cycle_id": "C-335",
-  "updated_at": "2026-06-07T17:23:14.306Z",
+  "updated_at": "2026-06-07T18:49:21.861Z",
   "rules_fired": [
     "kv_degraded"
   ],
@@ -10,7 +10,7 @@
   "signals": {
     "kv_status": "degraded",
     "gi": 0.82,
-    "vault_progress": 0.762
+    "vault_progress": 0.753
   },
   "ingest_health": {
     "terminal_snapshot": true,
