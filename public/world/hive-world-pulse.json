@@ -8,20 +8,20 @@
   },
   "canon_rule": "Browser Shell shows world state; it does not canonize world state.",
   "cycle": "C-336",
-  "generated_at": "2026-06-08T18:05:51.921989Z",
-  "idempotency_key": "mobius-browser-shell:HIVE_WORLD_PULSE_V1:C-336:057371f8b9381fb5:fetch-hive-world",
+  "generated_at": "2026-06-08T20:33:51.739751Z",
+  "idempotency_key": "mobius-browser-shell:HIVE_WORLD_PULSE_V1:C-336:3177348b9e489908:fetch-hive-world",
   "node_id": "mobius-browser-shell",
   "schema": "HIVE_WORLD_PULSE_V1",
-  "source_hash": "057371f8b9381fb57f82b40f36ee666937345387b00b9c9f4899b7f00e3865df",
-  "terminal_gi": 0.64,
+  "source_hash": "3177348b9e489908e77c8eb7527023f8009ea238c4fe864af5a9e939fc2ef4ab",
+  "terminal_gi": 0.727,
   "terminal_snapshot_available": true,
   "terminal_snapshot_error": null,
   "world": {
     "branch": "main",
     "current_cycle": {
-      "active_event_id": "signal-fog",
-      "active_quest_id": "restore-the-beacon",
-      "active_sentinel_id": "zeus",
+      "active_event_id": "quiet-grid",
+      "active_quest_id": "patrol-the-lanes",
+      "active_sentinel_id": "atlas",
       "cycle_id": "C-336",
       "ingest_health": {
         "cycle_state": true,
@@ -30,75 +30,66 @@
         "terminal_snapshot": true
       },
       "rules_fired": [
-        "kv_degraded"
+        "steady_state"
       ],
       "signals": {
         "gi": 0.761,
-        "kv_status": "degraded",
-        "vault_progress": 0.777
+        "kv_status": "unknown",
+        "vault_progress": 0.734
       },
-      "updated_at": "2026-06-08T17:35:11.542Z"
+      "updated_at": "2026-06-08T19:53:04.446Z"
     },
     "event": {
       "cycle_id": "C-336",
-      "description": "The lattice is visible, but unstable. Memory remains, live sight fades.",
-      "id": "signal-fog",
-      "sentinel_owner": "zeus",
-      "severity": "medium",
-      "summary": "Operator memory lanes are noisy; continuity is at risk.",
-      "title": "Signal Fog",
-      "tone": "warning",
-      "trigger": {
-        "gi_below": 0.8,
-        "kv_status": "degraded"
-      },
-      "type": "integrity_event",
+      "description": "No mesh alarms fired on this tick.",
+      "id": "quiet-grid",
+      "sentinel_owner": "atlas",
+      "severity": "low",
+      "summary": "No mesh alarms fired on this tick.",
+      "title": "Quiet Grid",
+      "tone": "calm",
+      "type": "calm_event",
       "ui": {
-        "color": "dim",
-        "overlay": "fog",
-        "priority": 1
+        "color": "neutral",
+        "overlay": "clear",
+        "priority": 0
       },
-      "updated_at": "2026-06-08T17:35:11.542Z"
+      "updated_at": "2026-06-08T19:53:04.446Z"
     },
     "quest": {
-      "assigned_by": "zeus",
+      "assigned_by": "atlas",
       "cycle_id": "C-336",
-      "description": "Re-establish live signal continuity across the Castle.",
-      "id": "restore-the-beacon",
+      "description": "Keep watch: terminal heartbeat, pulse freshness, OAA seals.",
+      "id": "patrol-the-lanes",
       "progress": 0,
       "reward_preview": {
         "mic_effect": "none_until_eligible",
-        "vault_effect": "stability_credit"
+        "vault_effect": "none"
       },
-      "sentinel_id": "zeus",
+      "sentinel_id": "atlas",
       "status": "active",
       "steps": [
         {
           "completed": false,
-          "id": "inspect",
-          "label": "Inspect Beacon"
+          "id": "heartbeat",
+          "label": "Log heartbeat"
         },
         {
           "completed": false,
-          "id": "fallback",
-          "label": "Verify Fallback Path"
-        },
-        {
-          "completed": false,
-          "id": "ack",
-          "label": "Acknowledge Sentinel"
+          "id": "freshness",
+          "label": "Check pulse freshness"
         }
       ],
-      "title": "Restore the Beacon",
-      "type": "stability_quest",
-      "updated_at": "2026-06-08T17:35:11.542Z"
+      "title": "Patrol the Lanes",
+      "type": "vigil_quest",
+      "updated_at": "2026-06-08T19:53:04.446Z"
     },
     "repo": "kaizencycle/mobius-hive",
     "sentinel": null
   },
   "world_refs": {
-    "active_event_id": "signal-fog",
-    "active_quest_id": "restore-the-beacon",
+    "active_event_id": "quiet-grid",
+    "active_quest_id": "patrol-the-lanes",
     "assigned_sentinel_id": null
   }
 }
