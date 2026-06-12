@@ -207,8 +207,8 @@ async function hydrateWorld() {
       fetchJson("/world/events/signal-fog.json").catch(() => null),
       fetchJson("/world/quests/restore-the-beacon.json").catch(() => null),
     ]);
-    const eid = world.active_events?.[0];
-    const qid = world.active_quests?.[0];
+    const eid = world.active_event_id ?? world.active_events?.[0];
+    const qid = world.active_quest_id ?? world.active_quests?.[0];
     let eventTitle = event0?.title || eid || "";
     let questTitle = quest0?.title || qid || "";
     if (eid && eid !== "signal-fog") {
@@ -446,9 +446,9 @@ function main() {
     const w = bundle.world;
     const gi = Math.round((w.integrity?.gi ?? 0) * 100);
     const mic = Math.round(1000 + (w.vault?.progress ?? 0) * 337);
-    const cycle = w.cycle || bundle.cycle?.cycle_id || "—";
-    const ev = bundle.eventTitle || w.active_events?.[0] || "";
-    const qu = bundle.questTitle || w.active_quests?.[0] || "";
+    const cycle = bundle.cycle?.cycle_id || w.cycle?.id || w.cycle || "—";
+    const ev = bundle.eventTitle || w.active_event_id || w.active_events?.[0] || "";
+    const qu = bundle.questTitle || w.active_quest_id || w.active_quests?.[0] || "";
     const liveTag = bundle.live ? "" : '<span class="muted"> DEMO DATA</span>';
     hud.innerHTML = `
       <span class="gold">MOBIUS HIVE</span>
@@ -609,7 +609,9 @@ function main() {
 
     drawZoneLabels(ctx);
 
-    const fogOn = bundle?.world?.active_events?.includes("signal-fog") ?? true;
+    const fogOn = bundle
+      ? (bundle.world?.active_event_id ?? bundle.world?.active_events?.[0]) === "signal-fog"
+      : true;
     if (fogOn) drawFog(ctx, w, h, frame);
 
     const nearbyId = adj?.id ?? null;
