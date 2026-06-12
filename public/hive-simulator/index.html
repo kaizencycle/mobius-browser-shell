@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+    <title>Mobius HIVE — World Simulator</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --bg: #0a0a18;
+        --panel: #12122a;
+        --cyan: #3dffea;
+        --gold: #e8c547;
+        --green: #5cff8a;
+        --red: #ff5c6c;
+        --muted: #6a6a8a;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        min-height: 100vh;
+        background: radial-gradient(ellipse at 50% 0%, #1a1a44 0%, var(--bg) 55%);
+        color: #e8e8f0;
+        font-family: "Press Start 2P", ui-monospace, monospace;
+        font-size: 9px;
+        line-height: 1.6;
+      }
+      #root {
+        max-width: 720px;
+        margin: 0 auto;
+        padding: 10px 8px 16px;
+      }
+      .hud {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px 12px;
+        align-items: center;
+        padding: 8px 10px;
+        background: var(--panel);
+        border: 2px solid #2a2a4a;
+        border-radius: 4px;
+        margin-bottom: 8px;
+      }
+      .hud span {
+        white-space: nowrap;
+      }
+      .gold {
+        color: var(--gold);
+      }
+      .cyan {
+        color: var(--cyan);
+      }
+      .green {
+        color: var(--green);
+      }
+      .red {
+        color: var(--red);
+      }
+      .muted {
+        color: var(--muted);
+        font-size: 7px;
+      }
+      .warn::before {
+        content: "▲ ";
+      }
+      .quest::before {
+        content: "◆ ";
+      }
+      #game {
+        display: block;
+        width: 100%;
+        max-width: 672px;
+        height: auto;
+        image-rendering: pixelated;
+        image-rendering: crisp-edges;
+        border: 3px solid #2a3a5a;
+        border-radius: 4px;
+        background: #050510;
+      }
+      .legend {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between;
+        gap: 6px;
+        margin-top: 8px;
+        padding: 6px 8px;
+        color: var(--muted);
+        font-size: 7px;
+      }
+      .dpad {
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr;
+        grid-template-rows: auto auto auto;
+        gap: 6px;
+        max-width: 200px;
+        margin: 12px auto 0;
+        opacity: 0.92;
+      }
+      .dpad button {
+        font-family: inherit;
+        font-size: 10px;
+        padding: 12px 8px;
+        border: 2px solid #3a4a6a;
+        border-radius: 6px;
+        background: rgba(20, 24, 48, 0.75);
+        color: var(--cyan);
+        touch-action: manipulation;
+      }
+      .dpad .up {
+        grid-column: 2;
+      }
+      .dpad .left {
+        grid-column: 1;
+        grid-row: 2;
+      }
+      .dpad .act {
+        grid-column: 2;
+        grid-row: 2;
+        color: var(--gold);
+      }
+      .dpad .right {
+        grid-column: 3;
+        grid-row: 2;
+      }
+      .dpad .down {
+        grid-column: 2;
+        grid-row: 3;
+      }
+      .dialog {
+        position: fixed;
+        left: 50%;
+        bottom: 12px;
+        transform: translateX(-50%);
+        width: min(96vw, 640px);
+        padding: 12px 14px;
+        background: rgba(8, 10, 28, 0.95);
+        border: 2px solid var(--cyan);
+        border-radius: 6px;
+        z-index: 20;
+        display: none;
+      }
+      .dialog.visible {
+        display: block;
+      }
+      .dialog .who {
+        color: var(--gold);
+        margin-bottom: 8px;
+        font-size: 8px;
+      }
+      .dialog .txt {
+        font-size: 8px;
+        line-height: 1.8;
+        color: #d0d0e8;
+      }
+      .overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(4, 6, 18, 0.88);
+        backdrop-filter: blur(4px);
+        z-index: 30;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        padding: 16px;
+      }
+      .overlay.visible {
+        display: flex;
+      }
+      .modal {
+        max-width: 420px;
+        width: 100%;
+        padding: 20px 18px;
+        background: #101028;
+        border: 3px solid var(--cyan);
+        border-radius: 8px;
+        text-align: center;
+      }
+      .modal h2 {
+        color: var(--gold);
+        font-size: 10px;
+        margin: 0 0 12px;
+        line-height: 1.7;
+      }
+      .modal p {
+        font-size: 8px;
+        color: #b8b8d8;
+        line-height: 1.8;
+        margin: 0 0 16px;
+      }
+      .modal .actions {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+      .modal button {
+        font-family: inherit;
+        font-size: 8px;
+        padding: 12px;
+        border: 2px solid var(--gold);
+        border-radius: 4px;
+        background: #1a1530;
+        color: var(--cyan);
+        cursor: pointer;
+      }
+      .modal button.secondary {
+        border-color: #4a4a6a;
+        color: var(--muted);
+      }
+      @media (min-width: 700px) {
+        .dpad {
+          display: none;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div id="root">
+      <div class="hud" id="hud"></div>
+      <canvas id="game" width="672" height="480"></canvas>
+      <div class="legend">
+        <span>↑↓←→ / WASD MOVE</span>
+        <span>[E] INTERACT</span>
+        <span>[ESC] CLOSE</span>
+        <span class="muted" id="footer-meta"></span>
+      </div>
+      <div class="dpad" id="dpad" aria-label="Touch controls"></div>
+    </div>
+    <div class="dialog" id="dialog" role="dialog" aria-live="polite">
+      <div class="who" id="dialog-who"></div>
+      <div class="txt" id="dialog-txt"></div>
+    </div>
+    <div class="overlay" id="portal-overlay">
+      <div class="modal">
+        <h2 id="portal-title"></h2>
+        <p id="portal-desc"></p>
+        <div class="actions">
+          <button type="button" id="portal-launch">LAUNCH SHELL ↗</button>
+          <button type="button" class="secondary" id="portal-close">RETURN TO HIVE</button>
+        </div>
+      </div>
+    </div>
+    <script src="./simulator.js" type="module"></script>
+  </body>
+</html>
