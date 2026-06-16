@@ -1,12 +1,7 @@
 import React from 'react';
 import { useHiveWorld } from '../../../hooks/useHiveWorld';
-import { TopStatusBar } from './TopStatusBar';
-import { WorldZoneCard } from './WorldZoneCard';
-import { SentinelRail } from './SentinelRail';
-import { EventCard } from './EventCard';
-import { QuestTracker } from './QuestTracker';
-import { ActionRibbon } from './ActionRibbon';
 import { HivePulseBar } from './HivePulseBar';
+import { HiveGameEmbed } from './HiveGameEmbed';
 
 export const HivePortal: React.FC = () => {
   const { world, loading, error, lastFetched, refresh } = useHiveWorld();
@@ -15,24 +10,18 @@ export const HivePortal: React.FC = () => {
   if (error && !world) return <HiveErrorScreen message={error} onRetry={refresh} />;
   if (!world) return <HiveErrorScreen message="World state unavailable" onRetry={refresh} />;
 
+  const gi = world.cycle.signals?.gi ?? null;
+  const worldMood = world.event?.ui.overlay === 'fog' ? 'fogged' : 'clearing';
+  const cycle = world.cycle.cycle_id ?? null;
+
   return (
-    <div className="flex flex-col h-full bg-gray-950 text-gray-100 overflow-hidden font-mono">
+    <div className="flex flex-col h-full bg-[#0a0c14] overflow-hidden">
+      {/* slim world-state HUD ribbon — single source of truth, not duplicated in game */}
       <HivePulseBar world={world} lastFetched={lastFetched} onRefresh={refresh} />
-      <TopStatusBar cycle={world.cycle} lastFetched={lastFetched} />
-      <div className="flex flex-1 overflow-hidden min-h-0">
-        <div className="flex flex-col flex-1 overflow-y-auto p-3 gap-3">
-          <WorldZoneCard cycle={world.cycle} event={world.event} />
-          {world.event && <EventCard event={world.event} />}
-          {world.quest && <QuestTracker quest={world.quest} />}
-          {!world.event && !world.quest && (
-            <div className="text-[11px] text-stone-600 font-mono text-center py-8">
-              No active event or quest this cycle.
-            </div>
-          )}
-        </div>
-        <SentinelRail sentinels={world.sentinels} activeSentinelId={world.activeSentinelId} />
+      {/* game renderer — full remaining height */}
+      <div className="flex-1 min-h-0 overflow-hidden">
+        <HiveGameEmbed gi={gi} worldMood={worldMood} cycle={cycle} />
       </div>
-      <ActionRibbon cycle={world.cycle} onActionComplete={refresh} />
     </div>
   );
 };
