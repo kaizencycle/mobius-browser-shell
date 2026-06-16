@@ -24,7 +24,8 @@ import React, { useCallback, useRef, useState } from 'react';
 import { getHiveWorldBaseUrl } from '../../../src/lib/meshWorldFetch';
 
 const GAME_BASE_URL =
-  import.meta.env.VITE_HIVE_URL ?? 'https://solid-crystal-164.higgsfield.gg/';
+  (import.meta.env.VITE_HIVE_URL as string | undefined)?.trim() ||
+  'https://solid-crystal-164.higgsfield.gg/';
 
 interface HiveGameEmbedProps {
   gi: number | null;
