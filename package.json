@@ -39,13 +39,13 @@
   },
   "dependencies": {
     "@simplewebauthn/server": "^13.2.2",
-    "@vercel/node": "^5.6.4",
     "lucide-react": "^0.556.0",
     "react": "^19.2.1",
     "react-dom": "^19.2.1",
     "react-force-graph-2d": "^1.29.0"
   },
   "devDependencies": {
+    "@vercel/node": "^5.8.17",
     "@tailwindcss/postcss": "^4.1.18",
     "@types/node": "^22.14.0",
     "@types/react": "^19.2.14",
