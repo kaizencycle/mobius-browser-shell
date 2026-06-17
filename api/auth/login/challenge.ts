@@ -7,7 +7,7 @@
 
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { createHmac, randomBytes } from 'crypto';
-import { checkChallengeRateLimit } from '../_rateLimit';
+import { checkChallengeRateLimit } from '../_rateLimit.js';
 
 const RP_ID = process.env.WEBAUTHN_RP_ID ?? 'mobius-browser-shell.vercel.app';
 const CHALLENGE_SECRET = process.env.CHALLENGE_SECRET ?? '';
