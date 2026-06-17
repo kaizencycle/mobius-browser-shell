@@ -166,7 +166,14 @@ export const HiveGameEmbed: React.FC<HiveGameEmbedProps> = ({ gi, worldMood, cyc
   useEffect(() => {
     if (!env.api.ledger) return; // ledger not configured — skip silently
 
+    // Expected origin of the game iframe — validated on every message.
+    const gameOrigin = new URL(GAME_BASE_URL).origin;
+
     const handler = async (ev: MessageEvent) => {
+      // P1: validate sender — must be our iframe's window at the expected origin.
+      // Rejects forged postMessages from any other frame or extension.
+      if (ev.source !== iframeRef.current?.contentWindow) return;
+      if (ev.origin !== gameOrigin) return;
       if (!isHiveEvent(ev.data)) return;
       const gameEv = ev.data;
 
@@ -176,12 +183,11 @@ export const HiveGameEmbed: React.FC<HiveGameEmbedProps> = ({ gi, worldMood, cyc
       // Dedup key: type + realm (or 'none') + cycle
       const dedupKey = `${gameEv.type}:${gameEv.realm ?? 'none'}:${gameEv.cycle ?? '?'}`;
       if (attested.current.has(dedupKey)) return;
-      attested.current.add(dedupKey);
-
       setLastEventType(gameEv.type);
       setWriteStatus('writing');
 
       const result = await submitAttestation(attestation);
+      if (result.ok) attested.current.add(dedupKey);
       setWriteStatus(result.ok ? 'ok' : 'fail');
 
       // Clear indicator after 4s so it doesn't clutter the screen
@@ -190,7 +196,7 @@ export const HiveGameEmbed: React.FC<HiveGameEmbedProps> = ({ gi, worldMood, cyc
 
     window.addEventListener('message', handler);
     return () => window.removeEventListener('message', handler);
-  }, []); // stable — civicId.current, attested.current are refs
+  }, []); // stable — civicId.current, attested.current, iframeRef.current are refs
 
   const fogOpacity =
     gi != null ? Math.max(0, Math.min(0.45, (0.95 - gi) * 0.7)) : 0.3;
