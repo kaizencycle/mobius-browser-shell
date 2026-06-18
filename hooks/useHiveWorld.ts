@@ -55,16 +55,36 @@ export interface HiveSentinelData {
   lines?: string[];
 }
 
+/**
+ * Chronicle entry — one citizen deed recorded back into world state.
+ * Matches the C-341 Brief E spec; written by world-update.yml (C-346 FIX-6)
+ * either to world/citizen-history.json or under current-world.json's
+ * `citizen_history` field. The shell reads both, dedup-free, best-effort.
+ */
+export interface CitizenHistoryEntry {
+  cycle_id: string;
+  civic_id: string;
+  zone: string;
+  action: string;
+  summary: string;
+  at: string;
+}
+
 export interface HiveWorldData {
   cycle: HiveCycleData;
   event: HiveEventData | null;
   quest: HiveQuestData | null;
   sentinels: HiveSentinelData[];
   activeSentinelId: string | null;
+  citizenHistory: CitizenHistoryEntry[] | null;
   sourceUrl: string;
 }
 
-const POLL_MS = 60_000;
+// GI can change on seal events (seconds), so we poll more aggressively than the
+// hourly world-update — but only while the chamber tab is visible (SHELL-9).
+const POLL_MS = 30_000;
+// When the tab is hidden, we skip the network call and re-check this often.
+const HIDDEN_BACKOFF_MS = 5_000;
 
 async function safeFetch<T>(url: string, signal: AbortSignal): Promise<T | null> {
   try {
@@ -98,6 +118,50 @@ async function resolveCycle(signal: AbortSignal): Promise<{ cycle: HiveCycleData
   throw new Error('HIVE world state unavailable — all sources failed');
 }
 
+/** Coerce an unknown payload into a CitizenHistoryEntry[] (newest first), or null. */
+function normalizeHistory(raw: unknown): CitizenHistoryEntry[] | null {
+  const arr = Array.isArray(raw)
+    ? raw
+    : isRecord(raw) && Array.isArray(raw['citizen_history'])
+      ? (raw['citizen_history'] as unknown[])
+      : null;
+  if (!arr) return null;
+
+  const entries = arr
+    .filter(isRecord)
+    .map((r): CitizenHistoryEntry => ({
+      cycle_id: typeof r['cycle_id'] === 'string' ? r['cycle_id'] : '',
+      civic_id: typeof r['civic_id'] === 'string' ? r['civic_id'] : '',
+      zone: typeof r['zone'] === 'string' ? r['zone'] : '',
+      action: typeof r['action'] === 'string' ? r['action'] : '',
+      summary: typeof r['summary'] === 'string' ? r['summary'] : '',
+      at: typeof r['at'] === 'string' ? r['at'] : '',
+    }));
+  if (entries.length === 0) return null;
+
+  // Newest first — the panel shows the most recent deeds.
+  return entries.sort((a, b) => (a.at < b.at ? 1 : a.at > b.at ? -1 : 0));
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+/**
+ * Resolve the Chronicle (citizen_history) with two best-effort sources:
+ *   1. world/citizen-history.json — dedicated file (preferred)
+ *   2. citizen_history field inside world/current-world.json (C-346 FIX-6)
+ * Returns null when neither exists — the panel renders "Chronicle empty".
+ */
+async function loadCitizenHistory(signal: AbortSignal): Promise<CitizenHistoryEntry[] | null> {
+  const direct = await safeFetch<unknown>(hiveWorldUrl('world/citizen-history.json'), signal);
+  const fromDirect = normalizeHistory(direct);
+  if (fromDirect) return fromDirect;
+
+  const world = await safeFetch<unknown>(hiveWorldUrl('world/current-world.json'), signal);
+  return normalizeHistory(world);
+}
+
 async function loadWorld(signal: AbortSignal): Promise<HiveWorldData> {
   const { cycle, usedProxy } = await resolveCycle(signal);
 
@@ -107,7 +171,7 @@ async function loadWorld(signal: AbortSignal): Promise<HiveWorldData> {
   const sentinelUrl = (id: string) => hiveWorldUrl(`world/sentinels/${id}.json`);
   const sentinelIndexUrl = hiveWorldUrl('world/sentinels/index.json');
 
-  const [event, quest, sentinelIndex] = await Promise.all([
+  const [event, quest, sentinelIndex, citizenHistory] = await Promise.all([
     cycle.active_event_id
       ? safeFetch<HiveEventData>(eventUrl(cycle.active_event_id), signal)
       : Promise.resolve(null),
@@ -115,6 +179,7 @@ async function loadWorld(signal: AbortSignal): Promise<HiveWorldData> {
       ? safeFetch<HiveQuestData>(questUrl(cycle.active_quest_id), signal)
       : Promise.resolve(null),
     safeFetch<string[]>(sentinelIndexUrl, signal),
+    loadCitizenHistory(signal),
   ]);
 
   const ids = sentinelIndex ?? (cycle.active_sentinel_id ? [cycle.active_sentinel_id] : []);
@@ -129,6 +194,7 @@ async function loadWorld(signal: AbortSignal): Promise<HiveWorldData> {
     quest,
     sentinels,
     activeSentinelId: cycle.active_sentinel_id,
+    citizenHistory,
     sourceUrl: usedProxy ? '/api/hive/world (proxy)' : 'bundled',
   };
 }
@@ -168,11 +234,35 @@ export function useHiveWorld(): {
       });
   }, []);
 
+  // SHELL-9: visibilitychange-aware polling. While the HIVE chamber tab is
+  // hidden we skip the network call entirely (no warm serverless functions, no
+  // wasted re-renders) and re-check on a short backoff. On tab focus we refresh
+  // immediately, then resume the foreground cadence.
   useEffect(() => {
     refresh();
-    const interval = setInterval(refresh, POLL_MS);
+
+    let timer: ReturnType<typeof setTimeout> | undefined;
+
+    const scheduleNext = () => {
+      timer = setTimeout(tick, document.hidden ? HIDDEN_BACKOFF_MS : POLL_MS);
+    };
+    const tick = () => {
+      if (!document.hidden) refresh();
+      scheduleNext();
+    };
+    scheduleNext();
+
+    const onVisibility = () => {
+      if (document.hidden) return;
+      refresh(); // immediate refresh on tab focus
+      if (timer) clearTimeout(timer);
+      scheduleNext(); // reset to the foreground cadence
+    };
+    document.addEventListener('visibilitychange', onVisibility);
+
     return () => {
-      clearInterval(interval);
+      if (timer) clearTimeout(timer);
+      document.removeEventListener('visibilitychange', onVisibility);
       abortRef.current?.abort();
     };
   }, [refresh]);
