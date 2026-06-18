@@ -24,14 +24,24 @@
  *   "start", "ready" — game lifecycle, not player actions
  */
 
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { getHiveWorldBaseUrl } from '../../../src/lib/meshWorldFetch';
 import { submitAttestation } from '../../../src/lib/epicon-attest';
 import { env } from '../../../config/env';
 
-const GAME_BASE_URL =
+export const GAME_BASE_URL =
   (import.meta.env.VITE_HIVE_URL as string | undefined)?.trim() ||
   'https://solid-crystal-164.higgsfield.gg/';
+
+// Origin of the game iframe — used both to validate inbound postMessages and as
+// the explicit targetOrigin for shell → game pushes (never '*', see SHELL-2/5).
+const GAME_ORIGIN = (() => {
+  try {
+    return new URL(GAME_BASE_URL).origin;
+  } catch {
+    return '';
+  }
+})();
 
 // Pseudonymous civic_id for this browser session (C-341 anon pattern).
 // Persisted in localStorage so a returning citizen keeps one identity in
@@ -46,6 +56,34 @@ function getOrCreateCivicId(): string {
     return fresh;
   } catch {
     return `mobius-anon-${Math.random().toString(36).slice(2, 10)}`;
+  }
+}
+
+// SHELL-7: persist the per-session dedup set in sessionStorage, keyed by
+// civic_id. This survives HiveGameEmbed unmount/remount (chamber tab switches)
+// so a realm sealed in one mount can't be re-attested in the next — but clears
+// on tab close, so it never persists forever.
+function attestedStorageKey(civicId: string): string {
+  return `hive_attested_${civicId}`;
+}
+
+function loadAttested(civicId: string): Set<string> {
+  try {
+    const raw = sessionStorage.getItem(attestedStorageKey(civicId));
+    if (!raw) return new Set();
+    const parsed: unknown = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return new Set();
+    return new Set(parsed.filter((x): x is string => typeof x === 'string'));
+  } catch {
+    return new Set();
+  }
+}
+
+function saveAttested(civicId: string, set: Set<string>): void {
+  try {
+    sessionStorage.setItem(attestedStorageKey(civicId), JSON.stringify([...set]));
+  } catch {
+    /* sessionStorage unavailable (private mode / quota) — dedup degrades to in-memory */
   }
 }
 
@@ -132,48 +170,70 @@ function toAttestation(
   return null; // "start", "ready", unknown — do not attest
 }
 
+// Status of the most recent ledger write — shown as a small non-blocking
+// indicator so the player knows their deed was recorded.
+export type WriteStatus = 'idle' | 'writing' | 'ok' | 'fail';
+
 interface HiveGameEmbedProps {
   gi: number | null;
   worldMood: string | null;
   cycle: string | null;
+  /** Shared ref so HivePulseBar can drive fullscreen on the same iframe (SHELL-3). */
+  iframeRef: React.RefObject<HTMLIFrameElement | null>;
+  /** Lifted into HivePortal so HivePulseBar can mirror the unmute state (SHELL-5). */
+  muted: boolean;
+  /** Lifted write status — rendered here and in HivePulseBar (SHELL-6). */
+  writeStatus: WriteStatus;
+  lastEventType: string | null;
+  onWriteStatus: (status: WriteStatus) => void;
+  onEventType: (type: string) => void;
 }
 
-// Status of the most recent ledger write — shown as a small non-blocking
-// indicator so the player knows their deed was recorded.
-type WriteStatus = 'idle' | 'writing' | 'ok' | 'fail';
-
-export const HiveGameEmbed: React.FC<HiveGameEmbedProps> = ({ gi, worldMood, cycle }) => {
-  const iframeRef = useRef<HTMLIFrameElement>(null);
+export const HiveGameEmbed: React.FC<HiveGameEmbedProps> = ({
+  gi,
+  worldMood,
+  cycle,
+  iframeRef,
+  muted,
+  writeStatus,
+  lastEventType,
+  onWriteStatus,
+  onEventType,
+}) => {
   const [loaded, setLoaded] = useState(false);
-  const [muted] = useState(true);
-  const [writeStatus, setWriteStatus] = useState<WriteStatus>('idle');
-  const [lastEventType, setLastEventType] = useState<string | null>(null);
   const civicId = useRef(getOrCreateCivicId());
-  // Deduplicate: track which (type+realm+cycle) tuples have been attested this
-  // session to prevent double-writes if the game emits twice (e.g. on remount).
-  const attested = useRef(new Set<string>());
+  // SHELL-7: dedup set hydrated from sessionStorage (survives remounts within
+  // the session). Lazy-init so we read storage once, not on every render.
+  const attested = useRef<Set<string> | null>(null);
+  if (attested.current === null) attested.current = loadAttested(civicId.current);
+  // Avoid stale-closure status churn: refs hold the latest setters for the
+  // mount-stable message handler below.
+  const onWriteStatusRef = useRef(onWriteStatus);
+  const onEventTypeRef = useRef(onEventType);
+  onWriteStatusRef.current = onWriteStatus;
+  onEventTypeRef.current = onEventType;
 
-  // Pass ?data= so the game overlays the shell's live current-world.json.
-  const gameUrl = useCallback(() => {
+  // Build the iframe src ONCE (captured initial muted state). Mute toggles after
+  // mount go via postMessage (SHELL-5), so the src never changes and the iframe
+  // is never reloaded mid-session.
+  const srcRef = useRef<string>('');
+  if (!srcRef.current) {
     const base = getHiveWorldBaseUrl();
     const url = new URL(GAME_BASE_URL);
     if (base.startsWith('http')) url.searchParams.set('data', base);
     if (muted) url.searchParams.set('muted', '1');
-    return url.toString();
-  }, [muted]);
+    srcRef.current = url.toString();
+  }
 
   // C-341 write-back: listen for postMessage from the game iframe.
   useEffect(() => {
     if (!env.api.ledger) return; // ledger not configured — skip silently
 
-    // Expected origin of the game iframe — validated on every message.
-    const gameOrigin = new URL(GAME_BASE_URL).origin;
-
     const handler = async (ev: MessageEvent) => {
       // P1: validate sender — must be our iframe's window at the expected origin.
       // Rejects forged postMessages from any other frame or extension.
       if (ev.source !== iframeRef.current?.contentWindow) return;
-      if (ev.origin !== gameOrigin) return;
+      if (ev.origin !== GAME_ORIGIN) return;
       if (!isHiveEvent(ev.data)) return;
       const gameEv = ev.data;
 
@@ -182,21 +242,43 @@ export const HiveGameEmbed: React.FC<HiveGameEmbedProps> = ({ gi, worldMood, cyc
 
       // Dedup key: type + realm (or 'none') + cycle
       const dedupKey = `${gameEv.type}:${gameEv.realm ?? 'none'}:${gameEv.cycle ?? '?'}`;
-      if (attested.current.has(dedupKey)) return;
-      setLastEventType(gameEv.type);
-      setWriteStatus('writing');
+      if (attested.current?.has(dedupKey)) return;
+      onEventTypeRef.current(gameEv.type);
+      onWriteStatusRef.current('writing');
 
       const result = await submitAttestation(attestation);
-      if (result.ok) attested.current.add(dedupKey);
-      setWriteStatus(result.ok ? 'ok' : 'fail');
+      if (result.ok && attested.current) {
+        attested.current.add(dedupKey);
+        saveAttested(civicId.current, attested.current);
+      }
+      onWriteStatusRef.current(result.ok ? 'ok' : 'fail');
 
       // Clear indicator after 4s so it doesn't clutter the screen
-      setTimeout(() => setWriteStatus('idle'), 4000);
+      setTimeout(() => onWriteStatusRef.current('idle'), 4000);
     };
 
     window.addEventListener('message', handler);
     return () => window.removeEventListener('message', handler);
-  }, []); // stable — civicId.current, attested.current, iframeRef.current are refs
+  }, [iframeRef]); // stable — civicId/attested are refs, setters via refs
+
+  // SHELL-2: push GI updates into the game so its internal fog layer stays in
+  // sync with the shell's CSS fog (no full re-render — postMessage only).
+  useEffect(() => {
+    if (!loaded || gi == null || !GAME_ORIGIN) return;
+    iframeRef.current?.contentWindow?.postMessage(
+      { source: 'mobius-shell', type: 'gi-update', gi },
+      GAME_ORIGIN,
+    );
+  }, [gi, loaded, iframeRef]);
+
+  // SHELL-5: push mute/unmute without remounting the iframe.
+  useEffect(() => {
+    if (!loaded || !GAME_ORIGIN) return;
+    iframeRef.current?.contentWindow?.postMessage(
+      { source: 'mobius-shell', type: muted ? 'mute' : 'unmute' },
+      GAME_ORIGIN,
+    );
+  }, [muted, loaded, iframeRef]);
 
   const fogOpacity =
     gi != null ? Math.max(0, Math.min(0.45, (0.95 - gi) * 0.7)) : 0.3;
@@ -231,7 +313,7 @@ export const HiveGameEmbed: React.FC<HiveGameEmbedProps> = ({ gi, worldMood, cyc
       {/* game iframe */}
       <iframe
         ref={iframeRef}
-        src={gameUrl()}
+        src={srcRef.current}
         title="HIVE 16-bit World Simulator"
         className="flex-1 w-full border-0 min-h-0"
         style={{ display: loaded ? 'block' : 'none', imageRendering: 'pixelated' }}
