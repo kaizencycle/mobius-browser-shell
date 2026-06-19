@@ -13,6 +13,7 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { createHmac } from 'crypto';
 import { verifyAuthenticationResponse } from '@simplewebauthn/server';
+import { mintCitizenToken } from '../_jwt.js';
 
 const RP_ID = process.env.WEBAUTHN_RP_ID ?? 'mobius-browser-shell.vercel.app';
 const RP_ORIGIN = process.env.WEBAUTHN_RP_ORIGIN ?? 'https://mobius-browser-shell.vercel.app';
@@ -20,6 +21,7 @@ const CHALLENGE_SECRET = process.env.CHALLENGE_SECRET ?? '';
 const CITIZEN_ID_PEPPER = process.env.CITIZEN_ID_PEPPER ?? '';
 const IDENTITY_API_URL = process.env.MOBIUS_IDENTITY_API_URL ?? '';
 const IDENTITY_API_KEY = process.env.MOBIUS_IDENTITY_API_KEY ?? '';
+const JWT_SECRET = process.env.JWT_SECRET ?? '';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'POST') {
@@ -152,7 +154,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     onboarded,
   };
 
-  return res.status(200).json(identity);
+  const token = JWT_SECRET ? mintCitizenToken(citizenId, handle, JWT_SECRET) : undefined;
+  return res.status(200).json(token ? { ...identity, token } : identity);
 }
 
 function parseCookie(header: string, name: string): string | null {

@@ -8,11 +8,13 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { createHmac } from 'crypto';
 import { verifyRegistrationResponse } from '@simplewebauthn/server';
+import { mintCitizenToken } from '../_jwt.js';
 
 const RP_ID = process.env.WEBAUTHN_RP_ID ?? 'mobius-browser-shell.vercel.app';
 const RP_ORIGIN = process.env.WEBAUTHN_RP_ORIGIN ?? 'https://mobius-browser-shell.vercel.app';
 const CHALLENGE_SECRET = process.env.CHALLENGE_SECRET ?? '';
 const CITIZEN_ID_PEPPER = process.env.CITIZEN_ID_PEPPER ?? '';
+const JWT_SECRET = process.env.JWT_SECRET ?? '';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'POST') {
@@ -121,9 +123,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     onboarded: false,
   };
 
+  const token = JWT_SECRET ? mintCitizenToken(citizenId, null, JWT_SECRET) : undefined;
+
   // When identity API is not configured, return credential for client-side cache
   // so session-only restore can verify assertions without the identity store
   const response: Record<string, unknown> = { ...identity };
+  if (token) response.token = token;
   if (!IDENTITY_API_URL || !IDENTITY_API_KEY) {
     response.credential = {
       id: credentialIdB64,
