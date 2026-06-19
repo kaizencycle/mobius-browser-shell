@@ -68,9 +68,9 @@ export interface AuthContextValue {
   hasIdentityCache: boolean;
   error: string | null;
   clearError: () => void;
-  /** @deprecated Use citizen. JWT follow-up will add token. */
+  /** Session JWT — issued by auth verify endpoints on passkey success. Null until first login after JWT_SECRET is set. */
   token: string | null;
-  /** @deprecated Use citizen. Legacy shape for WalletContext, InquiryChat, etc. */
+  /** Legacy shape for WalletContext and InquiryChat. Mirrors citizen fields. */
   user: { id: string; email: string; name?: string } | null;
 }
 
@@ -90,9 +90,12 @@ const SESSION_KEY = 'mobius_session';
 
 const ATLAS_EVENTS_URL = (import.meta.env.VITE_ATLAS_URL as string) || '/api/atlas/events';
 
+const SESSION_TOKEN_KEY = 'mobius_session_token';
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [status, setStatus] = useState<AuthStatus>('loading');
   const [citizen, setCitizen] = useState<CitizenIdentity | null>(null);
+  const [sessionToken, setSessionToken] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [hasIdentityCache, setHasIdentityCache] = useState(false);
 
@@ -106,6 +109,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const age = Date.now() - new Date(parsed.authenticatedAt).getTime();
         if (age < 24 * 60 * 60 * 1000) {
           setCitizen(parsed);
+          setSessionToken(sessionStorage.getItem(SESSION_TOKEN_KEY));
           setStatus('authenticated');
           setHasIdentityCache(identityCache.hasCache());
           return;
@@ -118,8 +122,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setStatus('unauthenticated');
   }, []);
 
-  const persistSession = useCallback((identity: CitizenIdentity) => {
+  const persistSession = useCallback((identity: CitizenIdentity, token?: string | null) => {
     sessionStorage.setItem(SESSION_KEY, JSON.stringify(identity));
+    if (token !== undefined) {
+      if (token) {
+        sessionStorage.setItem(SESSION_TOKEN_KEY, token);
+      } else {
+        sessionStorage.removeItem(SESSION_TOKEN_KEY);
+      }
+      setSessionToken(token);
+    }
     setCitizen(identity);
     setStatus('authenticated');
   }, []);
@@ -155,8 +167,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const register = useCallback(async () => {
     setError(null);
     try {
-      const { identity, credentialId, credential } = await PasskeyService.register();
-      persistSession(identity);
+      const { identity, credentialId, credential, token } = await PasskeyService.register();
+      persistSession(identity, token);
       // Store in cache when we have credential (session-only mode)
       if (credential) {
         await identityCache.store(identity, credentialId, credential);
@@ -171,8 +183,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const authenticate = useCallback(async () => {
     setError(null);
     try {
-      const identity = await PasskeyService.authenticate();
-      persistSession(identity);
+      const { identity, token } = await PasskeyService.authenticate();
+      persistSession(identity, token);
       logAuthEvent('AUTHENTICATE', { citizenId: identity.citizenId });
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Authentication failed');
@@ -194,11 +206,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return;
     }
     try {
-      const identity = await PasskeyService.authenticateFromCache(
+      const { identity, token } = await PasskeyService.authenticateFromCache(
         cached.credentialId,
         cached.credential
       );
-      persistSession(identity);
+      persistSession(identity, token);
       setHasIdentityCache(true);
       logAuthEvent('CACHE_RESTORE', { citizenId: identity.citizenId });
     } catch (err) {
@@ -287,9 +299,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signOut = useCallback(() => {
     const id = citizen?.citizenId ?? null;
     sessionStorage.removeItem(SESSION_KEY);
+    sessionStorage.removeItem(SESSION_TOKEN_KEY);
     sessionStorage.removeItem('mobius_has_entered');
     identityCache.clear();
     setCitizen(null);
+    setSessionToken(null);
     setHasIdentityCache(false);
     setStatus('unauthenticated');
     logAuthEvent('SIGN_OUT', { citizenId: id ?? undefined });
@@ -297,8 +311,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const clearError = useCallback(() => setError(null), []);
 
-  // Legacy compat: token (null until JWT PR), user shape for WalletContext/InquiryChat
-  const token: string | null = null;
+  const token = sessionToken;
   const user = citizen
     ? { id: citizen.citizenId, email: '', name: citizen.handle ?? undefined }
     : null;

@@ -24,6 +24,12 @@ export interface RegisterResult {
   identity: CitizenIdentity;
   credentialId: string;
   credential?: CachedCredential;
+  token: string | null;
+}
+
+export interface AuthResult {
+  identity: CitizenIdentity;
+  token: string | null;
 }
 
 export const PasskeyService = {
@@ -105,11 +111,13 @@ export const PasskeyService = {
     }
 
     const data = await verifyRes.json();
-    const identity = data as CitizenIdentity;
+    const { token, credential: cachedCred, ...rest } = data as Record<string, unknown>;
+    const identity = rest as unknown as CitizenIdentity;
     return {
       identity,
       credentialId: credential.id,
-      credential: data.credential ?? undefined,
+      credential: (cachedCred as CachedCredential | undefined) ?? undefined,
+      token: (token as string | undefined) ?? null,
     };
   },
 
@@ -120,7 +128,7 @@ export const PasskeyService = {
   async authenticateFromCache(
     credentialId: string,
     credential: CachedCredential
-  ): Promise<CitizenIdentity> {
+  ): Promise<AuthResult> {
     const challengeRes = await fetch('/api/auth/login/challenge', {
       method: 'GET',
       credentials: 'include',
@@ -172,12 +180,14 @@ export const PasskeyService = {
       throw new Error(err.error ?? 'Authentication failed');
     }
 
-    return verifyRes.json() as Promise<CitizenIdentity>;
+    const data = await verifyRes.json() as Record<string, unknown>;
+    const { token, ...rest } = data;
+    return { identity: rest as unknown as CitizenIdentity, token: (token as string | undefined) ?? null };
   },
 
   // ── Authentication ──────────────────────────────────────────────────────────
 
-  async authenticate(): Promise<CitizenIdentity> {
+  async authenticate(): Promise<AuthResult> {
     const challengeRes = await fetch('/api/auth/login/challenge', {
       method: 'GET',
       credentials: 'include',
@@ -221,7 +231,9 @@ export const PasskeyService = {
       throw new Error(err.error ?? 'Authentication failed');
     }
 
-    return verifyRes.json() as Promise<CitizenIdentity>;
+    const data = await verifyRes.json() as Record<string, unknown>;
+    const { token, ...rest } = data;
+    return { identity: rest as unknown as CitizenIdentity, token: (token as string | undefined) ?? null };
   },
 };
 
