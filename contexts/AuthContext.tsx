@@ -122,15 +122,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setStatus('unauthenticated');
   }, []);
 
-  const persistSession = useCallback((identity: CitizenIdentity, token: string | null = null) => {
+  const persistSession = useCallback((identity: CitizenIdentity, token?: string | null) => {
     sessionStorage.setItem(SESSION_KEY, JSON.stringify(identity));
-    if (token) {
-      sessionStorage.setItem(SESSION_TOKEN_KEY, token);
-    } else {
-      sessionStorage.removeItem(SESSION_TOKEN_KEY);
+    if (token !== undefined) {
+      if (token) {
+        sessionStorage.setItem(SESSION_TOKEN_KEY, token);
+      } else {
+        sessionStorage.removeItem(SESSION_TOKEN_KEY);
+      }
+      setSessionToken(token);
     }
     setCitizen(identity);
-    setSessionToken(token);
     setStatus('authenticated');
   }, []);
 
