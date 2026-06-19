@@ -100,8 +100,8 @@ Now tabs will embed your real deployed labs via iframes!
 | `VITE_CITIZEN_SHIELD_URL` | Citizen Shield URL | For live mode |
 | `VITE_HIVE_URL` | HIVE game URL (optional) | No |
 | `VITE_USE_LIVE_LABS` | `true` = iframe, `false` = demo UI | No (default: false) |
-| `VITE_MIC_API_BASE` | MIC Indexer API (future) | No |
-| `VITE_LEDGER_API` | Command Ledger API (future) | No |
+| `VITE_MIC_API_BASE` | MIC Indexer API base URL | No |
+| `VITE_LEDGER_API` | Command Ledger API base URL | No |
 
 ## Deploy
 
@@ -160,24 +160,19 @@ mobius-browser-shell/
 └── .env.local.example      # Environment template
 ```
 
-## Future: MIC Integration
+## MIC Wallet Integration
 
-The shell is designed to eventually connect to the MIC economy:
+The Wallet tab fetches live data from `VITE_MIC_WALLET_API_BASE` using a Bearer JWT minted by the shell after WebAuthn authentication. Authentication (`JWT_SECRET`) must be set in the Vercel dashboard for the token to flow; without it the wallet silently shows no data.
 
-```typescript
-// Future: src/services/micClient.ts
-export async function getWallet() {
-  const res = await fetch(`${env.MIC_API_BASE}/wallet/me`);
-  return res.json();
-  // Returns: { micBalance, shards, mii, ... }
-}
-
-export async function postEarn(lab: string, event: string) {
-  // POST to MIC indexer when user completes actions
-}
+```
+Registration / Login
+  → /api/auth/*/verify  (WebAuthn assertion)
+  → shell mints HS256 JWT (24h, citizenId + handle)
+  → WalletContext carries Bearer token
+  → ${VITE_MIC_WALLET_API_BASE}/mic/wallet
 ```
 
-For now, the Wallet tab shows demo data. When the MIC API is ready, we'll wire it up.
+The `HIVE → ledger → Chronicle` write-back loop (C-341) posts citizen attestations to `VITE_LEDGER_API/ledger/attest` on game events — no auth required on that path.
 
 ## Philosophy
 
@@ -218,8 +213,8 @@ MIT - but remember: you can fork the shell, not the integrity.
 | Knowledge Graph | ✅ Ready | 1.0.0-beta.1 |
 | Sentinel System | ✅ Active | 1.0.0 |
 | Anti-Nuke Protection | ✅ Active | 1.0.0 |
-| Authentication | ✅ Ready | 1.0.0-beta.1 |
-| MIC/MII Integration | ✅ Ready | 1.0.0-beta.1 |
+| Authentication (WebAuthn + JWT) | ✅ Ready | 1.0.0-beta.2 |
+| MIC Wallet (requires JWT_SECRET in Vercel) | ✅ Wired | 1.0.0-beta.2 |
 
 ## 🛡️ Sentinel Status
 
