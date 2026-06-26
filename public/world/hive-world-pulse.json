@@ -8,12 +8,12 @@
   },
   "canon_rule": "Browser Shell shows world state; it does not canonize world state.",
   "cycle": "C-354",
-  "generated_at": "2026-06-26T04:42:19.372092Z",
-  "idempotency_key": "mobius-browser-shell:HIVE_WORLD_PULSE_V1:C-354:f064f89dfc2bea58:fetch-hive-world",
+  "generated_at": "2026-06-26T08:21:57.246382Z",
+  "idempotency_key": "mobius-browser-shell:HIVE_WORLD_PULSE_V1:C-354:bf2242de2bee10bf:fetch-hive-world",
   "node_id": "mobius-browser-shell",
   "schema": "HIVE_WORLD_PULSE_V1",
-  "source_hash": "f064f89dfc2bea58c49c5caaad5f38ee3acd35597690763d6667223f47f51687",
-  "terminal_gi": 0.83,
+  "source_hash": "bf2242de2bee10bf6ca06ce4bf95bace42178397319362b6a915cc5a512727bf",
+  "terminal_gi": 0.81,
   "terminal_snapshot_available": true,
   "terminal_snapshot_error": null,
   "world": {
@@ -22,7 +22,7 @@
       "active_event_id": "signal-fog",
       "active_quest_id": "restore-the-beacon",
       "active_sentinel_id": "zeus",
-      "cycle_id": "C-353",
+      "cycle_id": "C-354",
       "ingest_health": {
         "cycle_state": true,
         "mobius_pulse": true,
@@ -37,10 +37,10 @@
         "kv_status": "degraded",
         "vault_progress": null
       },
-      "updated_at": "2026-06-26T00:16:36.323Z"
+      "updated_at": "2026-06-26T04:51:01.188Z"
     },
     "event": {
-      "cycle_id": "C-353",
+      "cycle_id": "C-354",
       "description": "The lattice is visible, but unstable. Memory remains, live sight fades.",
       "id": "signal-fog",
       "sentinel_owner": "zeus",
@@ -58,11 +58,11 @@
         "overlay": "fog",
         "priority": 1
       },
-      "updated_at": "2026-06-26T00:16:36.323Z"
+      "updated_at": "2026-06-26T04:51:01.188Z"
     },
     "quest": {
       "assigned_by": "zeus",
-      "cycle_id": "C-353",
+      "cycle_id": "C-354",
       "description": "Re-establish live signal continuity across the Castle.",
       "id": "restore-the-beacon",
       "progress": 0,
@@ -91,7 +91,7 @@
       ],
       "title": "Restore the Beacon",
       "type": "stability_quest",
-      "updated_at": "2026-06-26T00:16:36.323Z"
+      "updated_at": "2026-06-26T04:51:01.188Z"
     },
     "repo": "kaizencycle/mobius-hive",
     "sentinel": null
