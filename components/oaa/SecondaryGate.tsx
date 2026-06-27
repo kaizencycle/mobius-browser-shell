@@ -9,7 +9,7 @@ interface SecondaryGateProps {
   onFail: () => void;
 }
 
-const SYNTHESIS_QUESTIONS = [
+const SYNTHESIS_QUESTIONS: ((title: string) => string)[] = [
   (title: string) => `In your own words, what was the core argument of "${title}"?`,
   (title: string) => `Name one real-world example where the ideas in "${title}" apply.`,
   (title: string) => `If someone hadn't watched "${title}", what one sentence summary would you give them?`,
@@ -26,7 +26,8 @@ export const SecondaryGate: React.FC<SecondaryGateProps> = ({
 
   // Pick a question based on course id (deterministic)
   const qIndex = course.id.charCodeAt(0) % SYNTHESIS_QUESTIONS.length;
-  const question = SYNTHESIS_QUESTIONS[qIndex](course.title);
+  const questionFn = SYNTHESIS_QUESTIONS[qIndex] ?? SYNTHESIS_QUESTIONS[0]!;
+  const question = questionFn(course.title);
 
   const wordCount = response.trim().split(/\s+/).filter(Boolean).length;
   const MIN_WORDS = 20;

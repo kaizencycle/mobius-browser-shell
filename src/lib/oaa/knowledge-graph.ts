@@ -60,9 +60,10 @@ export function updateGraph(
         e.target_topic === edge.target_topic
     );
     if (idx >= 0) {
+      const existing = graph[idx]!;
       graph[idx] = {
-        ...graph[idx],
-        weight: Math.min(graph[idx].weight + WEIGHT_INCREMENT, MAX_WEIGHT),
+        ...existing,
+        weight: Math.min(existing.weight + WEIGHT_INCREMENT, MAX_WEIGHT),
         last_updated: new Date().toISOString(),
       };
     } else {

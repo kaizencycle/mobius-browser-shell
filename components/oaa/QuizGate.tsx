@@ -39,9 +39,9 @@ export const QuizGate: React.FC<QuizGateProps> = ({
   };
 
   const handleNext = () => {
-    if (!question) return;
+    if (!question || !selected) return;
     if (isLast) {
-      const finalAnswers = { ...answers, [question.id]: selected! };
+      const finalAnswers = { ...answers, [question.id]: selected };
       const session: QuizSession = {
         userId,
         quizId: quiz.id,
@@ -66,7 +66,7 @@ export const QuizGate: React.FC<QuizGateProps> = ({
 
   if (!question) return null;
 
-  const optionLabels = ['A', 'B', 'C', 'D'];
+  const optionLabels: string[] = ['A', 'B', 'C', 'D'];
 
   return (
     <div className="max-w-xl mx-auto px-4">
@@ -86,7 +86,7 @@ export const QuizGate: React.FC<QuizGateProps> = ({
               key={i}
               className={`h-1.5 flex-1 rounded-full transition-all duration-300 ${
                 i < currentIdx
-                  ? (answers[quiz.questions[i].id] === quiz.questions[i].correctAnswer
+                  ? (answers[quiz.questions[i]?.id ?? ''] === quiz.questions[i]?.correctAnswer
                     ? 'bg-emerald-400'
                     : 'bg-rose-400')
                   : i === currentIdx
@@ -114,7 +114,7 @@ export const QuizGate: React.FC<QuizGateProps> = ({
             return (
               <button
                 key={letter}
-                onClick={() => !confirmed && setSelected(letter)}
+                onClick={() => !confirmed && letter && setSelected(letter)}
                 disabled={confirmed}
                 className={`
                   w-full flex items-center gap-3 p-3.5 rounded-xl border-2 text-left text-sm

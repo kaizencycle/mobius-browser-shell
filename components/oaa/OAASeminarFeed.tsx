@@ -66,7 +66,7 @@ export const OAASeminarFeed: React.FC<OAASeminarFeedProps> = ({ className = '' }
   const [showToast, setShowToast] = useState(false);
 
   // ── Knowledge graph ──────────────────────────────────────────────────────
-  const userId = citizen?.user_id ?? 'guest';
+  const userId = citizen?.citizenId ?? 'guest';
   const [graph, setGraph] = useState(() => loadGraph(userId));
 
   // ── Subject selection ────────────────────────────────────────────────────
@@ -78,7 +78,7 @@ export const OAASeminarFeed: React.FC<OAASeminarFeedProps> = ({ className = '' }
     const stack = available.slice(0, SEMINAR_STACK_SIZE);
     setSelectedSubject(subject);
     setSeminarStack(stack);
-    setCurrentCourse(stack[0]);
+    setCurrentCourse(stack[0] ?? null);
     setScreen('swipe-stack');
   }, []);
 

@@ -50,7 +50,9 @@ export function computeSwipeVelocity(
   seminarDurationSeconds: number
 ): number {
   if (swipeTimestamps.length < 2) return 0;
-  const elapsed = (swipeTimestamps[swipeTimestamps.length - 1] - swipeTimestamps[0]) / 1000;
+  const first = swipeTimestamps[0] ?? 0;
+  const last = swipeTimestamps[swipeTimestamps.length - 1] ?? 0;
+  const elapsed = (last - first) / 1000;
   // Ratio of expected time to actual time — clamped to [0, 1]
   // elapsed >> expected → ratio small → velocity low (good)
   // elapsed << expected → ratio high → velocity high (suspicious)
