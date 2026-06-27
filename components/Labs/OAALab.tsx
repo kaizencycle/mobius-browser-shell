@@ -7,6 +7,7 @@ import { MOBIUS_OPEN_INQUIRY_EVENT } from '../InquiryChatModal';
 import { Map, Compass, Plus, Atom, Calculator, Dna, Code, FlaskConical, Cpu, Globe, Rocket, ArrowRight, ArrowLeft, Send, X, BookOpen, ChevronDown, GraduationCap, Award } from 'lucide-react';
 import { LearningProgressTracker } from '../Learning';
 import { OAALearnToEarn } from './OAALearnToEarn';
+import { OAASeminarFeed } from '../oaa/OAASeminarFeed';
 import { AtlasChamberHeader } from './AtlasChamberHeader';
 import { CitizenOnboardingStepper } from './CitizenOnboardingStepper';
 import { useWallet } from '../../contexts/WalletContext';
@@ -46,7 +47,7 @@ const SUBJECTS: Subject[] = [
 ];
 
 // View mode for OAA Lab
-type OAAView = 'subjects' | 'learning';
+type OAAView = 'subjects' | 'learning' | 'seminar-feed';
 
 const XP_TO_MIC_THRESHOLD = 50;
 
@@ -123,12 +124,45 @@ export const OAALab: React.FC<OAALabProps> = ({ onNavigateToKnowledgeGraph }) =>
         </div>
       </div>
       <CitizenOnboardingStepper />
+      {/* Mode toggle */}
+      <div className="flex border-b border-stone-700 bg-stone-800 shrink-0">
+        <button
+          onClick={() => setCurrentView('learning')}
+          className={`flex-1 py-2 text-xs font-semibold transition-colors ${
+            currentView !== 'seminar-feed'
+              ? 'text-amber-400 border-b-2 border-amber-400'
+              : 'text-stone-400 hover:text-stone-200'
+          }`}
+        >
+          <BookOpen className="w-3.5 h-3.5 inline mr-1" />
+          Quiz Modules
+        </button>
+        <button
+          onClick={() => setCurrentView('seminar-feed')}
+          className={`flex-1 py-2 text-xs font-semibold transition-colors ${
+            currentView === 'seminar-feed'
+              ? 'text-amber-400 border-b-2 border-amber-400'
+              : 'text-stone-400 hover:text-stone-200'
+          }`}
+        >
+          📺 Seminar Feed
+        </button>
+      </div>
+
       <div className="flex-1 min-h-0 overflow-auto">
-        {/* Stats row above learn-to-earn content */}
-        <div className="px-4 pt-3 pb-1">
-          <StatsRow progress={mockProgress} />
-        </div>
-        <OAALearnToEarn onNavigateToKnowledgeGraph={onNavigateToKnowledgeGraph} />
+        {currentView === 'seminar-feed' ? (
+          <div className="py-4">
+            <OAASeminarFeed />
+          </div>
+        ) : (
+          <>
+            {/* Stats row above learn-to-earn content */}
+            <div className="px-4 pt-3 pb-1">
+              <StatsRow progress={mockProgress} />
+            </div>
+            <OAALearnToEarn onNavigateToKnowledgeGraph={onNavigateToKnowledgeGraph} />
+          </>
+        )}
       </div>
     </div>
   );
