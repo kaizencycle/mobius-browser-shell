@@ -1,6 +1,6 @@
 {
   "cycle_id": "C-355",
-  "updated_at": "2026-06-27T17:31:35.803Z",
+  "updated_at": "2026-06-27T18:53:03.154Z",
   "rules_fired": [
     "kv_degraded"
   ],
