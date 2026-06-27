@@ -7,6 +7,7 @@ import {
   CourseSubject,
   CourseVideo,
   getCoursesBySubject,
+  getCourseById,
   getQuizByCourseId,
   SUBJECT_GROUPS,
 } from '../../src/lib/oaa/courses';
@@ -142,6 +143,7 @@ export const OAASeminarFeed: React.FC<OAASeminarFeedProps> = ({ className = '' }
       );
       await earnMIC('oaa_learning', {
         ...attestation,
+        mic_earned: breakdown.total,
         subject: currentCourse.subject,
         category: currentCourse.category,
       });
@@ -167,7 +169,7 @@ export const OAASeminarFeed: React.FC<OAASeminarFeedProps> = ({ className = '' }
         '',
         breakdown.total
       );
-      await earnMIC('oaa_learning', { ...attestation, subject: currentCourse.subject });
+      await earnMIC('oaa_learning', { ...attestation, mic_earned: breakdown.total, subject: currentCourse.subject });
       setPendingToast(breakdown);
       setShowToast(true);
     }
@@ -186,8 +188,7 @@ export const OAASeminarFeed: React.FC<OAASeminarFeedProps> = ({ className = '' }
 
   // ── Start next seminar ────────────────────────────────────────────────────
   const handleStartNext = useCallback((courseId: string) => {
-    const course = seminarStack.find(c => c.id === courseId) ??
-      getCoursesBySubject(selectedSubject ?? 'AI').find(c => c.id === courseId);
+    const course = getCourseById(courseId);
     if (!course) {
       setScreen('subject-select');
       return;

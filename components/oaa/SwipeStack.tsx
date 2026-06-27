@@ -59,8 +59,9 @@ export const SwipeStack: React.FC<SwipeStackProps> = ({ courses, onComplete }) =
         ))}
       </div>
 
-      {/* Current card */}
+      {/* Current card — keyed by course.id so React remounts fresh per card */}
       <SeminarCard
+        key={course.id}
         course={course}
         index={currentIndex + 1}
         total={courses.length}
