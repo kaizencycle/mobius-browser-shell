@@ -3,57 +3,54 @@ import { TabId } from '../types';
 import { SENTINELS } from '../constants';
 import { SentinelStatus } from './SentinelStatus';
 import { CitizenProfileButton } from './CitizenProfile/CitizenProfileButton';
-import { Coffee, CheckCircle } from 'lucide-react';
+import { OnboardingNudge } from './hallway/OnboardingNudge';
+import { Coffee, CheckCircle, Settings } from 'lucide-react';
 import { useTerminal } from '../contexts/TerminalContext';
 import { useWallet } from '../contexts/WalletContext';
 import { useAuth } from '../contexts/AuthContext';
 import { useGuest } from '../contexts/GuestContext';
+import { useVisitorOnboarding } from '../hooks/useVisitorOnboarding';
 import { wakeAllServices, env } from '../config/env';
+import { EXTENDED_CHAMBERS, type PublicChamber } from '../src/lib/chambers';
+import { pushChamberHistory } from '../src/lib/storage';
+import { ONBOARDING_PATHS } from '../src/lib/onboarding/paths';
 import { type TerminalState } from '../src/lib/terminal-bridge';
 
-const TERMINAL_APP_URL = `${env.terminalOrigin.replace(/\/+$/, '')}/terminal`;
+const TERMINAL_APP_URL = `${env.terminalBase.replace(/\/+$/, '')}/terminal`;
 
 function giClass(mode: TerminalState['mode'], stale: boolean): string {
   if (stale) return 'hall-gi--dim';
   return mode === 'green' ? 'hall-gi--green' : mode === 'red' ? 'hall-gi--red' : 'hall-gi--yellow';
 }
 
-interface Door {
-  id: TabId | null;
-  room: string;
-  slug: string;
-  icon: string;
-  title: string;
-  role: string;
-  dClass: string;
-  disabled?: boolean;
-}
-
-const DOORS: Door[] = [
-  { id: TabId.OAA,             room: '01', slug: 'LEARN',    icon: '📖', title: 'Learn',              role: 'Complete guided seminars, prove comprehension, earn MIC through civic skill.',           dClass: 'd-oaa'     },
-  { id: TabId.EPICON,          room: '02', slug: 'MEMORY',   icon: '🧠', title: 'Memory',             role: 'Actions and attestations recorded so the system remembers without relying on trust.',    dClass: 'd-epicon'  },
-  { id: TabId.HIVE,            room: '03', slug: 'WORLD',    icon: '🌍', title: 'World',              role: 'Enter the shared world where civic tasks, learning, and community stories are playable.', dClass: 'd-hive'    },
-  { id: TabId.REFLECTIONS,     room: '04', slug: 'REFLECT',  icon: '🪞', title: 'Reflection Nook',    role: 'Journal, mood, E.O.M.M. Past-you, present-you.',        dClass: 'd-reflect' },
-  { id: TabId.SHIELD,          room: '05', slug: 'SHIELD',   icon: '🛡', title: 'Citizen Shield',     role: 'Civic radar + ECHO threat intel.',                      dClass: 'd-shield'  },
-  { id: TabId.KNOWLEDGE_GRAPH, room: '06', slug: 'SENTINEL', icon: '⬡', title: 'ATLAS Observatory',  role: 'Knowledge graph. Concepts, intents, time.',             dClass: 'd-atlas'   },
-  { id: TabId.JADE,            room: '07', slug: 'SENTINEL', icon: '🍵', title: 'JADE Tea Room',      role: 'The room that asks why. Socratic UX.',                  dClass: 'd-jade'    },
-  { id: TabId.WALLET,          room: '08', slug: 'TREASURY', icon: '◎',  title: 'MIC Vault',          role: 'Wallet, shards, ledger. Provenance over balance.',       dClass: 'd-wallet'  },
-  { id: TabId.VAULT,           room: '09', slug: 'ARCHIVES', icon: '🗄️', title: 'Archives',            role: 'Sealed reserve blocks preserve history so Mobius can recover, replay, and verify.',     dClass: 'd-vault'   },
-  { id: null,                  room: 'COUNCIL', slug: 'DVA', icon: '⚖️', title: 'ATLAS · AUREA · EVE · JADE', role: 'The agent council reviews signals, checks integrity, and helps humans decide.', dClass: 'd-mii', disabled: true },
-];
-
 interface HallwayProps {
   onEnter: (tab: TabId) => void;
   onOpenProfile: () => void;
+  onOpenSettings?: () => void;
 }
 
-export const Hallway: React.FC<HallwayProps> = ({ onEnter, onOpenProfile }) => {
+function handleChamberClick(
+  chamber: PublicChamber,
+  onEnter: (tab: TabId) => void,
+): void {
+  pushChamberHistory(chamber.id);
+  if (chamber.externalUrl) {
+    window.open(chamber.externalUrl, chamber.id === 'pulse' ? '_blank' : '_blank', 'noopener,noreferrer');
+    return;
+  }
+  if (chamber.tabId) onEnter(chamber.tabId);
+}
+
+export const Hallway: React.FC<HallwayProps> = ({ onEnter, onOpenProfile, onOpenSettings }) => {
   const [isWaking, setIsWaking] = useState(false);
   const [wakeComplete, setWakeComplete] = useState(false);
   const { state: terminalState } = useTerminal();
   const { wallet } = useWallet();
   const { citizen } = useAuth();
   const { isGuest, triggerBecomeCitizen } = useGuest();
+  const { state: onboarding } = useVisitorOnboarding();
+
+  const pathDef = ONBOARDING_PATHS.find(p => p.id === onboarding.path);
 
   const handleWakeLabs = async () => {
     setIsWaking(true);
@@ -64,11 +61,13 @@ export const Hallway: React.FC<HallwayProps> = ({ onEnter, onOpenProfile }) => {
     setTimeout(() => setWakeComplete(false), 3000);
   };
 
+  const featured = EXTENDED_CHAMBERS.filter(c => c.featured);
+  const more = EXTENDED_CHAMBERS.filter(c => !c.featured);
+
   return (
     <div className="hall-root">
-      <div className="hall-inner">
+      <div className="hall-inner hall-inner--public">
 
-        {/* ── Hall header ─────────────────────────────────────── */}
         <div className="hall-head">
           <div className="brand">
             <div className="glyph">
@@ -81,7 +80,7 @@ export const Hallway: React.FC<HallwayProps> = ({ onEnter, onOpenProfile }) => {
               <div className="name">Mobius — School of Chambers</div>
               <div className="sub">
                 {env.network.isTestnet && <span className="hall-testnet">TESTNET</span>}
-                ATLAS v1.0 · 7 rooms · MII 0.95
+                Seven chambers · one substrate
               </div>
             </div>
           </div>
@@ -93,7 +92,7 @@ export const Hallway: React.FC<HallwayProps> = ({ onEnter, onOpenProfile }) => {
                 target="_blank"
                 rel="noreferrer"
                 className={`hall-gi ${giClass(terminalState.mode, terminalState.stale)}`}
-                title={terminalState.stale ? 'Stale — last-known-good' : 'Open Mobius Terminal'}
+                title={terminalState.stale ? 'Stale — last-known-good' : 'Open Pulse / Terminal'}
               >
                 ↗ GI {terminalState.gi.toFixed(2)}
               </a>
@@ -118,68 +117,101 @@ export const Hallway: React.FC<HallwayProps> = ({ onEnter, onOpenProfile }) => {
                 : <Coffee size={13} className={isWaking ? 'animate-pulse' : ''} />}
             </button>
 
-            <span className="hall-sentinel-row">
-              <span className="pip" aria-hidden />
-              Sentinels online · MII 0.95
-            </span>
-
-            <span className="hall-sentinels-detail">
-              <SentinelStatus sentinels={SENTINELS} mii={terminalState?.echo?.avgMii ?? null} />
-            </span>
+            {onOpenSettings && (
+              <button className="hall-settings" onClick={onOpenSettings} title="Shell settings" aria-label="Settings">
+                <Settings size={14} />
+              </button>
+            )}
 
             {isGuest ? (
-              <button className="hall-guest" onClick={triggerBecomeCitizen}>⬡ Guest</button>
+              <button className="hall-guest" onClick={triggerBecomeCitizen}>Become citizen</button>
             ) : citizen ? (
               <CitizenProfileButton onClick={onOpenProfile} />
             ) : null}
           </div>
         </div>
 
-        {/* ── Hero ────────────────────────────────────────────── */}
-        <div className="hall-title">
-          <div className="eyebrow">A school, not a dashboard</div>
-          <h1>Pick a room. <em>Each one is its own world.</em></h1>
-          <p className="lede">
-            Seven chambers, each with its own atmosphere, vocabulary, and
-            personality. The classroom feels like a classroom; the arcade feels
-            like an arcade; the tea room invites you to slow down.{' '}
-            <span className="q">Step in to see each room's native voice.</span>
-          </p>
-        </div>
+        <div className="hall-body-grid">
+          <div className="hall-main-col">
+            <div className="hall-title hall-title--public">
+              <div className="eyebrow">Welcome to the school</div>
+              <h1>
+                Pick a chamber.
+                <em> Each one is its own world.</em>
+              </h1>
+              <p className="lede">
+                Learn, remember, verify, and participate — at your own pace.
+                {pathDef && (
+                  <span className="hall-path-badge">
+                    Your path: <strong>{pathDef.label}</strong> · opens {pathDef.firstChamberLabel} first
+                  </span>
+                )}
+              </p>
+            </div>
 
-        {/* ── Door grid ───────────────────────────────────────── */}
-        <div className="doors">
-          {DOORS.map((door) => (
-            <button
-              key={door.room}
-              className={['door', door.dClass, door.disabled ? 'door--disabled' : ''].filter(Boolean).join(' ')}
-              onClick={() => door.id && onEnter(door.id)}
-              disabled={door.disabled}
-              aria-label={door.disabled ? `${door.title} — read only` : `Enter ${door.title}`}
-            >
-              <span className="lit" aria-hidden />
-              <span className="glow" aria-hidden />
-              <span className="num">ROOM {door.room} · {door.slug}</span>
-              <span className="body">
-                <span className="icon" aria-hidden>{door.icon}</span>
-                <span className="door-title">{door.title}</span>
-                <span className="role">{door.role}</span>
-              </span>
-              <span className="enter">
-                {door.disabled ? (
-                  <span>read-only</span>
-                ) : (
-                  <>
-                    <span>Enter</span>
+            <div className="hall-section-label">Start here</div>
+            <div className="doors doors--featured">
+              {featured.map(chamber => (
+                <button
+                  key={chamber.id}
+                  className={['door', 'door--public', chamber.dClass].join(' ')}
+                  onClick={() => handleChamberClick(chamber, onEnter)}
+                  aria-label={`Enter ${chamber.publicName}`}
+                >
+                  <span className="lit" aria-hidden />
+                  <span className="glow" aria-hidden />
+                  <span className="num">CHAMBER {chamber.room} · {chamber.slug}</span>
+                  <span className="body">
+                    <span className="icon" aria-hidden>{chamber.icon}</span>
+                    <span className="door-title">{chamber.publicName}</span>
+                    <span className="canon-name">{chamber.canonName}</span>
+                    <span className="role">{chamber.tagline}</span>
+                  </span>
+                  <span className="enter">
+                    <span>{chamber.externalUrl ? 'Open' : 'Enter'}</span>
                     <svg viewBox="0 0 24 24" fill="none" aria-hidden>
                       <path d="M5 12h14" stroke="currentColor" strokeWidth="2"/>
                       <path d="M12 5l7 7-7 7" stroke="currentColor" strokeWidth="2"/>
                     </svg>
-                  </>
-                )}
-              </span>
-            </button>
-          ))}
+                  </span>
+                </button>
+              ))}
+            </div>
+
+            <div className="hall-section-label">More rooms</div>
+            <div className="doors doors--more">
+              {more.map(chamber => (
+                <button
+                  key={chamber.id}
+                  className={['door', 'door--public', 'door--compact', chamber.dClass].join(' ')}
+                  onClick={() => handleChamberClick(chamber, onEnter)}
+                  disabled={chamber.disabled}
+                  aria-label={`Enter ${chamber.publicName}`}
+                >
+                  <span className="lit" aria-hidden />
+                  <span className="body">
+                    <span className="icon" aria-hidden>{chamber.icon}</span>
+                    <span className="door-title">{chamber.publicName}</span>
+                    <span className="canon-name">{chamber.canonName}</span>
+                  </span>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <aside className="hall-sidebar">
+            <OnboardingNudge />
+            <div className="hall-sidebar-card">
+              <div className="hall-sidebar-label">Sentinels</div>
+              <div className="hall-sentinel-row hall-sentinel-row--sidebar">
+                <span className="pip" aria-hidden />
+                {SENTINELS.length} online · MII {terminalState?.echo?.avgMii?.toFixed(2) ?? '0.95'}
+              </div>
+              <div className="hall-sentinels-detail hall-sentinels-detail--sidebar">
+                <SentinelStatus sentinels={SENTINELS} mii={terminalState?.echo?.avgMii ?? null} />
+              </div>
+            </div>
+          </aside>
         </div>
 
       </div>

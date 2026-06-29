@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
+import { useVisitorOnboarding } from '../../hooks/useVisitorOnboarding';
 import { formatDistanceToNow } from '../../utils/time';
 
 /**
@@ -27,6 +28,7 @@ interface CitizenProfileProps {
 
 export function CitizenProfile({ isOpen, onClose }: CitizenProfileProps) {
   const { citizen, signOut } = useAuth();
+  const { reset: resetOnboarding } = useVisitorOnboarding();
   const [copiedField, setCopiedField] = useState<string | null>(null);
   const closeButtonRef = useRef<HTMLButtonElement>(null);
 
@@ -192,6 +194,16 @@ export function CitizenProfile({ isOpen, onClose }: CitizenProfileProps) {
 
         {/* Footer */}
         <div className="shrink-0 p-5 border-t border-stone-800/60 flex flex-col gap-2">
+          <button
+            onClick={() => {
+              resetOnboarding();
+              onClose();
+              window.location.reload();
+            }}
+            className="w-full py-2.5 px-4 text-xs text-stone-500 hover:text-stone-300 border border-stone-800 hover:border-stone-700 rounded-xl transition-colors focus:outline-none focus-visible:ring-1 focus-visible:ring-stone-500"
+          >
+            Restart onboarding
+          </button>
           <button
             onClick={() => { onClose(); signOut(); }}
             className="w-full py-2.5 px-4 text-xs text-stone-500 hover:text-stone-300 border border-stone-800 hover:border-stone-700 rounded-xl transition-colors focus:outline-none focus-visible:ring-1 focus-visible:ring-stone-500"
