@@ -30,16 +30,16 @@ interface Door {
 }
 
 const DOORS: Door[] = [
-  { id: TabId.OAA,             room: '01', slug: 'LAB 7',    icon: '📚', title: 'OAA Library',       role: 'Learn-to-earn. Modules, quizzes, MIC as XP.',          dClass: 'd-oaa'     },
-  { id: TabId.HIVE,            room: '02', slug: 'LAB 8',    icon: '🎮', title: 'HIVE Arcade',        role: '16-bit governance JRPG. Dice, mesh, shards.',           dClass: 'd-hive'    },
-  { id: TabId.REFLECTIONS,     room: '03', slug: 'LAB 4',    icon: '🪞', title: 'Reflection Nook',    role: 'Journal, mood, E.O.M.M. Past-you, present-you.',        dClass: 'd-reflect' },
-  { id: TabId.SHIELD,          room: '04', slug: 'LAB 6',    icon: '🛡', title: 'Shield War Room',    role: 'Civic radar + ECHO threat intel.',                      dClass: 'd-shield'  },
-  { id: TabId.KNOWLEDGE_GRAPH, room: '05', slug: 'SENTINEL', icon: '⬡', title: 'ATLAS Observatory',  role: 'Knowledge graph. Concepts, intents, time.',             dClass: 'd-atlas'   },
-  { id: TabId.JADE,            room: '06', slug: 'SENTINEL', icon: '🍵', title: 'JADE Tea Room',      role: 'The room that asks why. Socratic UX.',                  dClass: 'd-jade'    },
-  { id: TabId.WALLET,          room: '07', slug: 'TREASURY', icon: '◎',  title: 'MIC Vault',          role: 'Wallet, shards, ledger. Provenance over balance.',       dClass: 'd-wallet'  },
-  { id: TabId.VAULT,           room: '08', slug: 'CIVIC',    icon: '🔐', title: 'Reserve Vault',       role: 'Seal records, attestations, hash chain. Read-only.',     dClass: 'd-vault'   },
-  { id: TabId.EPICON,          room: '09', slug: 'RECORD',   icon: '📋', title: 'Intent Feed',         role: 'Live EPICON — every action declared before executed.',   dClass: 'd-epicon'  },
-  { id: null,                  room: 'FACULTY', slug: 'MII 0.95', icon: '⬢', title: 'ATLAS · AUREA · EVE · JADE', role: 'Four sentinels watching the school. All green.', dClass: 'd-mii', disabled: true },
+  { id: TabId.OAA,             room: '01', slug: 'LEARN',    icon: '📖', title: 'Learn',              role: 'Complete guided seminars, prove comprehension, earn MIC through civic skill.',           dClass: 'd-oaa'     },
+  { id: TabId.EPICON,          room: '02', slug: 'MEMORY',   icon: '🧠', title: 'Memory',             role: 'Actions and attestations recorded so the system remembers without relying on trust.',    dClass: 'd-epicon'  },
+  { id: TabId.HIVE,            room: '03', slug: 'WORLD',    icon: '🌍', title: 'World',              role: 'Enter the shared world where civic tasks, learning, and community stories are playable.', dClass: 'd-hive'    },
+  { id: TabId.REFLECTIONS,     room: '04', slug: 'REFLECT',  icon: '🪞', title: 'Reflection Nook',    role: 'Journal, mood, E.O.M.M. Past-you, present-you.',        dClass: 'd-reflect' },
+  { id: TabId.SHIELD,          room: '05', slug: 'SHIELD',   icon: '🛡', title: 'Citizen Shield',     role: 'Civic radar + ECHO threat intel.',                      dClass: 'd-shield'  },
+  { id: TabId.KNOWLEDGE_GRAPH, room: '06', slug: 'SENTINEL', icon: '⬡', title: 'ATLAS Observatory',  role: 'Knowledge graph. Concepts, intents, time.',             dClass: 'd-atlas'   },
+  { id: TabId.JADE,            room: '07', slug: 'SENTINEL', icon: '🍵', title: 'JADE Tea Room',      role: 'The room that asks why. Socratic UX.',                  dClass: 'd-jade'    },
+  { id: TabId.WALLET,          room: '08', slug: 'TREASURY', icon: '◎',  title: 'MIC Vault',          role: 'Wallet, shards, ledger. Provenance over balance.',       dClass: 'd-wallet'  },
+  { id: TabId.VAULT,           room: '09', slug: 'ARCHIVES', icon: '🗄️', title: 'Archives',            role: 'Sealed reserve blocks preserve history so Mobius can recover, replay, and verify.',     dClass: 'd-vault'   },
+  { id: null,                  room: 'COUNCIL', slug: 'DVA', icon: '⚖️', title: 'ATLAS · AUREA · EVE · JADE', role: 'The agent council reviews signals, checks integrity, and helps humans decide.', dClass: 'd-mii', disabled: true },
 ];
 
 interface HallwayProps {
