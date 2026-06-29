@@ -8,11 +8,33 @@
  */
 
 export const env = {
+  // === PUBLIC SERVICE URLS (C-357 data layer) ===
+  /** Read-only terminal API — GI, journal, pulse, tripwires */
+  terminalBase:
+    (import.meta.env.VITE_TERMINAL_BASE as string | undefined)?.replace(/\/+$/, '') ||
+    (import.meta.env.VITE_TERMINAL_ORIGIN as string | undefined)?.replace(/\/+$/, '') ||
+    'https://terminal.mobius-substrate.com',
+  /** CPC ledger — MIC mint, wallet, attestations */
+  cpcBase:
+    (import.meta.env.VITE_CPC_BASE as string | undefined)?.replace(/\/+$/, '') ||
+    (import.meta.env.VITE_LEDGER_API as string | undefined)?.replace(/\/+$/, '') ||
+    'https://civic-protocol-core-ledger.onrender.com',
+  /** Identity service — JWT for CPC writes */
+  identityBase:
+    (import.meta.env.VITE_IDENTITY_BASE as string | undefined)?.replace(/\/+$/, '') ||
+    (import.meta.env.VITE_IDENTITY_API_BASE as string | undefined)?.replace(/\/+$/, '') ||
+    'https://mobius-identity-service.onrender.com',
+  /** Canonical public domain */
+  canonicalDomain:
+    (import.meta.env.VITE_CANONICAL_DOMAIN as string | undefined)?.replace(/\/+$/, '') ||
+    'https://mobius-substrate.com',
+
   // === FRONTEND LABS (iframe targets) ===
   /** Mobius Civic AI Terminal (snapshots, signals). Override for previews / forks. */
   terminalOrigin:
     (import.meta.env.VITE_TERMINAL_ORIGIN as string | undefined)?.replace(/\/+$/, '') ||
-    'https://mobius-civic-ai-terminal.vercel.app',
+    (import.meta.env.VITE_TERMINAL_BASE as string | undefined)?.replace(/\/+$/, '') ||
+    'https://terminal.mobius-substrate.com',
 
   labs: {
     oaa: import.meta.env.VITE_OAA_URL as string || 'https://lab7-proof.onrender.com',
