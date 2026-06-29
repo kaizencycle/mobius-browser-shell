@@ -27,6 +27,7 @@ const CHAMBER_MAP: Record<string, TabId> = {
   library:     TabId.OAA,
   hive:        TabId.HIVE,
   game:        TabId.HIVE,
+  world:       TabId.HIVE,
   rpg:         TabId.HIVE,
   reflections: TabId.REFLECTIONS,
   reflect:     TabId.REFLECTIONS,
@@ -34,14 +35,20 @@ const CHAMBER_MAP: Record<string, TabId> = {
   knowledge:   TabId.KNOWLEDGE_GRAPH,
   graph:       TabId.KNOWLEDGE_GRAPH,
   atlas:       TabId.KNOWLEDGE_GRAPH,
+  council:     TabId.KNOWLEDGE_GRAPH,
   shield:      TabId.SHIELD,
   security:    TabId.SHIELD,
   jade:        TabId.JADE,
   oracle:      TabId.JADE,
   wallet:      TabId.WALLET,
   mic:         TabId.WALLET,
+  treasury:    TabId.WALLET,
   vault:       TabId.VAULT,
+  archives:    TabId.VAULT,
   epicon:      TabId.EPICON,
+  memory:      TabId.EPICON,
+  cpc:         TabId.EPICON,
+  core:        TabId.EPICON,
 };
 
 export function useChamberParam(onNavigate: (tab: TabId) => void): void {
