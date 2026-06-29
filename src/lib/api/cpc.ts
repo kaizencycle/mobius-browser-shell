@@ -4,6 +4,7 @@
 
 import { env } from '../../../config/env';
 import { getLocal, setLocal, KEYS } from '../storage';
+import { hashReflection } from '../oaa/mic';
 
 const CPC_BASE = env.cpcBase;
 
@@ -44,12 +45,17 @@ function queueAttestationLocally(attestation: LearningAttestation): void {
   setLocal(KEYS.ATTESTATION_QUEUE, queue);
 }
 
+function shouldQueueOnHttpStatus(status: number): boolean {
+  return status >= 500 || status === 429 || status === 503;
+}
+
 export async function mintLearningMIC(
   attestation: LearningAttestation,
+  options?: { fromRetry?: boolean },
 ): Promise<{ success: boolean; mic_minted: number; error?: string }> {
   const token = await getCPCToken(attestation.user_civic_id);
   if (!token) {
-    queueAttestationLocally(attestation);
+    if (!options?.fromRetry) queueAttestationLocally(attestation);
     return { success: false, mic_minted: 0, error: 'cpc_unavailable' };
   }
 
@@ -66,15 +72,43 @@ export async function mintLearningMIC(
 
     if (!res.ok) {
       const err = await res.json().catch(() => ({})) as { detail?: string };
+      if (!options?.fromRetry && shouldQueueOnHttpStatus(res.status)) {
+        queueAttestationLocally(attestation);
+      }
       return { success: false, mic_minted: 0, error: err.detail ?? 'attest_failed' };
     }
 
     const data = await res.json() as { mic_minted?: number };
     return { success: true, mic_minted: data.mic_minted ?? attestation.mic_reward };
   } catch {
-    queueAttestationLocally(attestation);
+    if (!options?.fromRetry) queueAttestationLocally(attestation);
     return { success: false, mic_minted: 0, error: 'network_error' };
   }
+}
+
+/** Bridge OAA learn-to-earn attestation into CPC ledger write path. */
+export async function attestOaaLearning(
+  civicId: string,
+  courseId: string,
+  quizScore: number,
+  lipScore: number,
+  reflectionText: string,
+  micReward: number,
+): Promise<{ success: boolean; mic_minted: number }> {
+  if (micReward <= 0) return { success: false, mic_minted: 0 };
+
+  const result = await mintLearningMIC({
+    type: 'learning_attestation',
+    user_civic_id: civicId,
+    course_id: courseId,
+    quiz_score: quizScore,
+    lip_score: lipScore,
+    jade_reflection_hash: hashReflection(reflectionText || 'no-reflection'),
+    mic_reward: micReward,
+    timestamp: new Date().toISOString(),
+  });
+
+  return { success: result.success, mic_minted: result.mic_minted };
 }
 
 export async function fetchWalletBalance(
@@ -133,7 +167,7 @@ export async function retryQueuedAttestations(): Promise<void> {
       remaining.push(attestation);
       continue;
     }
-    const result = await mintLearningMIC(attestation);
+    const result = await mintLearningMIC(attestation, { fromRetry: true });
     if (!result.success) remaining.push(attestation);
   }
   setLocal(KEYS.ATTESTATION_QUEUE, remaining);

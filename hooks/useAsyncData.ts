@@ -2,7 +2,7 @@
  * C-357 degraded-state data hook — API failures never crash the shell.
  */
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 
 export type DataStatus = 'loading' | 'live' | 'degraded';
 
@@ -19,23 +19,26 @@ export function useAsyncData<T>(
 ): AsyncDataState<T> {
   const [data, setData] = useState<T | null>(null);
   const [status, setStatus] = useState<DataStatus>('loading');
+  const fetcherRef = useRef(fetcher);
+  const dataRef = useRef<T | null>(null);
+  fetcherRef.current = fetcher;
 
   const load = useCallback(async () => {
     try {
-      const result = await fetcher();
+      const result = await fetcherRef.current();
       if (result != null) {
+        dataRef.current = result;
         setData(result);
         setStatus('live');
-      } else if (data != null) {
-        setStatus('degraded');
       } else {
-        setStatus('degraded');
+        setStatus(dataRef.current != null ? 'degraded' : 'degraded');
       }
     } catch {
-      setStatus(data != null ? 'degraded' : 'degraded');
+      setStatus(dataRef.current != null ? 'degraded' : 'degraded');
     }
+  // Key effect only off explicit dependency list — fetcher stays in ref
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [fetcher, ...deps]);
+  }, deps);
 
   useEffect(() => {
     void load();
