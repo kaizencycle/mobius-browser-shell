@@ -13,6 +13,8 @@ import { VaultChamber } from './components/chambers/VaultChamber';
 import { EPICONChamber } from './components/chambers/EPICONChamber';
 import { JadeLab } from './components/Labs/JadeLab';
 import { ReturnCitizenDashboard } from './components/onboarding/ReturnCitizenDashboard';
+import { VisitorOnboardingFlow } from './components/onboarding/visitor/VisitorOnboardingFlow';
+import { useVisitorOnboarding } from './hooks/useVisitorOnboarding';
 import { CivicAlertBanner } from './components/Notifications/CivicAlertBanner';
 import { LiveSystemBar } from './components/Header/LiveSystemBar';
 import { useAuth } from './contexts/AuthContext';
@@ -28,6 +30,7 @@ const App: React.FC = () => {
   const [activeTab, setActiveTab] = useHashTab(TabId.HALLWAY);
 
   const { citizen } = useAuth();
+  const { state: visitorOnboarding, reset: resetVisitorOnboarding } = useVisitorOnboarding();
   const profile = useCitizenProfile();
 
   useSessionHeartbeat();
@@ -87,6 +90,11 @@ const App: React.FC = () => {
         return <OAAChamber />;
     }
   };
+
+  // Visitor onboarding gate — shown once to first-time visitors regardless of auth state
+  if (!visitorOnboarding.complete) {
+    return <VisitorOnboardingFlow />;
+  }
 
   return (
     <div className={`app-shell bg-stone-950 text-stone-100${giMoodClass ? ` ${giMoodClass}` : ''}`}>
