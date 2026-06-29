@@ -1,4 +1,4 @@
-import React, { Suspense, useEffect, useMemo } from 'react';
+import React, { Suspense, useEffect, useMemo, useState } from 'react';
 import { TabId } from './types';
 import { LabSkeleton } from './components/Labs/LabSkeleton';
 
@@ -17,6 +17,7 @@ import { VisitorOnboardingFlow } from './components/onboarding/visitor/VisitorOn
 import { useVisitorOnboarding } from './hooks/useVisitorOnboarding';
 import { CivicAlertBanner } from './components/Notifications/CivicAlertBanner';
 import { LiveSystemBar } from './components/Header/LiveSystemBar';
+import { ShellSettings } from './components/ShellSettings/ShellSettings';
 import { useAuth } from './contexts/AuthContext';
 import { useSessionHeartbeat } from './hooks/useSessionHeartbeat';
 import { InquiryChatModal } from './components/InquiryChatModal';
@@ -25,16 +26,31 @@ import { useCitizenProfile } from './hooks/useCitizenProfile';
 import { useDocumentTitle } from './hooks/useDocumentTitle';
 import { useHashTab } from './hooks/useHashTab';
 import { useChamberParam } from './hooks/useChamberParam';
+import { retryQueuedAttestations } from './src/lib/api/cpc';
+import { pushChamberHistory } from './src/lib/storage';
 
 const App: React.FC = () => {
   const [activeTab, setActiveTab] = useHashTab(TabId.HALLWAY);
+  const [settingsOpen, setSettingsOpen] = useState(false);
 
   const { citizen } = useAuth();
-  const { state: visitorOnboarding, reset: resetVisitorOnboarding } = useVisitorOnboarding();
+  const { state: visitorOnboarding } = useVisitorOnboarding();
   const profile = useCitizenProfile();
 
   useSessionHeartbeat();
   useDocumentTitle(activeTab);
+
+  // C-357: retry queued MIC attestations when CPC comes back online
+  useEffect(() => {
+    void retryQueuedAttestations();
+  }, []);
+
+  // Track chamber visits for local history
+  useEffect(() => {
+    if (activeTab !== TabId.HALLWAY) {
+      pushChamberHistory(activeTab);
+    }
+  }, [activeTab]);
 
   // Bridge: read ?chamber= from HIVE simulator portals and navigate to the matching tab
   useChamberParam(setActiveTab);
@@ -66,7 +82,11 @@ const App: React.FC = () => {
       case TabId.HALLWAY:
         return citizen
           ? <ReturnCitizenDashboard onSelectTab={setActiveTab} />
-          : <Hallway onEnter={setActiveTab} onOpenProfile={profile.open} />;
+          : <Hallway
+              onEnter={setActiveTab}
+              onOpenProfile={profile.open}
+              onOpenSettings={() => setSettingsOpen(true)}
+            />;
       case TabId.OAA:
         return <OAAChamber onNavigateToKnowledgeGraph={goToKnowledgeGraph} />;
       case TabId.HIVE:
@@ -123,6 +143,7 @@ const App: React.FC = () => {
 
       <InquiryChatModal />
       <CitizenProfile isOpen={profile.isOpen} onClose={profile.close} />
+      <ShellSettings isOpen={settingsOpen} onClose={() => setSettingsOpen(false)} />
     </div>
   );
 };

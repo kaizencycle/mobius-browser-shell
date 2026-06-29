@@ -1,7 +1,10 @@
 import { useState, useCallback } from 'react';
 import type { OnboardingPath } from '../src/lib/onboarding/paths';
+import { syncOnboardingState, KEYS, setLocal } from '../src/lib/storage';
+import { resetFirstActions, markFirstAction } from '../src/lib/onboarding/first-actions';
+import { env } from '../config/env';
 
-const STORAGE_KEY = 'mobius_visitor_onboarding';
+const STORAGE_KEY = KEYS.VISITOR_ONBOARDING;
 
 interface VisitorOnboardingState {
   complete: boolean;
@@ -21,7 +24,37 @@ function loadState(): VisitorOnboardingState {
 function saveState(state: VisitorOnboardingState): void {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    syncOnboardingState({
+      complete: state.complete,
+      path: state.path,
+      civic_id: state.civicId,
+      currentStep: state.currentStep,
+      completed_at: state.complete ? new Date().toISOString() : null,
+    });
   } catch { /* ignore */ }
+}
+
+/** Route to first chamber — handles external Pulse, Handbook, Core links */
+export function navigateToFirstChamber(chamber: string): void {
+  if (chamber === 'terminal' || chamber === 'pulse') {
+    markFirstAction('pulse');
+    window.open(`${env.terminalBase.replace(/\/+$/, '')}/terminal`, '_blank', 'noopener,noreferrer');
+    window.location.hash = 'hallway';
+    return;
+  }
+  if (chamber === 'handbook') {
+    const handbook = env.canonicalDomain
+      ? `${env.canonicalDomain.replace(/\/+$/, '')}/handbook`
+      : 'https://handbook.mobius-substrate.com';
+    window.open(handbook, '_blank', 'noopener,noreferrer');
+    window.location.hash = 'hallway';
+    return;
+  }
+  if (chamber === 'cpc' || chamber === 'core') {
+    window.location.hash = 'epicon';
+    return;
+  }
+  window.location.hash = chamber;
 }
 
 export function useVisitorOnboarding() {
@@ -45,15 +78,23 @@ export function useVisitorOnboarding() {
 
   const complete = useCallback((firstChamber: string) => {
     setState(prev => {
+      const civicId = prev.civicId ?? `citizen-${Date.now().toString(36)}`;
       const next: VisitorOnboardingState = {
         ...prev,
         complete: true,
-        civicId: prev.civicId ?? `citizen-${Date.now().toString(36)}`,
+        civicId,
       };
       saveState(next);
+      setLocal(KEYS.ONBOARDING, {
+        complete: true,
+        path: prev.path,
+        civic_id: civicId,
+        currentStep: 3,
+        completed_at: new Date().toISOString(),
+      });
       return next;
     });
-    window.location.hash = firstChamber;
+    navigateToFirstChamber(firstChamber);
   }, []);
 
   const skip = useCallback(() => {
@@ -66,6 +107,8 @@ export function useVisitorOnboarding() {
 
   const reset = useCallback(() => {
     localStorage.removeItem(STORAGE_KEY);
+    localStorage.removeItem(KEYS.ONBOARDING);
+    resetFirstActions();
     setState({ complete: false, path: null, currentStep: 0, civicId: null });
   }, []);
 

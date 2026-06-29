@@ -1,30 +1,20 @@
 import React, { useEffect, useState } from 'react';
+import { PUBLIC_CHAMBERS } from '../../../../src/lib/chambers';
+import { fetchSnapshot } from '../../../../src/lib/api/terminal';
 
-const CHAMBERS = [
-  { icon: '📖', publicName: 'Learn',    canonName: 'Open Agent Architecture' },
-  { icon: '🧠', publicName: 'Memory',   canonName: 'EPICON Ledger'           },
-  { icon: '⚡', publicName: 'Pulse',    canonName: 'Civic Terminal'          },
-  { icon: '🌍', publicName: 'World',    canonName: 'HIVE'                    },
-  { icon: '⚖️', publicName: 'Council',  canonName: 'DVA'                     },
-  { icon: '🗄️', publicName: 'Archives', canonName: 'Reserve Blocks'          },
-];
+interface GIStatus {
+  gi: number;
+  mode: 'green' | 'yellow' | 'red';
+  label: string;
+}
 
-interface GIStatus { gi: number; mode: 'green' | 'yellow' | 'red'; label: string; }
-
-async function fetchGI(): Promise<GIStatus> {
-  try {
-    const res = await fetch(
-      'https://terminal.mobius-substrate.com/api/terminal/snapshot-lite',
-      { signal: AbortSignal.timeout(3000) }
-    );
-    const data = await res.json() as { gi?: number; mode?: string };
-    const gi = data.gi ?? 0.90;
-    const mode: GIStatus['mode'] = gi >= 0.95 ? 'green' : gi >= 0.80 ? 'yellow' : 'red';
-    const label = mode === 'green' ? 'healthy' : mode === 'yellow' ? 'recovering' : 'degraded';
-    return { gi, mode, label };
-  } catch {
-    return { gi: 0.90, mode: 'yellow', label: 'recovering' };
-  }
+async function loadGI(): Promise<GIStatus> {
+  const data = await fetchSnapshot();
+  if (!data) return { gi: 0.90, mode: 'yellow', label: 'recovering' };
+  const gi = data.gi ?? 0.90;
+  const mode: GIStatus['mode'] = gi >= 0.95 ? 'green' : gi >= 0.80 ? 'yellow' : 'red';
+  const label = mode === 'green' ? 'healthy' : mode === 'yellow' ? 'recovering' : 'degraded';
+  return { gi, mode, label };
 }
 
 interface Props { onContinue: () => void; onSkip: () => void; }
@@ -33,7 +23,7 @@ export function WelcomeScreen({ onContinue, onSkip }: Props) {
   const [giStatus, setGIStatus] = useState<GIStatus>({ gi: 0.90, mode: 'yellow', label: 'recovering' });
 
   useEffect(() => {
-    fetchGI().then(setGIStatus);
+    loadGI().then(setGIStatus);
   }, []);
 
   const dotColor = giStatus.mode === 'green'
@@ -51,13 +41,12 @@ export function WelcomeScreen({ onContinue, onSkip }: Props) {
   return (
     <div className="visitor-screen">
       <div className="visitor-eyebrow">Mobius Substrate · School of Chambers</div>
-      <h1 className="visitor-title">Welcome.</h1>
+      <h1 className="visitor-title">Welcome to the School of Chambers.</h1>
       <p className="visitor-sub">
         Seven chambers. One substrate. Learn, remember, verify, and participate
         in the civic world — at your own pace, in any order.
       </p>
 
-      {/* Live GI status */}
       <div className="visitor-gi-bar">
         <span className={`visitor-gi-dot ${dotColor} ${giStatus.mode !== 'green' ? 'animate-pulse' : ''}`} />
         <span className="visitor-gi-label">System integrity</span>
@@ -66,9 +55,8 @@ export function WelcomeScreen({ onContinue, onSkip }: Props) {
         </span>
       </div>
 
-      {/* Chamber grid */}
       <div className="visitor-chamber-grid">
-        {CHAMBERS.map(ch => (
+        {PUBLIC_CHAMBERS.map(ch => (
           <div key={ch.publicName} className="visitor-chamber-card">
             <span className="visitor-ch-icon">{ch.icon}</span>
             <span className="visitor-ch-public">{ch.publicName}</span>
