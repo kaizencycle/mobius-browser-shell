@@ -42,7 +42,7 @@ export const TabNavigation: React.FC<TabNavigationProps> = ({ activeTab, onTabCh
               <span className="sm:hidden">{tab.shortLabel}</span>
               <span className="hidden sm:inline leading-tight">{tab.label}</span>
               {isActive && tab.canonLabel && (
-                <span className="hidden sm:inline text-[9px] font-mono text-stone-400 leading-tight tracking-wide">{tab.canonLabel}</span>
+                <span className="text-[9px] font-mono text-stone-400 leading-tight tracking-wide">{tab.canonLabel}</span>
               )}
             </span>
             {isActive && <div className="absolute bottom-0 left-0 right-0 h-1 bg-stone-50" />}
