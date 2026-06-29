@@ -8,12 +8,14 @@ interface TabNavigationProps {
 }
 
 const TABS = [
-  { id: TabId.OAA, label: 'OAA Hub', shortLabel: 'OAA', icon: BookOpen },
-  { id: TabId.HIVE, label: 'HIVE Lab', shortLabel: 'HIVE', icon: Hexagon },
-  { id: TabId.REFLECTIONS, label: 'Reflections', shortLabel: 'Reflect', icon: Feather },
-  { id: TabId.KNOWLEDGE_GRAPH, label: 'Knowledge', shortLabel: 'Graph', icon: Network },
-  { id: TabId.SHIELD, label: 'Citizen Shield', shortLabel: 'Shield', icon: Shield },
-  { id: TabId.JADE, label: 'Jade', shortLabel: 'Jade', icon: Sparkles },
+  { id: TabId.OAA,             label: 'Learn',          shortLabel: 'Learn',   canonLabel: 'Open Agent Architecture', icon: BookOpen },
+  { id: TabId.EPICON,          label: 'Memory',         shortLabel: 'Memory',  canonLabel: 'EPICON Ledger',           icon: Feather  },
+  { id: TabId.HIVE,            label: 'World',          shortLabel: 'World',   canonLabel: 'HIVE',                    icon: Hexagon  },
+  { id: TabId.VAULT,           label: 'Archives',       shortLabel: 'Archive', canonLabel: 'Reserve Blocks',          icon: Network  },
+  { id: TabId.SHIELD,          label: 'Citizen Shield', shortLabel: 'Shield',  canonLabel: 'Civic Shield',            icon: Shield   },
+  { id: TabId.JADE,            label: 'Jade',           shortLabel: 'Jade',    canonLabel: 'JADE Sentinel',           icon: Sparkles },
+  { id: TabId.REFLECTIONS,     label: 'Reflections',    shortLabel: 'Reflect', canonLabel: '',                        icon: Network  },
+  { id: TabId.KNOWLEDGE_GRAPH, label: 'Knowledge',      shortLabel: 'Graph',   canonLabel: 'ATLAS Graph',             icon: Network  },
 ];
 
 export const TabNavigation: React.FC<TabNavigationProps> = ({ activeTab, onTabChange }) => {
@@ -36,10 +38,14 @@ export const TabNavigation: React.FC<TabNavigationProps> = ({ activeTab, onTabCh
             `}
           >
             <Icon className={`w-3.5 h-3.5 sm:w-4 sm:h-4 ${isActive ? 'text-indigo-600' : 'text-stone-400'}`} />
-            {/* Show short label on mobile, full label on larger screens */}
-            <span className="sm:hidden">{tab.shortLabel}</span>
-            <span className="hidden sm:inline">{tab.label}</span>
-            {isActive && <div className="absolute bottom-0 left-0 right-0 h-1 bg-stone-50" />} {/* Hides bottom border */}
+            <span className="flex flex-col items-start">
+              <span className="sm:hidden">{tab.shortLabel}</span>
+              <span className="hidden sm:inline leading-tight">{tab.label}</span>
+              {isActive && tab.canonLabel && (
+                <span className="text-[9px] font-mono text-stone-400 leading-tight tracking-wide">{tab.canonLabel}</span>
+              )}
+            </span>
+            {isActive && <div className="absolute bottom-0 left-0 right-0 h-1 bg-stone-50" />}
           </button>
         );
       })}

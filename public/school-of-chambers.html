@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Mobius Substrate — a civic school organized into seven chambers. Learn, remember, verify, and participate in the civic world.">
+<meta property="og:title" content="Mobius Substrate — School of Chambers">
+<meta property="og:description" content="A civic school organized into seven chambers. Learn, remember, verify, and participate in the civic world.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://mobius-substrate.com">
+<meta property="og:image" content="https://mobius-substrate.com/og-image.svg">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:site" content="@kaizencycle">
+<meta name="twitter:title" content="Mobius Substrate — School of Chambers">
+<meta name="twitter:image" content="https://mobius-substrate.com/og-image.svg">
+<link rel="canonical" href="https://mobius-substrate.com">
+<title>Mobius Substrate — School of Chambers</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&family=Inter:wght@300;400;500&display=swap');
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --ink:       #0f0e0d;
+    --ink-2:     #3d3a36;
+    --ink-3:     #7a756e;
+    --ground:    #f7f5f1;
+    --ground-2:  #eeeae3;
+    --ground-3:  #e3dfd7;
+    --accent:    #1a3a2a;
+    --accent-2:  #2d6b4a;
+    --amber:     #c47a1e;
+    --rule:      #d4cfc7;
+    --serif:  'DM Serif Display', Georgia, serif;
+    --sans:   'Inter', system-ui, sans-serif;
+    --mono:   'DM Mono', 'Courier New', monospace;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation: none !important; transition: none !important; }
+  }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: var(--sans);
+    background: var(--ground);
+    color: var(--ink);
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 32px;
+    height: 56px;
+    background: var(--ground);
+    border-bottom: 1px solid var(--rule);
+  }
+
+  .nav-brand {
+    display: flex; align-items: center; gap: 10px;
+    text-decoration: none;
+  }
+
+  .nav-mark {
+    width: 28px; height: 28px;
+    background: var(--accent);
+    border-radius: 6px;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .nav-mark svg { width: 16px; height: 16px; }
+
+  .nav-name {
+    font-family: var(--sans);
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--ink);
+    letter-spacing: 0.01em;
+  }
+
+  .nav-right { display: flex; align-items: center; gap: 8px; }
+
+  .gi-pill {
+    font-family: var(--mono);
+    font-size: 11px;
+    padding: 3px 8px;
+    border-radius: 4px;
+    background: #fef3c7;
+    color: #92400e;
+    border: 1px solid #fde68a;
+    letter-spacing: 0.02em;
+  }
+
+  .nav-link {
+    font-size: 13px; color: var(--ink-2); text-decoration: none;
+    padding: 6px 12px; border-radius: 6px; transition: background 0.15s;
+  }
+  .nav-link:hover { background: var(--ground-2); }
+
+  .nav-cta {
+    font-size: 13px; font-weight: 500; color: var(--ground);
+    background: var(--accent); text-decoration: none;
+    padding: 7px 14px; border-radius: 6px; transition: background 0.15s;
+  }
+  .nav-cta:hover { background: var(--accent-2); }
+
+  .hero {
+    padding: 140px 32px 80px;
+    max-width: 860px;
+    margin: 0 auto;
+  }
+
+  .hero-eyebrow {
+    font-family: var(--mono); font-size: 11px; font-weight: 500;
+    letter-spacing: 0.1em; text-transform: uppercase; color: var(--accent-2);
+    margin-bottom: 20px; display: flex; align-items: center; gap: 8px;
+  }
+
+  .hero-eyebrow::before {
+    content: ''; display: block; width: 24px; height: 1px; background: var(--accent-2);
+  }
+
+  .hero-title {
+    font-family: var(--serif);
+    font-size: clamp(42px, 6vw, 72px);
+    line-height: 1.08; color: var(--ink); margin-bottom: 28px; letter-spacing: -0.01em;
+  }
+
+  .hero-title em { font-style: italic; color: var(--accent-2); }
+
+  .hero-sub {
+    font-size: 18px; font-weight: 300; color: var(--ink-2);
+    max-width: 580px; line-height: 1.7; margin-bottom: 40px;
+  }
+
+  .hero-actions { display: flex; gap: 12px; flex-wrap: wrap; }
+
+  .btn-primary {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-size: 14px; font-weight: 500; color: var(--ground); background: var(--accent);
+    text-decoration: none; padding: 11px 20px; border-radius: 8px; transition: background 0.15s;
+  }
+  .btn-primary:hover { background: var(--accent-2); }
+
+  .btn-secondary {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-size: 14px; color: var(--ink-2); background: transparent;
+    text-decoration: none; padding: 11px 20px; border-radius: 8px;
+    border: 1px solid var(--rule); transition: border-color 0.15s, background 0.15s;
+  }
+  .btn-secondary:hover { border-color: var(--ink-3); background: var(--ground-2); }
+
+  .integrity-strip {
+    border-top: 1px solid var(--rule); border-bottom: 1px solid var(--rule);
+    background: var(--ground-2); padding: 0 32px;
+    display: flex; align-items: center; gap: 0; overflow-x: auto; scrollbar-width: none;
+  }
+  .integrity-strip::-webkit-scrollbar { display: none; }
+
+  .strip-item {
+    display: flex; align-items: center; gap: 8px; padding: 14px 24px 14px 0; flex-shrink: 0;
+  }
+  .strip-item + .strip-item { border-left: 1px solid var(--rule); padding-left: 24px; }
+
+  .strip-label {
+    font-family: var(--mono); font-size: 10px; color: var(--ink-3);
+    letter-spacing: 0.08em; text-transform: uppercase;
+  }
+  .strip-val { font-family: var(--mono); font-size: 12px; font-weight: 500; color: var(--ink); }
+  .strip-val.amber { color: var(--amber); }
+  .strip-val.green { color: var(--accent-2); }
+
+  .strip-dot {
+    width: 6px; height: 6px; border-radius: 50%; background: var(--amber);
+    animation: pulse-dot 2s infinite;
+  }
+  .strip-dot.green { background: var(--accent-2); animation: none; }
+
+  @keyframes pulse-dot { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+
+  .chambers-section { padding: 80px 32px 100px; max-width: 1100px; margin: 0 auto; }
+
+  .section-head { margin-bottom: 56px; }
+
+  .section-eyebrow {
+    font-family: var(--mono); font-size: 10px; letter-spacing: 0.12em;
+    text-transform: uppercase; color: var(--ink-3); margin-bottom: 12px;
+  }
+
+  .section-title { font-family: var(--serif); font-size: 36px; color: var(--ink); margin-bottom: 12px; }
+
+  .section-sub { font-size: 15px; color: var(--ink-2); max-width: 520px; line-height: 1.7; }
+
+  .chamber-grid {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 2px; border: 1px solid var(--rule); border-radius: 12px; overflow: hidden;
+  }
+
+  .chamber {
+    background: var(--ground); padding: 32px 28px; cursor: pointer;
+    transition: background 0.15s; text-decoration: none; display: block;
+    border-right: 1px solid var(--rule); border-bottom: 1px solid var(--rule); position: relative;
+  }
+
+  .chamber:hover { background: var(--ground-2); }
+  .chamber:hover .chamber-arrow { opacity: 1; transform: translateX(0); }
+
+  .chamber-top {
+    display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 20px;
+  }
+
+  .chamber-icon {
+    width: 44px; height: 44px; border-radius: 10px;
+    display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0;
+  }
+
+  .chamber-arrow {
+    font-size: 16px; color: var(--ink-3); opacity: 0;
+    transform: translateX(-4px); transition: opacity 0.15s, transform 0.15s; margin-top: 4px;
+  }
+
+  .chamber-num { font-family: var(--mono); font-size: 10px; color: var(--rule); letter-spacing: 0.05em; margin-bottom: 6px; }
+  .chamber-name { font-family: var(--serif); font-size: 26px; color: var(--ink); margin-bottom: 4px; line-height: 1.1; }
+  .chamber-canon { font-family: var(--mono); font-size: 10px; color: var(--ink-3); letter-spacing: 0.06em; margin-bottom: 14px; }
+  .chamber-desc { font-size: 14px; color: var(--ink-2); line-height: 1.65; }
+
+  .chamber-tag {
+    display: inline-flex; align-items: center; gap: 4px; margin-top: 18px;
+    font-size: 11px; font-family: var(--mono); color: var(--ink-3);
+    padding: 3px 8px; border: 1px solid var(--rule); border-radius: 4px;
+  }
+
+  .ch-learn .chamber-icon    { background: #d1fae5; }
+  .ch-memory .chamber-icon   { background: #dbeafe; }
+  .ch-pulse .chamber-icon    { background: #fef3c7; }
+  .ch-world .chamber-icon    { background: #ede9fe; }
+  .ch-council .chamber-icon  { background: #fee2e2; }
+  .ch-archives .chamber-icon { background: #f3f4f6; }
+  .ch-core .chamber-icon     { background: #ecfdf5; }
+
+  .principles {
+    padding: 80px 32px; background: var(--accent); color: var(--ground);
+  }
+
+  .principles-inner { max-width: 860px; margin: 0 auto; }
+
+  .principles-eyebrow {
+    font-family: var(--mono); font-size: 10px; letter-spacing: 0.12em;
+    text-transform: uppercase; color: rgba(247,245,241,0.5); margin-bottom: 40px;
+  }
+
+  .principles-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 40px 60px; }
+
+  @media (max-width: 600px) { .principles-grid { grid-template-columns: 1fr; } }
+
+  .principle-label {
+    font-family: var(--mono); font-size: 10px; letter-spacing: 0.1em;
+    text-transform: uppercase; color: rgba(247,245,241,0.5); margin-bottom: 8px;
+  }
+
+  .principle-text { font-family: var(--serif); font-size: 22px; line-height: 1.3; color: var(--ground); }
+
+  footer {
+    padding: 40px 32px; border-top: 1px solid var(--rule);
+    display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px;
+  }
+
+  .footer-left { display: flex; align-items: center; gap: 20px; }
+  .footer-brand { font-family: var(--mono); font-size: 11px; color: var(--ink-3); }
+  .footer-links { display: flex; gap: 16px; }
+  .footer-link { font-size: 12px; color: var(--ink-3); text-decoration: none; }
+  .footer-link:hover { color: var(--ink-2); }
+  .footer-right { font-family: var(--mono); font-size: 10px; color: var(--ink-3); letter-spacing: 0.05em; }
+
+  @media (max-width: 768px) {
+    nav { padding: 0 16px; }
+    .hero { padding: 120px 20px 60px; }
+    .chambers-section { padding: 60px 20px 80px; }
+    .chamber-grid { grid-template-columns: 1fr; }
+    .integrity-strip { padding: 0 20px; }
+    footer { padding: 32px 20px; flex-direction: column; align-items: flex-start; }
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="/" class="nav-brand">
+    <div class="nav-mark">
+      <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M8 2C4.686 2 2 4.686 2 8s2.686 6 6 6 6-2.686 6-6-2.686-6-6-6zm0 10c-2.21 0-4-1.79-4-4s1.79-4 4-4 4 1.79 4 4-1.79 4-4 4z" fill="#f7f5f1" opacity="0.6"/>
+        <path d="M8 5.5A2.5 2.5 0 1 0 8 10.5 2.5 2.5 0 0 0 8 5.5z" fill="#f7f5f1"/>
+      </svg>
+    </div>
+    <span class="nav-name">Mobius Substrate</span>
+  </a>
+  <div class="nav-right">
+    <span class="gi-pill" id="gi-pill">GI · C-357</span>
+    <a href="https://handbook.mobius-substrate.com" class="nav-link">Handbook</a>
+    <a href="https://terminal.mobius-substrate.com" class="nav-cta">Open Terminal →</a>
+  </div>
+</nav>
+
+<section class="hero">
+  <div class="hero-eyebrow">School of Chambers</div>
+  <h1 class="hero-title">A civic school<br>built on <em>integrity</em>,<br>not engagement.</h1>
+  <p class="hero-sub">
+    Mobius Substrate is organized into seven chambers. Each one gives you a simple way to learn, remember, verify, and participate in the civic world.
+  </p>
+  <div class="hero-actions">
+    <a href="#chambers" class="btn-primary">Enter the chambers →</a>
+    <a href="https://handbook.mobius-substrate.com" class="btn-secondary">Read the handbook</a>
+  </div>
+</section>
+
+<div class="integrity-strip">
+  <div class="strip-item">
+    <div class="strip-dot" id="gi-dot"></div>
+    <span class="strip-label">Integrity (GI)</span>
+    <span class="strip-val amber" id="gi-val">GI · —</span>
+  </div>
+  <div class="strip-item">
+    <span class="strip-label">Cycle</span>
+    <span class="strip-val" id="cycle-val">C-357</span>
+  </div>
+  <div class="strip-item">
+    <span class="strip-label">Sentinels</span>
+    <span class="strip-val green" id="sentinel-val">— active</span>
+  </div>
+  <div class="strip-item">
+    <span class="strip-label">Archives (Reserve Blocks)</span>
+    <span class="strip-val" id="vault-val">— sealed</span>
+  </div>
+  <div class="strip-item">
+    <span class="strip-label">MIC Fountain</span>
+    <span class="strip-val amber">GI ≥ 0.95 required</span>
+  </div>
+  <div class="strip-item">
+    <span class="strip-label">License</span>
+    <span class="strip-val">CC0 Public Domain</span>
+  </div>
+</div>
+
+<section class="chambers-section" id="chambers">
+  <div class="section-head">
+    <div class="section-eyebrow">Seven chambers · one substrate</div>
+    <h2 class="section-title">Simple doors.<br>Constitutional machinery underneath.</h2>
+    <p class="section-sub">Walk through any chamber. The protocol teaches itself as you go.</p>
+  </div>
+
+  <div class="chamber-grid">
+
+    <a href="https://mobius-substrate.com/#oaa" class="chamber ch-learn">
+      <div class="chamber-top">
+        <div class="chamber-icon">📖</div>
+        <span class="chamber-arrow">→</span>
+      </div>
+      <div class="chamber-num">01</div>
+      <div class="chamber-name">Learn</div>
+      <div class="chamber-canon">Open Agent Architecture</div>
+      <div class="chamber-desc">
+        The learning chamber. Complete guided seminars, prove comprehension, and earn MIC through civic skill — not passive consumption.
+      </div>
+      <span class="chamber-tag">↗ Earn MIC</span>
+    </a>
+
+    <a href="https://terminal.mobius-substrate.com/#epicon" class="chamber ch-memory">
+      <div class="chamber-top">
+        <div class="chamber-icon">🧠</div>
+        <span class="chamber-arrow">→</span>
+      </div>
+      <div class="chamber-num">02</div>
+      <div class="chamber-name">Memory</div>
+      <div class="chamber-canon">EPICON Ledger</div>
+      <div class="chamber-desc">
+        The memory chamber. Important actions, decisions, and attestations are recorded so the system remembers without relying on trust alone.
+      </div>
+      <span class="chamber-tag">↗ View ledger</span>
+    </a>
+
+    <a href="https://terminal.mobius-substrate.com" class="chamber ch-pulse">
+      <div class="chamber-top">
+        <div class="chamber-icon">⚡</div>
+        <span class="chamber-arrow">→</span>
+      </div>
+      <div class="chamber-num">03</div>
+      <div class="chamber-name">Pulse</div>
+      <div class="chamber-canon">Civic Terminal</div>
+      <div class="chamber-desc">
+        The live signal chamber. See the current state of the system — integrity health, sentinel activity, alerts, and civic terminal signals in real time.
+      </div>
+      <span class="chamber-tag">↗ Open terminal</span>
+    </a>
+
+    <a href="https://mobius-substrate.com/#hive" class="chamber ch-world">
+      <div class="chamber-top">
+        <div class="chamber-icon">🌍</div>
+        <span class="chamber-arrow">→</span>
+      </div>
+      <div class="chamber-num">04</div>
+      <div class="chamber-name">World</div>
+      <div class="chamber-canon">HIVE</div>
+      <div class="chamber-desc">
+        The simulation chamber. Enter the shared world where civic tasks, learning, agents, and community stories become interactive and playable.
+      </div>
+      <span class="chamber-tag">↗ Enter world</span>
+    </a>
+
+    <a href="https://terminal.mobius-substrate.com/#sentinel" class="chamber ch-council">
+      <div class="chamber-top">
+        <div class="chamber-icon">⚖️</div>
+        <span class="chamber-arrow">→</span>
+      </div>
+      <div class="chamber-num">05</div>
+      <div class="chamber-name">Council</div>
+      <div class="chamber-canon">DVA · Distributed Virtue Architecture</div>
+      <div class="chamber-desc">
+        The reasoning chamber. The agent council reviews signals, checks integrity, and helps humans make better decisions without replacing them.
+      </div>
+      <span class="chamber-tag">↗ View sentinels</span>
+    </a>
+
+    <a href="https://terminal.mobius-substrate.com/#vault" class="chamber ch-archives">
+      <div class="chamber-top">
+        <div class="chamber-icon">🗄️</div>
+        <span class="chamber-arrow">→</span>
+      </div>
+      <div class="chamber-num">06</div>
+      <div class="chamber-name">Archives</div>
+      <div class="chamber-canon">Reserve Blocks · .dat canon</div>
+      <div class="chamber-desc">
+        The recovery chamber. Sealed records and reserve blocks preserve history so Mobius can recover, replay, and verify what happened — permanently.
+      </div>
+      <span class="chamber-tag">↗ View archives</span>
+    </a>
+
+    <a href="https://handbook.mobius-substrate.com" class="chamber ch-core">
+      <div class="chamber-top">
+        <div class="chamber-icon">⚙️</div>
+        <span class="chamber-arrow">→</span>
+      </div>
+      <div class="chamber-num">07</div>
+      <div class="chamber-name">Core</div>
+      <div class="chamber-canon">Civic Protocol Core</div>
+      <div class="chamber-desc">
+        The protocol chamber. The engine underneath Mobius: wallets, attestations, identity, integrity logic, and civic protocol rails.
+      </div>
+      <span class="chamber-tag">↗ Read the handbook</span>
+    </a>
+
+  </div>
+</section>
+
+<section class="principles">
+  <div class="principles-inner">
+    <div class="principles-eyebrow">Constitutional principles</div>
+    <div class="principles-grid">
+      <div>
+        <div class="principle-label">Core law</div>
+        <div class="principle-text">Integrity before scale.</div>
+      </div>
+      <div>
+        <div class="principle-label">On memory</div>
+        <div class="principle-text">The archive is canon. The cache is temporary.</div>
+      </div>
+      <div>
+        <div class="principle-label">On agents</div>
+        <div class="principle-text">Machines assist. Humans attest.</div>
+      </div>
+      <div>
+        <div class="principle-label">On metrics</div>
+        <div class="principle-text">Count earned, not asserted.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="footer-left">
+    <span class="footer-brand">Mobius Substrate · C-357</span>
+    <div class="footer-links">
+      <a href="https://handbook.mobius-substrate.com" class="footer-link">Handbook</a>
+      <a href="https://terminal.mobius-substrate.com" class="footer-link">Terminal</a>
+      <a href="https://github.com/kaizencycle/Mobius-Substrate" class="footer-link">GitHub</a>
+      <a href="mailto:hello@mobius-substrate.com" class="footer-link">hello@mobius-substrate.com</a>
+    </div>
+  </div>
+  <div class="footer-right">CC0 Public Domain · Built by kaizencycle</div>
+</footer>
+
+<script>
+  // Hydrate live GI from terminal snapshot — non-blocking
+  (async () => {
+    try {
+      const r = await fetch('https://terminal.mobius-substrate.com/api/terminal/snapshot-lite', { signal: AbortSignal.timeout(4000) });
+      if (!r.ok) return;
+      const d = await r.json();
+      const gi = d?.gi ?? d?.integrity_index;
+      const cycle = d?.cycle;
+      const sentinels = d?.sentinel_count ?? d?.sentinels_active;
+      const vault = d?.vault_sealed ?? d?.reserve_blocks_sealed;
+      if (gi != null) {
+        const giStr = Number(gi).toFixed(2);
+        const mode = gi >= 0.95 ? 'green' : gi >= 0.80 ? 'amber' : 'red';
+        document.getElementById('gi-val').textContent = 'GI ' + giStr;
+        document.getElementById('gi-val').className = 'strip-val ' + mode;
+        document.getElementById('gi-dot').className = 'strip-dot ' + (mode === 'green' ? 'green' : '');
+        document.getElementById('gi-pill').textContent = 'GI ' + giStr + (cycle ? ' · ' + cycle : '');
+      }
+      if (cycle) document.getElementById('cycle-val').textContent = cycle;
+      if (sentinels != null) document.getElementById('sentinel-val').textContent = sentinels + ' active';
+      if (vault != null) document.getElementById('vault-val').textContent = vault + ' sealed';
+    } catch {}
+  })();
+</script>
+</body>
+</html>
