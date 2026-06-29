@@ -2876,3 +2876,459 @@
 }
 
 
+
+
+/* ═══════════════════════════════════════════════════════════════
+   C-357 VISITOR ONBOARDING FLOW
+   ─────────────────────────────────────────────────────────────── */
+
+.visitor-wrapper {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: #1c1917;
+  color: #e7e5e4;
+}
+
+.visitor-progress-bar {
+  height: 2px;
+  background: #292524;
+  flex-shrink: 0;
+}
+
+.visitor-progress-fill {
+  height: 100%;
+  background: #a8a29e;
+  transition: width 0.4s ease;
+}
+
+.visitor-inner {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 32px 16px 48px;
+  overflow-y: auto;
+}
+
+/* ── Step nav ─────────────────── */
+.visitor-step-nav {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  margin-bottom: 28px;
+  width: 100%;
+  max-width: 520px;
+}
+
+.visitor-step-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 0;
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  cursor: default;
+  font-size: 12px;
+  color: #78716c;
+  white-space: nowrap;
+  transition: color 0.15s, border-color 0.15s;
+}
+
+.visitor-step-btn.active {
+  color: #e7e5e4;
+  border-bottom-color: #e7e5e4;
+}
+
+.visitor-step-btn.done {
+  color: #34d399;
+  cursor: pointer;
+}
+
+.visitor-step-num {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #292524;
+  border: 1px solid #44403c;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-family: 'JetBrains Mono', monospace;
+  flex-shrink: 0;
+}
+
+.visitor-step-btn.active .visitor-step-num {
+  background: #e7e5e4;
+  color: #1c1917;
+  border-color: #e7e5e4;
+}
+
+.visitor-step-btn.done .visitor-step-num {
+  background: #065f46;
+  border-color: #059669;
+  color: #34d399;
+}
+
+.visitor-step-label { font-size: 12px; }
+
+.visitor-step-sep {
+  flex: 1;
+  height: 1px;
+  background: #44403c;
+  margin: 0 8px;
+  flex-shrink: 0;
+}
+
+/* ── Screen shell ─────────────── */
+.visitor-screen {
+  width: 100%;
+  max-width: 520px;
+  background: #292524;
+  border: 1px solid #44403c;
+  border-radius: 12px;
+  padding: 24px;
+  animation: fadeIn 0.25s ease;
+}
+
+.visitor-eyebrow {
+  font-size: 10px;
+  font-family: 'JetBrains Mono', monospace;
+  color: #78716c;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+
+.visitor-title {
+  font-size: 22px;
+  font-weight: 600;
+  color: #e7e5e4;
+  margin-bottom: 6px;
+  line-height: 1.2;
+}
+
+.visitor-sub {
+  font-size: 14px;
+  color: #a8a29e;
+  line-height: 1.6;
+  margin-bottom: 20px;
+}
+
+/* ── GI status bar ────────────── */
+.visitor-gi-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  background: #1c1917;
+  border: 1px solid #44403c;
+  border-radius: 8px;
+  margin-bottom: 16px;
+  font-size: 13px;
+}
+
+.visitor-gi-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.visitor-gi-label { color: #78716c; }
+
+.visitor-gi-val {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  margin-left: auto;
+}
+
+/* ── Chamber grid (Welcome) ───── */
+.visitor-chamber-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
+@media (min-width: 400px) {
+  .visitor-chamber-grid { grid-template-columns: 1fr 1fr 1fr; }
+}
+
+.visitor-chamber-card {
+  background: #1c1917;
+  border: 1px solid #44403c;
+  border-radius: 10px;
+  padding: 12px;
+}
+
+.visitor-ch-icon { font-size: 18px; display: block; margin-bottom: 5px; }
+.visitor-ch-public {
+  font-size: 13px;
+  font-weight: 500;
+  color: #e7e5e4;
+  display: block;
+  margin-bottom: 2px;
+}
+.visitor-ch-canon {
+  font-size: 9px;
+  font-family: 'JetBrains Mono', monospace;
+  color: #57534e;
+  display: block;
+}
+
+/* ── Path cards ───────────────── */
+.visitor-path-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 20px; }
+
+.visitor-path-card {
+  background: #1c1917;
+  border: 1px solid #44403c;
+  border-radius: 10px;
+  padding: 14px 16px;
+  cursor: pointer;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  transition: border-color 0.15s;
+  position: relative;
+}
+
+.visitor-path-card:hover { border-color: #78716c; }
+
+.visitor-path-card.selected {
+  border-color: #a8a29e;
+  background: #1c1917;
+}
+
+.visitor-path-icon { font-size: 20px; flex-shrink: 0; padding-top: 1px; }
+.visitor-path-content { flex: 1; }
+.visitor-path-title { font-size: 14px; font-weight: 500; color: #e7e5e4; margin-bottom: 3px; }
+.visitor-path-desc { font-size: 12px; color: #a8a29e; line-height: 1.5; }
+.visitor-path-tag {
+  display: inline-block;
+  margin-top: 6px;
+  font-size: 10px;
+  font-family: 'JetBrains Mono', monospace;
+  color: #57534e;
+  padding: 2px 6px;
+  border: 1px solid #44403c;
+  border-radius: 4px;
+}
+
+.visitor-path-check {
+  color: #34d399;
+  font-size: 14px;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+/* ── Chamber preview ──────────── */
+.visitor-mic-hint {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  background: #052e16;
+  border: 1px solid #166534;
+  border-radius: 8px;
+  margin-bottom: 14px;
+  font-size: 12px;
+  color: #34d399;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.visitor-preview-card {
+  background: #1c1917;
+  border: 1px solid #44403c;
+  border-radius: 10px;
+  padding: 16px;
+  margin-bottom: 14px;
+}
+
+.visitor-preview-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.visitor-preview-icon { font-size: 22px; }
+.visitor-preview-name { font-size: 15px; font-weight: 500; color: #e7e5e4; }
+.visitor-preview-desc { font-size: 13px; color: #a8a29e; line-height: 1.6; margin-bottom: 12px; }
+
+.visitor-subjects { display: flex; flex-wrap: wrap; gap: 6px; }
+.visitor-subject-chip {
+  font-size: 11px;
+  padding: 3px 9px;
+  border: 1px solid #44403c;
+  border-radius: 6px;
+  color: #78716c;
+  background: #292524;
+}
+
+/* ── Reward schedule ──────────── */
+.visitor-rewards { margin-bottom: 18px; }
+.visitor-rewards-label {
+  font-size: 10px;
+  font-family: 'JetBrains Mono', monospace;
+  color: #57534e;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 10px;
+}
+.visitor-reward-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+.visitor-reward-name { font-size: 12px; color: #a8a29e; min-width: 120px; }
+.visitor-reward-track {
+  flex: 1;
+  height: 2px;
+  background: #44403c;
+  border-radius: 1px;
+}
+.visitor-reward-fill {
+  height: 100%;
+  width: 30%;
+  border-radius: 1px;
+  background: #57534e;
+}
+.visitor-reward-val {
+  font-size: 11px;
+  font-family: 'JetBrains Mono', monospace;
+  color: #57534e;
+  min-width: 72px;
+  text-align: right;
+}
+
+/* ── Identity card ────────────── */
+.visitor-identity-card {
+  background: #1c1917;
+  border: 1px solid #44403c;
+  border-radius: 10px;
+  padding: 14px;
+  margin-bottom: 14px;
+}
+
+.visitor-identity-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 7px 0;
+  border-bottom: 1px solid #292524;
+}
+.visitor-identity-row:last-child { border-bottom: none; }
+
+.visitor-id-label {
+  font-size: 10px;
+  font-family: 'JetBrains Mono', monospace;
+  color: #57534e;
+}
+.visitor-id-val {
+  font-size: 12px;
+  font-family: 'JetBrains Mono', monospace;
+  color: #a8a29e;
+}
+.visitor-id-badge {
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 4px;
+  background: #451a03;
+  color: #fb923c;
+  border: 1px solid #9a3412;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+/* ── Checklist ────────────────── */
+.visitor-checklist { display: flex; flex-direction: column; gap: 6px; margin-bottom: 18px; }
+
+.visitor-check-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 9px 12px;
+  background: #1c1917;
+  border: 1px solid #44403c;
+  border-radius: 8px;
+}
+
+.visitor-check-item.done { border-color: #166534; }
+
+.visitor-check-icon {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  flex-shrink: 0;
+  margin-top: 1px;
+  background: #292524;
+  border: 1px solid #44403c;
+  color: #57534e;
+}
+
+.visitor-check-icon.done {
+  background: #052e16;
+  border-color: #166534;
+  color: #34d399;
+}
+
+.visitor-check-label { font-size: 13px; color: #e7e5e4; }
+.visitor-check-sub { font-size: 11px; color: #57534e; margin-top: 2px; }
+
+.visitor-footnote {
+  font-size: 11px;
+  color: #57534e;
+  text-align: center;
+  margin-top: 10px;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+/* ── Buttons ──────────────────── */
+.visitor-btn-row { display: flex; gap: 8px; }
+
+.visitor-btn-primary {
+  flex: 1;
+  padding: 11px 16px;
+  background: #e7e5e4;
+  color: #1c1917;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+.visitor-btn-primary:hover { opacity: 0.88; }
+.visitor-btn-primary:disabled { opacity: 0.3; cursor: not-allowed; }
+
+.visitor-btn-ghost {
+  padding: 11px 16px;
+  background: transparent;
+  border: 1px solid #44403c;
+  border-radius: 8px;
+  font-size: 14px;
+  color: #78716c;
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s;
+}
+.visitor-btn-ghost:hover { border-color: #78716c; color: #a8a29e; }
+
+/* ── Responsive ───────────────── */
+@media (max-width: 480px) {
+  .visitor-inner { padding: 20px 12px 40px; }
+  .visitor-step-label { display: none; }
+  .visitor-step-btn { gap: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .visitor-gi-dot { animation: none !important; }
+  .visitor-progress-fill { transition: none; }
+  .visitor-screen { animation: none; }
+}
