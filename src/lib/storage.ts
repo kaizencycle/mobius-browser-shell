@@ -11,6 +11,7 @@ export const KEYS = {
   CHAMBER_HISTORY: 'mobius_chamber_history',
   ATTESTATION_QUEUE: 'mobius_attestation_queue',
   MIC_BALANCE_CACHE: 'mobius_mic_balance_cache',
+  FIRST_ACTIONS: 'mobius_first_actions',
 } as const;
 
 export interface OnboardingState {
@@ -90,4 +91,21 @@ export function pushChamberHistory(chamberId: string): void {
   const history = getLocal<string[]>(KEYS.CHAMBER_HISTORY, []);
   const filtered = history.filter(id => id !== chamberId);
   setLocal(KEYS.CHAMBER_HISTORY, [chamberId, ...filtered].slice(0, 12));
+}
+
+/** Canonical civic ID — onboarding guest ID or authenticated citizen. */
+export function getCivicId(fallback = 'guest'): string {
+  const state = getOnboardingState();
+  return state.civic_id ?? fallback;
+}
+
+export function updateOAAProgress(patch: Partial<OAAProgress>): void {
+  const current = getLocal<OAAProgress>(KEYS.OAA_PROGRESS, {
+    seminars_completed: 0,
+    quizzes_passed: 0,
+    mic_earned: 0,
+    last_seminar_id: null,
+    knowledge_graph: [],
+  });
+  setLocal(KEYS.OAA_PROGRESS, { ...current, ...patch });
 }

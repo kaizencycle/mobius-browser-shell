@@ -1,6 +1,7 @@
 import { useState, useCallback } from 'react';
 import type { OnboardingPath } from '../src/lib/onboarding/paths';
 import { syncOnboardingState, KEYS, setLocal } from '../src/lib/storage';
+import { resetFirstActions, markFirstAction } from '../src/lib/onboarding/first-actions';
 import { env } from '../config/env';
 
 const STORAGE_KEY = KEYS.VISITOR_ONBOARDING;
@@ -36,6 +37,7 @@ function saveState(state: VisitorOnboardingState): void {
 /** Route to first chamber — handles external Pulse, Handbook, Core links */
 export function navigateToFirstChamber(chamber: string): void {
   if (chamber === 'terminal' || chamber === 'pulse') {
+    markFirstAction('pulse');
     window.open(`${env.terminalBase.replace(/\/+$/, '')}/terminal`, '_blank', 'noopener,noreferrer');
     window.location.hash = 'hallway';
     return;
@@ -106,6 +108,7 @@ export function useVisitorOnboarding() {
   const reset = useCallback(() => {
     localStorage.removeItem(STORAGE_KEY);
     localStorage.removeItem(KEYS.ONBOARDING);
+    resetFirstActions();
     setState({ complete: false, path: null, currentStep: 0, civicId: null });
   }, []);
 

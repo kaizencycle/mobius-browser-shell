@@ -1,5 +1,7 @@
 import React, { useMemo } from 'react';
 import type { PathDefinition } from '../../../../src/lib/onboarding/paths';
+import { FirstActionsChecklist } from '../../FirstActionsChecklist';
+import { useFirstActions } from '../../../../hooks/useFirstActions';
 
 interface Props {
   path: PathDefinition | null;
@@ -9,45 +11,14 @@ interface Props {
   onSkip: () => void;
 }
 
-interface ChecklistItem {
-  id: string;
-  label: string;
-  sub: (path: PathDefinition | null) => string;
-  done: (path: PathDefinition | null) => boolean;
-}
-
-const CHECKLIST: ChecklistItem[] = [
-  {
-    id: 'path',
-    label: 'Chose your path',
-    sub: p => p ? `${p.label} · opens ${p.firstChamberLabel} first` : 'No path selected',
-    done: p => !!p,
-  },
-  {
-    id: 'seminar',
-    label: 'Complete first seminar',
-    sub: () => 'Pass the quiz gate to earn MIC',
-    done: () => false,
-  },
-  {
-    id: 'jade',
-    label: 'Ask JADE a question',
-    sub: () => 'Unlocks personalized seminar routing',
-    done: () => false,
-  },
-  {
-    id: 'pulse',
-    label: 'View the Pulse chamber',
-    sub: () => 'See live system integrity and sentinel activity',
-    done: () => false,
-  },
-];
-
 export function IdentityScreen({ path, civicId, onComplete, onBack, onSkip }: Props) {
+  const { actions } = useFirstActions();
   const generatedId = useMemo(
     () => civicId ?? `citizen-${Date.now().toString(36)}`,
-    [civicId]
+    [civicId],
   );
+
+  const completedCount = [actions.path, actions.seminar, actions.jade, actions.pulse].filter(Boolean).length;
 
   return (
     <div className="visitor-screen">
@@ -75,22 +46,10 @@ export function IdentityScreen({ path, civicId, onComplete, onBack, onSkip }: Pr
         </div>
       </div>
 
-      <div className="visitor-checklist">
-        {CHECKLIST.map(item => {
-          const isDone = item.done(path);
-          return (
-            <div key={item.id} className={`visitor-check-item${isDone ? ' done' : ''}`}>
-              <div className={`visitor-check-icon${isDone ? ' done' : ''}`}>
-                {isDone ? '✓' : '·'}
-              </div>
-              <div className="visitor-check-content">
-                <div className="visitor-check-label">{item.label}</div>
-                <div className="visitor-check-sub">{item.sub(path)}</div>
-              </div>
-            </div>
-          );
-        })}
+      <div className="visitor-rewards-label" style={{ marginBottom: 8 }}>
+        First actions · {completedCount}/4
       </div>
+      <FirstActionsChecklist variant="card" forceShow />
 
       <div className="visitor-btn-row">
         <button className="visitor-btn-primary" onClick={onComplete}>
