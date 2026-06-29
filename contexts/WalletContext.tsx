@@ -19,6 +19,7 @@
 import { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
 import { useAuth } from './AuthContext';
 import { env } from '../config/env';
+import { getCivicId } from '../src/lib/storage';
 import { useMICBlockchain, MICBlock, MICTransaction, ChainStats } from '../hooks/useMICBlockchain';
 
 interface WalletData {
@@ -132,7 +133,7 @@ export function WalletProvider({ children }: { children: ReactNode }) {
   // ── Earn MIC: writes to API ledger AND local blockchain ──
   const earnMIC = useCallback(
     async (source: string, meta?: Record<string, unknown>): Promise<boolean> => {
-      const recipient = user?.id || user?.email || 'local-user';
+      const recipient = user?.id || user?.email || getCivicId('local-user');
       const amount = (meta?.mic_earned as number) ?? 0;
 
       // 1. Always write to local blockchain (works offline)
@@ -199,7 +200,7 @@ export function WalletProvider({ children }: { children: ReactNode }) {
   // ── Burn MIC: writes negative entry to API ledger and local chain ──
   const burnMIC = useCallback(
     async (amount: number, source: string, meta?: Record<string, unknown>): Promise<boolean> => {
-      const recipient = user?.id || user?.email || 'local-user';
+      const recipient = user?.id || user?.email || getCivicId('local-user');
       const burnAmount = Math.round(amount * 100) / 100;
 
       if (!Number.isFinite(burnAmount) || burnAmount <= 0) {

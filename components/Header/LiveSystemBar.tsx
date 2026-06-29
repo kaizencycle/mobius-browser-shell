@@ -2,6 +2,7 @@ import React from 'react';
 import { terminalBridge } from '../../services/terminalBridge';
 import { useTerminalData } from '../../hooks/useTerminalData';
 import { GIGauge } from '../GIDisplay/GIGauge';
+import { markFirstAction } from '../../src/lib/onboarding/first-actions';
 
 export function LiveSystemBar() {
   const { data } = useTerminalData(
@@ -66,6 +67,7 @@ export function LiveSystemBar() {
         href={`${terminalBridge.baseUrl}/terminal`}
         target="_blank"
         rel="noreferrer"
+        onClick={() => markFirstAction('pulse')}
         className="shrink-0 text-stone-400 transition-colors hover:text-white"
       >
         → Terminal

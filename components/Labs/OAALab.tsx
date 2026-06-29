@@ -13,6 +13,7 @@ import { CitizenOnboardingStepper } from './CitizenOnboardingStepper';
 import { useWallet } from '../../contexts/WalletContext';
 import { useTerminal } from '../../contexts/TerminalContext';
 import { StreakDisplay, LevelBar, StatsRow, OAASkeleton } from './OAAEnhancements';
+import { getOnboardingState } from '../../src/lib/storage';
 
 export interface OAALabProps {
   onNavigateToKnowledgeGraph?: () => void;
@@ -59,7 +60,9 @@ export const OAALab: React.FC<OAALabProps> = ({ onNavigateToKnowledgeGraph }) =>
   const [sessionXp, setSessionXp] = useState(0);
 
   // State for view mode
-  const [currentView, setCurrentView] = useState<OAAView>('subjects');
+  const learnerDefaultView: OAAView =
+    getOnboardingState().path === 'learner' ? 'seminar-feed' : 'subjects';
+  const [currentView, setCurrentView] = useState<OAAView>(learnerDefaultView);
 
   // State for subject selection and chat
   const [selectedSubject, setSelectedSubject] = useState<Subject | null>(null);

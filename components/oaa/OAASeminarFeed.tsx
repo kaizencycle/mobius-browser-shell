@@ -31,6 +31,9 @@ import { MicRewardToast } from './MicRewardToast';
 
 import { useWallet } from '../../contexts/WalletContext';
 import { useAuth } from '../../contexts/AuthContext';
+import { getCivicId, updateOAAProgress, getLocal, KEYS } from '../../src/lib/storage';
+import { attestOaaLearning } from '../../src/lib/api/cpc';
+import { markFirstAction } from '../../src/lib/onboarding/first-actions';
 
 type FeedScreen =
   | 'subject-select'
@@ -67,7 +70,7 @@ export const OAASeminarFeed: React.FC<OAASeminarFeedProps> = ({ className = '' }
   const [showToast, setShowToast] = useState(false);
 
   // ── Knowledge graph ──────────────────────────────────────────────────────
-  const userId = citizen?.citizenId ?? 'guest';
+  const userId = citizen?.citizenId ?? getCivicId();
   const [graph, setGraph] = useState(() => loadGraph(userId));
 
   // ── Subject selection ────────────────────────────────────────────────────
@@ -92,22 +95,84 @@ export const OAASeminarFeed: React.FC<OAASeminarFeedProps> = ({ className = '' }
   // ── Quiz pass ────────────────────────────────────────────────────────────
   const handleQuizPass = useCallback((result: QuizResult) => {
     setQuizResult(result);
+    markFirstAction('seminar');
+    if (currentCourse) {
+      const progress = getLocal(KEYS.OAA_PROGRESS, {
+        seminars_completed: 0,
+        quizzes_passed: 0,
+        mic_earned: 0,
+        last_seminar_id: null,
+        knowledge_graph: [],
+      });
+      updateOAAProgress({
+        seminars_completed: progress.seminars_completed + 1,
+        quizzes_passed: progress.quizzes_passed + 1,
+        last_seminar_id: currentCourse.id,
+      });
+    }
     if (result.lip.requires_secondary_gate) {
       setScreen('secondary-gate');
     } else {
       setScreen('jade-prompt');
     }
-  }, []);
+  }, [currentCourse]);
 
   // ── Secondary gate pass ───────────────────────────────────────────────────
   const handleSecondaryPass = useCallback(() => {
     setScreen('jade-prompt');
   }, []);
 
+  const mintAndEarn = useCallback(async (
+    breakdown: ReturnType<typeof computeMICReward>,
+    reflectionText: string,
+  ) => {
+    if (!currentCourse || !quizResult || breakdown.total <= 0) return;
+
+    const attestation = buildAttestation(
+      userId,
+      currentCourse.id,
+      quizResult.score,
+      quizResult.lip.score,
+      reflectionText,
+      breakdown.total,
+    );
+
+    await earnMIC('oaa_learning', {
+      ...attestation,
+      mic_earned: breakdown.total,
+      subject: currentCourse.subject,
+      category: currentCourse.category,
+    });
+
+    const cpc = await attestOaaLearning(
+      userId,
+      currentCourse.id,
+      quizResult.score,
+      quizResult.lip.score,
+      reflectionText,
+      breakdown.total,
+    );
+
+    const progress = getLocal(KEYS.OAA_PROGRESS, {
+      seminars_completed: 0,
+      quizzes_passed: 0,
+      mic_earned: 0,
+      last_seminar_id: null,
+      knowledge_graph: [],
+    });
+    updateOAAProgress({
+      mic_earned: progress.mic_earned + (cpc.mic_minted || breakdown.total),
+    });
+
+    setPendingToast(breakdown);
+    setShowToast(true);
+  }, [currentCourse, quizResult, userId, earnMIC]);
+
   // ── JADE question submitted ───────────────────────────────────────────────
   const handleJadeQuestion = useCallback(async (question: string) => {
     if (!currentCourse || !quizResult) return;
 
+    markFirstAction('jade');
     const depth = scoreSemanticDepth(question);
     const reflComp = computeReflectionComponent(depth);
 
@@ -131,48 +196,18 @@ export const OAASeminarFeed: React.FC<OAASeminarFeedProps> = ({ className = '' }
     if (output.micBonus > 0) breakdown.jadeDepthBonus += output.micBonus;
     breakdown.total = breakdown.base + breakdown.highRetentionBonus + breakdown.reflectionBonus + breakdown.jadeDepthBonus;
 
-    // Mint MIC via WalletContext
-    if (breakdown.total > 0) {
-      const attestation = buildAttestation(
-        userId,
-        currentCourse.id,
-        quizResult.score,
-        quizResult.lip.score,
-        question,
-        breakdown.total
-      );
-      await earnMIC('oaa_learning', {
-        ...attestation,
-        mic_earned: breakdown.total,
-        subject: currentCourse.subject,
-        category: currentCourse.category,
-      });
-      setPendingToast(breakdown);
-      setShowToast(true);
-    }
+    await mintAndEarn(breakdown, question);
 
     setJadeOutput(output);
     setScreen('jade-response');
-  }, [currentCourse, quizResult, graph, userId, earnMIC]);
+  }, [currentCourse, quizResult, graph, userId, mintAndEarn]);
 
   // ── JADE skipped (no reflection) ─────────────────────────────────────────
   const handleJadeSkip = useCallback(async () => {
     if (!currentCourse || !quizResult) return;
 
     const breakdown = computeMICReward(quizResult.score, false);
-    if (breakdown.total > 0) {
-      const attestation = buildAttestation(
-        userId,
-        currentCourse.id,
-        quizResult.score,
-        quizResult.lip.score,
-        '',
-        breakdown.total
-      );
-      await earnMIC('oaa_learning', { ...attestation, mic_earned: breakdown.total, subject: currentCourse.subject });
-      setPendingToast(breakdown);
-      setShowToast(true);
-    }
+    await mintAndEarn(breakdown, '');
 
     // Route without question
     const output = routeNextSeminar({
@@ -184,7 +219,7 @@ export const OAASeminarFeed: React.FC<OAASeminarFeedProps> = ({ className = '' }
     });
     setJadeOutput(output);
     setScreen('jade-response');
-  }, [currentCourse, quizResult, graph, userId, earnMIC]);
+  }, [currentCourse, quizResult, graph, userId, mintAndEarn]);
 
   // ── Start next seminar ────────────────────────────────────────────────────
   const handleStartNext = useCallback((courseId: string) => {

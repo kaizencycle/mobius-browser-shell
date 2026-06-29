@@ -17,6 +17,7 @@
  */
 import React, { useState, useEffect, useRef } from 'react';
 import { Mic, MicOff, Volume2, VolumeX, Send, Sparkles, Eye, MessageCircle } from 'lucide-react';
+import { markFirstAction } from '../../src/lib/onboarding/first-actions';
 import { env } from '../../config/env';
 import { useSpeechRecognition, useSpeechSynthesis, useUserDisplayName } from '../../hooks';
 import { useAuth } from '../../contexts/AuthContext';
@@ -108,6 +109,7 @@ export const JadeLab: React.FC = () => {
 
   const sendToJade = async (text: string) => {
     if (!text.trim() || isThinking) return;
+    markFirstAction('jade');
     const userMsg: JadeMessage = { role: 'user', content: text.trim(), timestamp: new Date() };
     setMessages((prev) => [...prev, userMsg]);
     setInput('');

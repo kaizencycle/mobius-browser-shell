@@ -12,7 +12,8 @@ import { useGuest } from '../contexts/GuestContext';
 import { useVisitorOnboarding } from '../hooks/useVisitorOnboarding';
 import { wakeAllServices, env } from '../config/env';
 import { EXTENDED_CHAMBERS, type PublicChamber } from '../src/lib/chambers';
-import { pushChamberHistory } from '../src/lib/storage';
+import { pushChamberHistory, getCivicId } from '../src/lib/storage';
+import { markFirstAction } from '../src/lib/onboarding/first-actions';
 import { ONBOARDING_PATHS } from '../src/lib/onboarding/paths';
 import { type TerminalState } from '../src/lib/terminal-bridge';
 
@@ -34,6 +35,7 @@ function handleChamberClick(
   onEnter: (tab: TabId) => void,
 ): void {
   pushChamberHistory(chamber.id);
+  if (chamber.id === 'pulse') markFirstAction('pulse');
   if (chamber.externalUrl) {
     window.open(chamber.externalUrl, chamber.id === 'pulse' ? '_blank' : '_blank', 'noopener,noreferrer');
     return;
@@ -45,12 +47,15 @@ export const Hallway: React.FC<HallwayProps> = ({ onEnter, onOpenProfile, onOpen
   const [isWaking, setIsWaking] = useState(false);
   const [wakeComplete, setWakeComplete] = useState(false);
   const { state: terminalState } = useTerminal();
-  const { wallet } = useWallet();
+  const { wallet, getChainBalance } = useWallet();
   const { citizen } = useAuth();
   const { isGuest, triggerBecomeCitizen } = useGuest();
   const { state: onboarding } = useVisitorOnboarding();
 
   const pathDef = ONBOARDING_PATHS.find(p => p.id === onboarding.path);
+  const civicId = getCivicId();
+  const localMic = getChainBalance(civicId);
+  const displayMic = wallet?.balance ?? (localMic > 0 ? localMic : 0);
 
   const handleWakeLabs = async () => {
     setIsWaking(true);
@@ -91,6 +96,7 @@ export const Hallway: React.FC<HallwayProps> = ({ onEnter, onOpenProfile, onOpen
                 href={TERMINAL_APP_URL}
                 target="_blank"
                 rel="noreferrer"
+                onClick={() => markFirstAction('pulse')}
                 className={`hall-gi ${giClass(terminalState.mode, terminalState.stale)}`}
                 title={terminalState.stale ? 'Stale — last-known-good' : 'Open Pulse / Terminal'}
               >
@@ -101,9 +107,7 @@ export const Hallway: React.FC<HallwayProps> = ({ onEnter, onOpenProfile, onOpen
             )}
 
             <span className="hall-chip hall-chip--mic">
-              ◎ {wallet
-                ? wallet.balance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-                : '0.00'}
+              ◎ {displayMic.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </span>
 
             <button
