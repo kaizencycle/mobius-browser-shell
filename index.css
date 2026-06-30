@@ -429,6 +429,50 @@
   color: rgba(255,255,255,.8);
 }
 
+/* ── OAuth login buttons ───────────────────────────────────── */
+.hall-oauth {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+.hall-oauth-btn {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  letter-spacing: .04em;
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,.15);
+  background: transparent;
+  color: rgba(255,255,255,.55);
+  cursor: pointer;
+  transition: background .15s, color .15s, border-color .15s;
+  white-space: nowrap;
+}
+.hall-oauth-btn:hover:not(:disabled) {
+  background: rgba(255,255,255,.07);
+  color: rgba(255,255,255,.85);
+  border-color: rgba(255,255,255,.25);
+}
+.hall-oauth-btn:disabled { opacity: .4; cursor: default; }
+
+/* Auth gate variant — full width, stacked */
+.auth-gate-oauth {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+}
+.auth-gate-oauth .hall-oauth-btn {
+  width: 100%;
+  justify-content: center;
+  padding: 10px 16px;
+  font-size: 13px;
+  border-radius: 12px;
+}
+
 /* ── Hall title (hero) ─────────────────────────────────────── */
 .hall-title {
   padding: 64px 0 36px;

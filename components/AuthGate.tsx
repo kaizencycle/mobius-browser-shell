@@ -13,6 +13,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { PasskeyService } from '../services/PasskeyService';
+import { OAuthButtons } from './hallway/OAuthButtons';
 
 type GateView = 'landing' | 'registering' | 'authenticating';
 
@@ -128,7 +129,15 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
 
             <div className="flex items-center gap-3">
               <div className="flex-1 h-px bg-stone-800" />
-              <span className="text-[10px] text-stone-600">new citizen</span>
+              <span className="text-[10px] text-stone-600">or continue with</span>
+              <div className="flex-1 h-px bg-stone-800" />
+            </div>
+
+            <OAuthButtons className="auth-gate-oauth" />
+
+            <div className="flex items-center gap-3">
+              <div className="flex-1 h-px bg-stone-800" />
+              <span className="text-[10px] text-stone-600">new citizen · passkey</span>
               <div className="flex-1 h-px bg-stone-800" />
             </div>
 
