@@ -1,5 +1,6 @@
 import React from 'react';
-import { useVisitorOnboarding } from '../../../hooks/useVisitorOnboarding';
+import type { TabId } from '../../../types';
+import type { OnboardingPath } from '../../../src/lib/onboarding/paths';
 import { ONBOARDING_PATHS } from '../../../src/lib/onboarding/paths';
 import { WelcomeScreen } from './screens/WelcomeScreen';
 import { PathScreen } from './screens/PathScreen';
@@ -33,9 +34,27 @@ function StepNav({ current, onSelect }: { current: number; onSelect: (n: number)
   );
 }
 
-export function VisitorOnboardingFlow() {
-  const { state, setStep, setPath, complete, skip } = useVisitorOnboarding();
+export interface VisitorOnboardingFlowProps {
+  state: {
+    currentStep: number;
+    path: OnboardingPath | null;
+    civicId: string | null;
+  };
+  setStep: (step: number) => void;
+  setPath: (path: OnboardingPath) => void;
+  complete: (firstChamber: string, setActiveTab?: (tab: TabId) => void) => void;
+  skip: () => void;
+  setActiveTab: (tab: TabId) => void;
+}
 
+export function VisitorOnboardingFlow({
+  state,
+  setStep,
+  setPath,
+  complete,
+  skip,
+  setActiveTab,
+}: VisitorOnboardingFlowProps) {
   const selectedPath = ONBOARDING_PATHS.find(p => p.id === state.path) ?? null;
   const progress = ((state.currentStep + 1) / STEP_LABELS.length) * 100;
 
@@ -74,7 +93,7 @@ export function VisitorOnboardingFlow() {
           <IdentityScreen
             path={selectedPath}
             civicId={state.civicId}
-            onComplete={() => complete(selectedPath?.firstChamber ?? 'hallway')}
+            onComplete={() => complete(selectedPath?.firstChamber ?? 'hallway', setActiveTab)}
             onBack={() => setStep(2)}
             onSkip={skip}
           />

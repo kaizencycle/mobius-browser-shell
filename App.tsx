@@ -34,7 +34,7 @@ const App: React.FC = () => {
   const [settingsOpen, setSettingsOpen] = useState(false);
 
   const { citizen } = useAuth();
-  const { state: visitorOnboarding } = useVisitorOnboarding();
+  const visitorOnboarding = useVisitorOnboarding();
   const profile = useCitizenProfile();
 
   useSessionHeartbeat();
@@ -112,8 +112,17 @@ const App: React.FC = () => {
   };
 
   // Visitor onboarding gate — shown once to first-time visitors regardless of auth state
-  if (!visitorOnboarding.complete) {
-    return <VisitorOnboardingFlow />;
+  if (!visitorOnboarding.state.complete) {
+    return (
+      <VisitorOnboardingFlow
+        state={visitorOnboarding.state}
+        setStep={visitorOnboarding.setStep}
+        setPath={visitorOnboarding.setPath}
+        complete={visitorOnboarding.complete}
+        skip={visitorOnboarding.skip}
+        setActiveTab={setActiveTab}
+      />
+    );
   }
 
   return (
