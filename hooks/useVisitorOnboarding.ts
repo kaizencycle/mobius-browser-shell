@@ -3,6 +3,7 @@ import type { OnboardingPath } from '../src/lib/onboarding/paths';
 import { syncOnboardingState, KEYS, setLocal } from '../src/lib/storage';
 import { resetFirstActions, markFirstAction } from '../src/lib/onboarding/first-actions';
 import { env } from '../config/env';
+import { TabId } from '../types';
 
 const STORAGE_KEY = KEYS.VISITOR_ONBOARDING;
 
@@ -34,12 +35,30 @@ function saveState(state: VisitorOnboardingState): void {
   } catch { /* ignore */ }
 }
 
-/** Route to first chamber — handles external Pulse, Handbook, Core links */
-export function navigateToFirstChamber(chamber: string): void {
+const CHAMBER_TO_TAB: Record<string, TabId> = {
+  oaa:         TabId.OAA,
+  hive:        TabId.HIVE,
+  reflections: TabId.REFLECTIONS,
+  knowledge:   TabId.KNOWLEDGE_GRAPH,
+  shield:      TabId.SHIELD,
+  jade:        TabId.JADE,
+  wallet:      TabId.WALLET,
+  vault:       TabId.VAULT,
+  epicon:      TabId.EPICON,
+  hallway:     TabId.HALLWAY,
+  cpc:         TabId.EPICON,
+  core:        TabId.EPICON,
+};
+
+/** Route to first chamber, using the shell's tab router when available. */
+export function navigateToFirstChamber(
+  chamber: string,
+  setActiveTab?: (tab: TabId) => void,
+): void {
   if (chamber === 'terminal' || chamber === 'pulse') {
     markFirstAction('pulse');
     window.open(`${env.terminalBase.replace(/\/+$/, '')}/terminal`, '_blank', 'noopener,noreferrer');
-    window.location.hash = 'hallway';
+    setActiveTab?.(TabId.HALLWAY);
     return;
   }
   if (chamber === 'handbook') {
@@ -47,14 +66,11 @@ export function navigateToFirstChamber(chamber: string): void {
       ? `${env.canonicalDomain.replace(/\/+$/, '')}/handbook`
       : 'https://handbook.mobius-substrate.com';
     window.open(handbook, '_blank', 'noopener,noreferrer');
-    window.location.hash = 'hallway';
+    setActiveTab?.(TabId.HALLWAY);
     return;
   }
-  if (chamber === 'cpc' || chamber === 'core') {
-    window.location.hash = 'epicon';
-    return;
-  }
-  window.location.hash = chamber;
+  const tab = CHAMBER_TO_TAB[chamber] ?? TabId.HALLWAY;
+  setActiveTab?.(tab);
 }
 
 export function useVisitorOnboarding() {
@@ -76,7 +92,7 @@ export function useVisitorOnboarding() {
     });
   }, []);
 
-  const complete = useCallback((firstChamber: string) => {
+  const complete = useCallback((firstChamber: string, setActiveTab?: (tab: TabId) => void) => {
     setState(prev => {
       const civicId = prev.civicId ?? `citizen-${Date.now().toString(36)}`;
       const next: VisitorOnboardingState = {
@@ -94,7 +110,7 @@ export function useVisitorOnboarding() {
       });
       return next;
     });
-    navigateToFirstChamber(firstChamber);
+    navigateToFirstChamber(firstChamber, setActiveTab);
   }, []);
 
   const skip = useCallback(() => {
