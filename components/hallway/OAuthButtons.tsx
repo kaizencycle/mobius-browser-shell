@@ -1,7 +1,11 @@
 import React, { useState } from 'react';
 import { initiateOAuth } from '../../services/OAuthService';
 
-export function OAuthButtons() {
+interface OAuthButtonsProps {
+  className?: string;
+}
+
+export function OAuthButtons({ className }: OAuthButtonsProps) {
   const [pending, setPending] = useState<'google' | 'github' | null>(null);
 
   const login = (provider: 'google' | 'github') => {
@@ -10,7 +14,7 @@ export function OAuthButtons() {
   };
 
   return (
-    <div className="hall-oauth">
+    <div className={className ?? 'hall-oauth'}>
       <button
         className="hall-oauth-btn hall-oauth-btn--github"
         onClick={() => login('github')}

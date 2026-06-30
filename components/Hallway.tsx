@@ -5,7 +5,6 @@ import { SentinelStatus } from './SentinelStatus';
 import { CitizenProfileButton } from './CitizenProfile/CitizenProfileButton';
 import { OnboardingNudge } from './hallway/OnboardingNudge';
 import { Coffee, CheckCircle, Settings } from 'lucide-react';
-import { OAuthButtons } from './hallway/OAuthButtons';
 import { useTerminal } from '../contexts/TerminalContext';
 import { useWallet } from '../contexts/WalletContext';
 import { useAuth } from '../contexts/AuthContext';
@@ -132,9 +131,7 @@ export const Hallway: React.FC<HallwayProps> = ({ onEnter, onOpenProfile, onOpen
               <button className="hall-guest" onClick={triggerBecomeCitizen}>Become citizen</button>
             ) : citizen ? (
               <CitizenProfileButton onClick={onOpenProfile} />
-            ) : (
-              <OAuthButtons />
-            )}
+            ) : null}
           </div>
         </div>
 

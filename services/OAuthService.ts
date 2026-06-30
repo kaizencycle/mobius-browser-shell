@@ -19,9 +19,17 @@ export interface OAuthCallbackResult {
   civicId: string;
   handle: string | null;
   provider: OAuthProvider;
+  /** True only when the Identity Service minted a brand-new civic_id. */
+  isNewCitizen: boolean;
 }
 
-const CALLBACK_PARAMS = ['oauth_token', 'oauth_civic_id', 'oauth_handle', 'oauth_provider'] as const;
+const CALLBACK_PARAMS = [
+  'oauth_token',
+  'oauth_civic_id',
+  'oauth_handle',
+  'oauth_provider',
+  'oauth_is_new',
+] as const;
 
 /** Redirect the browser to the Identity Service OAuth entry point. */
 export function initiateOAuth(provider: OAuthProvider): void {
@@ -54,5 +62,7 @@ export function consumeOAuthCallback(): OAuthCallbackResult | null {
     civicId,
     handle: params.get('oauth_handle'),
     provider,
+    // Default false (returning citizen) — Identity Service sets oauth_is_new=true only on first mint
+    isNewCitizen: params.get('oauth_is_new') === 'true',
   };
 }

@@ -62,7 +62,7 @@ export interface AuthContextValue {
     handle: string | null;
   }) => Promise<CitizenIdentity>;
   /** Complete auth from OAuth callback (token + civic_id from Identity Service) */
-  loginWithOAuth: (token: string, civicId: string, handle: string | null, provider: OAuthProvider) => void;
+  loginWithOAuth: (token: string, civicId: string, handle: string | null, provider: OAuthProvider, isNewCitizen?: boolean) => void;
   /** Clear session */
   signOut: () => void;
   /** Claim genesis grant (50 MIC) after covenants signed. Idempotent. */
@@ -111,7 +111,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         citizenId: oauthResult.civicId,
         handle: oauthResult.handle,
         authenticatedAt: new Date().toISOString(),
-        onboarded: false,
+        // Returning citizens (isNewCitizen=false) have already onboarded — don't re-gate them
+        onboarded: !oauthResult.isNewCitizen,
       };
       persistSession(identity, oauthResult.token);
       setHasIdentityCache(identityCache.hasCache());
@@ -320,12 +321,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     civicId: string,
     handle: string | null,
     provider: OAuthProvider,
+    isNewCitizen = false,
   ) => {
     const identity: CitizenIdentity = {
       citizenId: civicId,
       handle,
       authenticatedAt: new Date().toISOString(),
-      onboarded: false,
+      onboarded: !isNewCitizen,
     };
     persistSession(identity, token);
     logAuthEvent('AUTHENTICATE', { citizenId: civicId, handle });
