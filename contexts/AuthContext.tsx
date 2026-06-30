@@ -15,6 +15,7 @@ import {
 } from 'react';
 import { PasskeyService } from '../services/PasskeyService';
 import { identityCache } from '../services/IdentityCache';
+import { consumeOAuthCallback, type OAuthProvider } from '../services/OAuthService';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -60,6 +61,8 @@ export interface AuthContextValue {
     consents: { integrity: boolean; ecology: boolean; custodianship: boolean };
     handle: string | null;
   }) => Promise<CitizenIdentity>;
+  /** Complete auth from OAuth callback (token + civic_id from Identity Service) */
+  loginWithOAuth: (token: string, civicId: string, handle: string | null, provider: OAuthProvider) => void;
   /** Clear session */
   signOut: () => void;
   /** Claim genesis grant (50 MIC) after covenants signed. Idempotent. */
@@ -99,8 +102,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [error, setError] = useState<string | null>(null);
   const [hasIdentityCache, setHasIdentityCache] = useState(false);
 
-  // Rehydrate session from sessionStorage on mount
+  // Rehydrate session from sessionStorage on mount, or consume OAuth callback
   useEffect(() => {
+    // OAuth callback takes priority — token in URL means the provider just redirected back
+    const oauthResult = consumeOAuthCallback();
+    if (oauthResult) {
+      const identity: CitizenIdentity = {
+        citizenId: oauthResult.civicId,
+        handle: oauthResult.handle,
+        authenticatedAt: new Date().toISOString(),
+        onboarded: false,
+      };
+      persistSession(identity, oauthResult.token);
+      setHasIdentityCache(identityCache.hasCache());
+      logAuthEvent('AUTHENTICATE', { citizenId: oauthResult.civicId, handle: oauthResult.handle });
+      return;
+    }
+
     try {
       const raw = sessionStorage.getItem(SESSION_KEY);
       if (raw) {
@@ -120,6 +138,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
     setHasIdentityCache(identityCache.hasCache());
     setStatus('unauthenticated');
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const persistSession = useCallback((identity: CitizenIdentity, token?: string | null) => {
@@ -296,6 +315,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return 0;
   }, [citizen]);
 
+  const loginWithOAuth = useCallback((
+    token: string,
+    civicId: string,
+    handle: string | null,
+    provider: OAuthProvider,
+  ) => {
+    const identity: CitizenIdentity = {
+      citizenId: civicId,
+      handle,
+      authenticatedAt: new Date().toISOString(),
+      onboarded: false,
+    };
+    persistSession(identity, token);
+    logAuthEvent('AUTHENTICATE', { citizenId: civicId, handle });
+    void provider; // provider recorded server-side; not stored in shell session
+  }, [persistSession, logAuthEvent]);
+
   const signOut = useCallback(() => {
     const id = citizen?.citizenId ?? null;
     sessionStorage.removeItem(SESSION_KEY);
@@ -325,6 +361,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         authenticate,
         restoreFromCache,
         completeOnboarding,
+        loginWithOAuth,
         signOut,
         claimGenesisGrant,
         hasIdentityCache,
