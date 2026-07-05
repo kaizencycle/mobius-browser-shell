@@ -2,6 +2,10 @@ import React, { Suspense, lazy, useEffect, useRef } from 'react';
 import { ShellErrorBoundary } from '../ShellErrorBoundary';
 import { ErrorCodes } from '../../errors/errorCodes';
 import { useAtlasErrorLog } from '../useAtlasErrorLog';
+import { chamberByTab, chamberPublicName } from '../../src/lib/chambers';
+import { TabId } from '../../types';
+
+const council = chamberByTab(TabId.KNOWLEDGE_GRAPH)!;
 
 const KnowledgeGraphLab = lazy(() =>
   import('../KnowledgeGraph').then((m) => ({ default: m.KnowledgeGraphLab })),
@@ -45,7 +49,7 @@ export const AtlasChamber: React.FC<AtlasChamberProps> = ({ onNavigateToReflecti
 
       {/* Title overlay (top-left) */}
       <div className="at-title">
-        <div className="label">Room 05 · ATLAS · Knowledge Graph</div>
+        <div className="label">Room {council.room} · {council.publicName} · {council.canonName}</div>
         <h2>What you know,<br /><em>arranged by light.</em></h2>
         <p className="obs">
           Force-directed constellations of everything you've learned. Navigate the graph to find your clusters.
@@ -62,7 +66,7 @@ export const AtlasChamber: React.FC<AtlasChamberProps> = ({ onNavigateToReflecti
       {/* Full-bleed lab content (behind overlays) */}
       <div className="at-content">
         <ShellErrorBoundary
-          appName="ATLAS Sentinel"
+          appName={chamberPublicName(TabId.KNOWLEDGE_GRAPH)}
           appIcon="⬡"
           errorCode={ErrorCodes.ATLAS_GRAPH_LOAD}
           recoverable={false}

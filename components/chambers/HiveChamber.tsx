@@ -2,6 +2,10 @@ import React, { Suspense, lazy, useState } from 'react';
 import { ShellErrorBoundary } from '../ShellErrorBoundary';
 import { ErrorCodes } from '../../errors/errorCodes';
 import { useAtlasErrorLog } from '../useAtlasErrorLog';
+import { chamberByTab, chamberPublicName } from '../../src/lib/chambers';
+import { TabId } from '../../types';
+
+const world = chamberByTab(TabId.HIVE)!;
 
 const HiveLab = lazy(() =>
   import('../Labs/HivePortal').then((m) => ({ default: m.HivePortal })),
@@ -22,9 +26,9 @@ export const HiveChamber: React.FC = () => {
     <div className="hive-room">
       <div className="hive-crt">
         <div className="hive-head">
-          <h2>HIVE — QUEST LOG</h2>
+          <h2>{world.publicName} — QUEST LOG</h2>
           <div className="hive-stats">
-            <div className="hive-view-toggle" role="tablist" aria-label="HIVE view">
+            <div className="hive-view-toggle" role="tablist" aria-label={`${world.publicName} view`}>
               <button
                 type="button"
                 role="tab"
@@ -32,7 +36,7 @@ export const HiveChamber: React.FC = () => {
                 className={`hive-view-btn ${view === 'world' ? 'active' : ''}`}
                 onClick={() => setView('world')}
               >
-                WORLD
+                {world.publicName.toUpperCase()}
               </button>
               <button
                 type="button"
