@@ -7,27 +7,27 @@
   "requestFramePermissions": [],
   "labs": {
     "oaa": {
-      "name": "OAA Learning Hub",
+      "name": "Learn",
       "version": "1.0.0",
       "status": "active"
     },
     "reflections": {
-      "name": "Reflections",
+      "name": "Reflect",
       "version": "1.0.0",
       "status": "active"
     },
     "citizenShield": {
-      "name": "Citizen Shield",
+      "name": "Shield",
       "version": "1.0.0",
       "status": "active"
     },
     "hive": {
-      "name": "HIVE",
+      "name": "World",
       "version": "1.0.0",
       "status": "active"
     },
     "wallet": {
-      "name": "MIC Wallet",
+      "name": "Wallet",
       "version": "1.0.0",
       "status": "active"
     },
@@ -37,7 +37,7 @@
       "status": "active"
     },
     "knowledgeGraph": {
-      "name": "Knowledge Graph",
+      "name": "Council",
       "version": "1.0.0",
       "status": "active"
     }
