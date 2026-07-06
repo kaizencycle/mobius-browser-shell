@@ -166,3 +166,23 @@ export const EXTENDED_CHAMBERS: PublicChamber[] = [
 export function chamberByTab(tabId: TabId): PublicChamber | undefined {
   return EXTENDED_CHAMBERS.find(c => c.tabId === tabId);
 }
+
+/** Document title — public chamber name only (C-363 language layer). */
+export function chamberDocumentTitle(tabId: TabId): string {
+  const chamber = chamberByTab(tabId);
+  return chamber ? `${chamber.publicName} — Mobius Substrate` : 'Mobius Substrate';
+}
+
+/** Primary user-facing label for a chamber tab. */
+export function chamberPublicName(tabId: TabId): string {
+  return chamberByTab(tabId)?.publicName ?? 'Mobius';
+}
+
+/** Canonical subtitle shown beneath the public name. */
+export function chamberCanonName(tabId: TabId): string {
+  return chamberByTab(tabId)?.canonName ?? '';
+}
+
+export function pulseChamber(): PublicChamber {
+  return PUBLIC_CHAMBERS.find((c) => c.id === 'pulse')!;
+}

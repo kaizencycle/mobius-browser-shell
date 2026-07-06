@@ -2,6 +2,10 @@ import React from 'react';
 import { useTerminalData } from '../../hooks/useTerminalData';
 import { terminalBridge } from '../../services/terminalBridge';
 import type { EPICONEntry } from '../../services/terminalBridge';
+import { chamberByTab } from '../../src/lib/chambers';
+import { TabId } from '../../types';
+
+const memory = chamberByTab(TabId.EPICON)!;
 
 const STATUS_COLOR: Record<string, string> = {
   pending:    'text-amber-600 bg-amber-50 border-amber-200',
@@ -23,9 +27,9 @@ export const EPICONFeed: React.FC = () => {
     <div className="flex flex-col h-full bg-stone-50 overflow-hidden">
       <div className="flex items-center justify-between px-4 py-2.5 bg-stone-50 border-b border-stone-200">
         <div>
-          <span className="text-sm font-semibold text-stone-900">Intent Record</span>
+          <span className="text-sm font-semibold text-stone-900">{memory.publicName}</span>
           <span className="ml-2 text-[10px] font-mono px-1.5 py-0.5 rounded bg-stone-100 text-stone-500 border border-stone-200 uppercase tracking-widest">
-            EPICON
+            {memory.canonName}
           </span>
         </div>
         <button onClick={() => void refresh()}

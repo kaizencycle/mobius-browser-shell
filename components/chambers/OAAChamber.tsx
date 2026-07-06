@@ -2,6 +2,10 @@ import React, { Suspense, lazy } from 'react';
 import { ShellErrorBoundary } from '../ShellErrorBoundary';
 import { ErrorCodes } from '../../errors/errorCodes';
 import { useAtlasErrorLog } from '../useAtlasErrorLog';
+import { chamberByTab, chamberPublicName } from '../../src/lib/chambers';
+import { TabId } from '../../types';
+
+const learn = chamberByTab(TabId.OAA)!;
 
 const OAALab = lazy(() =>
   import('../Labs/OAALab').then((m) => ({ default: m.OAALab })),
@@ -18,15 +22,15 @@ export const OAAChamber: React.FC<OAAChamberProps> = ({ onNavigateToKnowledgeGra
       <div className="oaa-frame">
         <div className="oaa-head">
           <div>
-            <div className="label">ROOM 01 · OAA · Today's Lesson Plan</div>
-            <h2>OAA Library<small>learn to earn</small></h2>
+            <div className="label">ROOM {learn.room} · {learn.publicName} · Today's Lesson Plan</div>
+            <h2>{learn.publicName}<small>{learn.canonName}</small></h2>
           </div>
           <div className="date">Period 3<b>Mon — Fri</b></div>
         </div>
 
         <div className="oaa-content">
           <ShellErrorBoundary
-            appName="OAA Learning Hub"
+            appName={chamberPublicName(TabId.OAA)}
             appIcon="📚"
             errorCode={ErrorCodes.OAA_LOAD_FAILED}
             onError={logToAtlas}

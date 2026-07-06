@@ -2,6 +2,10 @@ import React, { Suspense, lazy } from 'react';
 import { ShellErrorBoundary } from '../ShellErrorBoundary';
 import { ErrorCodes } from '../../errors/errorCodes';
 import { useAtlasErrorLog } from '../useAtlasErrorLog';
+import { chamberByTab, chamberPublicName } from '../../src/lib/chambers';
+import { TabId } from '../../types';
+
+const archives = chamberByTab(TabId.VAULT)!;
 
 const VaultLab = lazy(() =>
   import('../Labs/VaultLab').then(m => ({ default: m.VaultLab })),
@@ -14,17 +18,17 @@ export const VaultChamber: React.FC = () => {
       <div className="va-room">
         <div className="va-head">
           <div className="l">
-            Room 08 · The Vault
-            <b>Civic Protocol · reserve seals</b>
+            Room {archives.room} · {archives.publicName}
+            <b>{archives.canonName}</b>
           </div>
-          <h2>Reserve Vault<small>Transparency over obscurity</small></h2>
+          <h2>{archives.publicName}<small>{archives.tagline}</small></h2>
           <div className="r">
             <span className="va-stamp">READ-ONLY</span>
           </div>
         </div>
         <div className="va-ledger">
           <ShellErrorBoundary
-            appName="Reserve Vault"
+            appName={chamberPublicName(TabId.VAULT)}
             appIcon="🔐"
             errorCode={ErrorCodes.MIC_SYNC_FAILED}
             onError={logToAtlas}
