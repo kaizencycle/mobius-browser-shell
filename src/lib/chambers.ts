@@ -167,8 +167,14 @@ export function chamberByTab(tabId: TabId): PublicChamber | undefined {
   return EXTENDED_CHAMBERS.find(c => c.tabId === tabId);
 }
 
+/** Landing / hallway document title — matches index.html SEO. */
+export const HALLWAY_DOCUMENT_TITLE = 'Mobius Substrate — School of Chambers';
+
 /** Document title — public chamber name only (C-363 language layer). */
 export function chamberDocumentTitle(tabId: TabId): string {
+  if (tabId === TabId.HALLWAY) {
+    return HALLWAY_DOCUMENT_TITLE;
+  }
   const chamber = chamberByTab(tabId);
   return chamber ? `${chamber.publicName} — Mobius Substrate` : 'Mobius Substrate';
 }
