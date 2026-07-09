@@ -1,5 +1,7 @@
 # Mobius Browser Shell — robots.txt
-# C-314: Public phase active. API routes blocked for all crawlers.
+# C-367: Sitemap moved to canonical domain (was vercel.app — ignored by
+# crawlers as unverified cross-host declaration). llms.txt added for
+# GEO / LLM indexing. API routes remain blocked for all crawlers.
 
 # Default: allow shell, block API
 User-agent: *
@@ -34,4 +36,7 @@ User-agent: Applebot
 Allow: /
 Disallow: /api/
 
-Sitemap: https://mobius-browser-shell.vercel.app/sitemap.xml
+Sitemap: https://mobius-substrate.com/sitemap.xml
+
+# AI-readable site map (llmstxt.org convention):
+# https://mobius-substrate.com/llms.txt
