@@ -80,10 +80,6 @@ export const CHAMBER_ROUTES = {
 
 const HALLWAY_ROUTE = CHAMBER_ROUTES.hallway;
 
-const PATH_TO_ROUTE: Record<string, ChamberRoute> = Object.fromEntries(
-  Object.values(CHAMBER_ROUTES).map((route) => [route.path, route]),
-);
-
 /** Extended in-app chambers (not in sitemap; legacy hash support). */
 const EXTENDED_TAB_ROUTES: Partial<Record<TabId, ChamberRoute>> = {
   [TabId.REFLECTIONS]: {
@@ -111,6 +107,12 @@ const EXTENDED_TAB_ROUTES: Partial<Record<TabId, ChamberRoute>> = {
     description: 'MIC wallet and civic participation rewards.',
   },
 };
+
+const PATH_TO_ROUTE: Record<string, ChamberRoute> = Object.fromEntries(
+  [...Object.values(CHAMBER_ROUTES), ...Object.values(EXTENDED_TAB_ROUTES)]
+    .filter(Boolean)
+    .map((route) => [route.path, route]),
+);
 
 const TAB_TO_ROUTE: Partial<Record<TabId, ChamberRoute>> = {};
 for (const route of Object.values(CHAMBER_ROUTES)) {
