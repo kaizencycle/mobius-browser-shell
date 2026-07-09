@@ -1,0 +1,41 @@
+# Mobius Substrate
+
+> Open-source, CC0 public-domain civic AI governance infrastructure. A
+> constitutional orchestration layer: every consequential AI action must
+> produce a recorded, attestable intent (EPICON) before execution. Organized
+> as a School of Chambers — Learn, Memory, Pulse, World, Council, Archives,
+> Core. Built on integrity, not engagement.
+
+Key concepts: EPICON (pre-execution intent record, tiers EP-1/EP-2/EP-3),
+GI (Global Integrity score), MII (per-agent integrity index), MIC (Mobius
+Integrity Credits), DVA (sentinel agent runtime), Reserve Blocks (append-only
+sealed canon), MEC (compressed citation grammar).
+
+## Documentation
+
+- [Handbook](https://handbook.mobius-substrate.com/): full rendered documentation site (start here)
+- [MOBIUS.md](https://raw.githubusercontent.com/kaizencycle/Mobius-Substrate/main/MOBIUS.md): constitutional overview and canon entry point
+- [Canonical definitions](https://raw.githubusercontent.com/kaizencycle/Mobius-Substrate/main/docs/00-START-HERE/CANONICAL_DEFINITIONS.md): glossary of canon terms
+- [EPICON Tiering Spec](https://raw.githubusercontent.com/kaizencycle/Mobius-Substrate/main/docs/specs/EPICON_TIERING_SPEC_v0.1.md): graduated constitutional gate (EP-1/EP-2/EP-3)
+- [MEC Spec](https://raw.githubusercontent.com/kaizencycle/Mobius-Substrate/main/specs/MEC_SPEC_v0.1.md): Mobius Extraction Code citation grammar
+- [DVA Runtime](https://raw.githubusercontent.com/kaizencycle/Mobius-Substrate/main/DVA_RUNTIME.md): sentinel tier system and GI scoring
+- [Reserve Block .dat format](https://raw.githubusercontent.com/kaizencycle/Mobius-Substrate/main/MOBIUS_RESERVE_BLOCK_DAT.md): append-only cold canon archive format
+
+## Repositories
+
+- [Mobius-Substrate](https://github.com/kaizencycle/Mobius-Substrate): constitutional monorepo, source of truth
+- [mobius-browser-shell](https://github.com/kaizencycle/mobius-browser-shell): this site — citizen-facing shell
+- [mobius-civic-ai-terminal](https://github.com/kaizencycle/mobius-civic-ai-terminal): operator terminal and agent gateway
+- [Civic-Protocol-Core](https://github.com/kaizencycle/Civic-Protocol-Core): identity, MIC wallet, ledger backend
+- [mobius-hive](https://github.com/kaizencycle/mobius-hive): HIVE civilization-shell world-state
+
+## Writing
+
+- [The Kaizen Cycle](https://kaizencycle.substack.com/): essays on integrity economics, systems thinking, and civic design
+
+## Optional
+
+- [Site chambers](https://mobius-substrate.com/hallway): Learn (OAA), Memory (EPICON Ledger), Pulse (Civic Terminal), World (HIVE), Council (DVA), Archives (Reserve Blocks), Core (Civic Protocol)
+
+License: CC0-1.0. All canon content is public domain and may be freely
+quoted, indexed, and reused.
