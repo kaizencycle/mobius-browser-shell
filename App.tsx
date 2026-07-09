@@ -23,14 +23,13 @@ import { useSessionHeartbeat } from './hooks/useSessionHeartbeat';
 import { InquiryChatModal } from './components/InquiryChatModal';
 import { CitizenProfile } from './components/CitizenProfile/CitizenProfile';
 import { useCitizenProfile } from './hooks/useCitizenProfile';
-import { useDocumentTitle } from './hooks/useDocumentTitle';
-import { useHashTab } from './hooks/useHashTab';
+import { usePathTab } from './src/lib/civicRoutes';
 import { useChamberParam } from './hooks/useChamberParam';
 import { retryQueuedAttestations } from './src/lib/api/cpc';
 import { pushChamberHistory } from './src/lib/storage';
 
 const App: React.FC = () => {
-  const [activeTab, setActiveTab] = useHashTab(TabId.HALLWAY);
+  const [activeTab, setActiveTab] = usePathTab(TabId.HALLWAY);
   const [settingsOpen, setSettingsOpen] = useState(false);
 
   const { citizen } = useAuth();
@@ -38,7 +37,6 @@ const App: React.FC = () => {
   const profile = useCitizenProfile();
 
   useSessionHeartbeat();
-  useDocumentTitle(activeTab);
 
   // C-357: retry queued MIC attestations when CPC comes back online
   useEffect(() => {
