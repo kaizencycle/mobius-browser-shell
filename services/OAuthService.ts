@@ -1,13 +1,13 @@
 /**
- * OAuthService — OAuth 2.0 handshake for Mobius Identity Service.
+ * OAuthService — OAuth 2.0 handshake via shell API routes.
  *
  * The shell never handles passwords or tokens from the provider directly.
- * It redirects to the Identity Service, which runs the OAuth dance, mints a
- * civic_id (sha256-hashed provider UID), and redirects back with a short-lived
- * JWT. The shell reads that JWT from the URL, creates a session, and strips
- * the params from the address bar.
+ * /api/auth/oauth/* runs the OAuth dance server-side, mints a civic_id
+ * (HMAC of provider UID), issues a short-lived JWT, and redirects back
+ * with oauth_* query params. The client strips those params after session
+ * creation.
  *
- * Provider UID is NEVER stored. Only civic_id (hashed) hits the shell or ledger.
+ * Provider UID is NEVER stored. Only civic_id (hashed) hits the shell session.
  */
 
 import { env } from '../config/env';
@@ -23,6 +23,13 @@ export interface OAuthCallbackResult {
   isNewCitizen: boolean;
 }
 
+export interface OAuthStatus {
+  ready: boolean;
+  providers: OAuthProvider[];
+  github: boolean;
+  google: boolean;
+}
+
 const CALLBACK_PARAMS = [
   'oauth_token',
   'oauth_civic_id',
@@ -31,10 +38,23 @@ const CALLBACK_PARAMS = [
   'oauth_is_new',
 ] as const;
 
-/** Redirect the browser to the Identity Service OAuth entry point. */
+/** Fetch which OAuth providers are configured on the server. */
+export async function fetchOAuthStatus(): Promise<OAuthStatus> {
+  try {
+    const res = await fetch('/api/auth/oauth/status', { cache: 'no-store' });
+    if (!res.ok) {
+      return { ready: false, providers: [], github: false, google: false };
+    }
+    return (await res.json()) as OAuthStatus;
+  } catch {
+    return { ready: false, providers: [], github: false, google: false };
+  }
+}
+
+/** Start OAuth via shell API — browser navigates to provider authorize URL. */
 export function initiateOAuth(provider: OAuthProvider): void {
   const redirectUri = `${env.canonicalDomain}/`;
-  const url = new URL(`${env.identityBase}/auth/${provider}`);
+  const url = new URL(`/api/auth/oauth/${provider}`, window.location.origin);
   url.searchParams.set('redirect_uri', redirectUri);
   window.location.href = url.toString();
 }
