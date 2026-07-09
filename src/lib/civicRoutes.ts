@@ -19,7 +19,7 @@ export interface ChamberRoute {
 }
 
 /** Indexable chamber routes (sitemap-aligned). */
-export const CHAMBER_ROUTES: Record<string, ChamberRoute> = {
+export const CHAMBER_ROUTES = {
   hallway: {
     path: '/hallway',
     tabId: TabId.HALLWAY,
@@ -76,9 +76,11 @@ export const CHAMBER_ROUTES: Record<string, ChamberRoute> = {
     description:
       'The Core chamber: Civic Protocol identity, MIC wallet, and the constitutional substrate.',
   },
-};
+} satisfies Record<string, ChamberRoute>;
 
-const PATH_TO_ROUTE = Object.fromEntries(
+const HALLWAY_ROUTE = CHAMBER_ROUTES.hallway;
+
+const PATH_TO_ROUTE: Record<string, ChamberRoute> = Object.fromEntries(
   Object.values(CHAMBER_ROUTES).map((route) => [route.path, route]),
 );
 
@@ -159,7 +161,7 @@ function routeFromLocation(loc: Location = window.location): ChamberRoute | null
 }
 
 function pathForTab(tab: TabId): string {
-  return TAB_TO_ROUTE[tab]?.path ?? '/hallway';
+  return TAB_TO_ROUTE[tab]?.path ?? HALLWAY_ROUTE.path;
 }
 
 function applyRouteMeta(route: ChamberRoute): void {
@@ -220,7 +222,7 @@ export function usePathTab(
   }, [defaultTab]);
 
   const setActiveTab = useCallback((tab: TabId) => {
-    const route = TAB_TO_ROUTE[tab] ?? CHAMBER_ROUTES.hallway;
+    const route: ChamberRoute = TAB_TO_ROUTE[tab] ?? HALLWAY_ROUTE;
     const path = route.path;
 
     if (tab === TabId.HALLWAY) {
