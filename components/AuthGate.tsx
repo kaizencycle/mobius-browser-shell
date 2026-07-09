@@ -22,20 +22,24 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
   const [view, setView] = useState<GateView>('landing');
   const [isPlatformAvailable, setIsPlatformAvailable] = useState(true);
   const [isWorking, setIsWorking] = useState(false);
+  const [oauthError, setOauthError] = useState<string | null>(null);
+
+  const displayError = error ?? oauthError;
 
   useEffect(() => {
     PasskeyService.isPlatformAuthenticatorAvailable().then(setIsPlatformAvailable);
   }, []);
 
   useEffect(() => {
-    if (!error) setView('landing');
-  }, [error]);
+    if (!displayError) setView('landing');
+  }, [displayError]);
 
   if (status === 'loading') return <SubstrateLoader />;
   if (status === 'authenticated') return <>{children}</>;
 
   const handleRegister = async () => {
     clearError();
+    setOauthError(null);
     setView('registering');
     setIsWorking(true);
     await register();
@@ -44,6 +48,7 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
 
   const handleAuthenticate = async () => {
     clearError();
+    setOauthError(null);
     setView('authenticating');
     setIsWorking(true);
     await authenticate();
@@ -52,6 +57,7 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
 
   const handleRestoreFromCache = async () => {
     clearError();
+    setOauthError(null);
     setView('authenticating');
     setIsWorking(true);
     await restoreFromCache();
@@ -86,11 +92,14 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
           </div>
         )}
 
-        {error && !isWorking && (
+        {displayError && !isWorking && (
           <div className="w-full bg-red-950/40 border border-red-800/50 rounded-xl p-4 text-center animate-fadeIn">
-            <p className="text-red-400 text-xs leading-relaxed">{error}</p>
+            <p className="text-red-400 text-xs leading-relaxed">{displayError}</p>
             <button
-              onClick={clearError}
+              onClick={() => {
+                clearError();
+                setOauthError(null);
+              }}
               className="mt-2 text-[10px] text-red-500 hover:text-red-400 underline underline-offset-2"
             >
               Try again
@@ -98,7 +107,7 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
           </div>
         )}
 
-        {!isWorking && !error && (
+        {!isWorking && !displayError && (
           <div className="w-full flex flex-col gap-3">
             {!isPlatformAvailable && (
               <p className="text-amber-500 text-[10px] text-center leading-relaxed mb-1">
@@ -115,7 +124,7 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
               Sign in with passkey
             </button>
 
-            {hasIdentityCache && !isWorking && !error && (
+            {hasIdentityCache && !isWorking && !displayError && (
               <div className="w-full p-3 bg-stone-800/50 border border-stone-700/50 rounded-xl flex items-center justify-between">
                 <p className="text-stone-400 text-xs">This device has a saved identity</p>
                 <button
@@ -133,7 +142,10 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
               <div className="flex-1 h-px bg-stone-800" />
             </div>
 
-            <OAuthButtons className="auth-gate-oauth" />
+            <OAuthButtons
+              className="auth-gate-oauth"
+              onError={setOauthError}
+            />
 
             <div className="flex items-center gap-3">
               <div className="flex-1 h-px bg-stone-800" />
