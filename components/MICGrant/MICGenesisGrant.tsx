@@ -63,7 +63,7 @@ export function MICGenesisGrant({ handle, onComplete }: MICGenesisGrantProps) {
             Genesis Grant
           </p>
           <p className="text-stone-200 text-3xl font-light tracking-wide">
-            ◎ 50 MIC
+            ⬡ Portfolio opened
           </p>
           <p className="text-stone-500 text-xs">
             Covenant Acceptance · {new Date().toLocaleDateString()}

@@ -1,4 +1,4 @@
-// components/oaa/OAASeminarFeed.tsx — C-355 OAA Learn-to-Earn orchestrator
+// components/oaa/OAASeminarFeed.tsx — C-355 OAA learning orchestrator (C-369: portfolio copy)
 
 import React, { useState, useCallback, useEffect } from 'react';
 import { ArrowLeft, BookOpen } from 'lucide-react';

@@ -247,8 +247,8 @@ export const WalletLab: React.FC<WalletLabProps> = ({ onNavigateToOaa }) => {
             {/* Guest note — shown when exploring as guest */}
             {isGuest && (
               <div className="w-full lg:w-auto text-stone-700 text-xs text-center py-4 px-3 bg-stone-50 rounded-xl border border-stone-200 mb-4">
-                Sign the covenants to establish your MIC balance.
-                <br />Genesis grant: ◎ 50 MIC on registration.
+                Sign the covenants to establish your learning portfolio.
+                <br />Fractal Shards record demonstrated capability — not automatic MIC.
               </div>
             )}
             {/* Balance Card with Testnet Badge */}

@@ -28,8 +28,8 @@ const ACTION_MESSAGES: Record<string, { title: string; detail: string }> = {
     detail: 'You can explore the creator, but saving an agent requires a covenant.',
   },
   claim_genesis_grant: {
-    title: 'Claim your 50 MIC genesis grant',
-    detail: 'Sign the Three Covenants. Your first act of integrity, recognized.',
+    title: 'Citizen identity unlocks your portfolio',
+    detail: 'Sign the Three Covenants to collect Fractal Shards and record learning evidence.',
   },
   flag_threat: {
     title: 'Flagging requires citizen identity',

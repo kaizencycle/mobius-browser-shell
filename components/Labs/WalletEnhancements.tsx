@@ -259,7 +259,7 @@ export const GenesisGrantBanner: React.FC<GenesisGrantBannerProps> = ({ balance 
     return (
       <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-sm">
         <span className="text-xl">🎉</span>
-        <span className="font-medium">Genesis grant received — you're building your MIC balance!</span>
+        <span className="font-medium">Covenant recognized — your Fractal Shard portfolio is growing.</span>
       </div>
     );
   }
@@ -268,8 +268,8 @@ export const GenesisGrantBanner: React.FC<GenesisGrantBannerProps> = ({ balance 
     <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-amber-50 border border-amber-200 text-amber-800 text-sm">
       <span className="text-xl">🌱</span>
       <div>
-        <span className="font-medium">Complete your first activity to unlock your Genesis grant.</span>
-        <span className="ml-2 text-amber-600 font-mono text-xs">+50 MIC on first earn</span>
+        <span className="font-medium">Complete your first lesson to record your first Fractal Shard.</span>
+        <span className="ml-2 text-amber-600 font-mono text-xs">portfolio evidence</span>
       </div>
     </div>
   );

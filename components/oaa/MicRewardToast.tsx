@@ -39,7 +39,7 @@ export const MicRewardToast: React.FC<MicRewardToastProps> = ({ breakdown, onDis
       <div className="flex items-center gap-3 mb-2">
         <Award className="w-6 h-6 text-amber-500 shrink-0" />
         <div>
-          <div className="text-xs font-semibold text-stone-500 uppercase tracking-wide">MIC Earned</div>
+          <div className="text-xs font-semibold text-stone-500 uppercase tracking-wide">Fractal Shard recorded</div>
           <div className="text-3xl font-black text-amber-500 leading-none">+{breakdown.total}</div>
         </div>
       </div>
@@ -54,7 +54,7 @@ export const MicRewardToast: React.FC<MicRewardToastProps> = ({ breakdown, onDis
         </div>
       )}
       <div className="mt-2 text-[10px] text-stone-300 text-center">
-        🧪 Testnet — recorded to ledger
+        Portfolio evidence — stewardship recognition is separate
       </div>
     </div>
   );

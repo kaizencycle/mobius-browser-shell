@@ -7,7 +7,7 @@ import { GIGauge } from '../GIDisplay/GIGauge';
 import { useAuth } from '../../contexts/AuthContext';
 
 const LAB_TILES: { id: TabId; icon: string; label: string; desc: string }[] = [
-  { id: TabId.OAA,            icon: '📚', label: 'OAA Library',     desc: 'Learn-to-earn'       },
+  { id: TabId.OAA,            icon: '📚', label: 'OAA Library',     desc: 'Learn → Fractal Shards' },
   { id: TabId.HIVE,           icon: '🎮', label: 'HIVE Arcade',     desc: 'Governance JRPG'     },
   { id: TabId.REFLECTIONS,    icon: '🪞', label: 'Reflections',     desc: 'Journal & mood'      },
   { id: TabId.SHIELD,         icon: '🛡', label: 'Shield',          desc: 'Civic radar'         },
