@@ -13,15 +13,15 @@ import { useGuest } from '../../contexts/GuestContext';
 const ACTION_MESSAGES: Record<string, { title: string; detail: string }> = {
   save_progress: {
     title: 'Your progress won\'t be saved',
-    detail: 'Citizen identity is required to save learning progress and earn MIC.',
+    detail: 'Citizen identity is required to save learning progress and collect Fractal Shards.',
   },
   earn_mic: {
-    title: 'MIC requires a citizen identity',
-    detail: 'Sign the Three Covenants to start earning Mobius Integrity Credits.',
+    title: 'Portfolio tracking requires citizen identity',
+    detail: 'Sign the Three Covenants to collect Fractal Shards and build your learning portfolio.',
   },
   submit_quiz: {
     title: 'Quiz results require citizen identity',
-    detail: 'Complete this module as a citizen to earn MIC and save your score.',
+    detail: 'Complete this module as a citizen to record Fractal Shards and save your score.',
   },
   create_agent: {
     title: 'Agents require citizen identity',
@@ -80,7 +80,7 @@ export function GuestNudge() {
           <div className="flex items-center gap-2 py-2 px-3 rounded-xl bg-stone-800/60 border border-stone-800">
             <span className="text-stone-600 text-xs select-none">◎</span>
             <span className="text-stone-600 text-[10px]">
-              Become a citizen and receive ◎ 50 MIC genesis grant
+              Become a citizen to collect Fractal Shards and build your portfolio
             </span>
           </div>
 
