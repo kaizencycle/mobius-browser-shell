@@ -76,8 +76,7 @@ export function MICGenesisGrant({ handle, onComplete }: MICGenesisGrantProps) {
             {displayName}. The substrate recognizes your first act of integrity.
           </p>
           <p className="text-stone-700 text-xs leading-relaxed">
-            50 MIC credited to your citizen account.
-            Integrity is the only currency that compounds.
+            Covenant accepted. Learning collects Fractal Shards — stewardship recognition follows evidence, not volume.
           </p>
         </div>
 

@@ -26,14 +26,14 @@ export function GuestBadge() {
           <div className="flex flex-col gap-1">
             <p className="text-stone-300 text-xs font-medium">Exploring as guest</p>
             <p className="text-stone-600 text-[10px] leading-relaxed">
-              Sign the Three Covenants to save progress, earn MIC, and establish your citizen identity.
+              Sign the Three Covenants to save progress, collect Fractal Shards, and establish your citizen identity.
             </p>
           </div>
 
           {/* Genesis grant teaser */}
           <div className="flex items-center gap-2 py-1.5 px-2.5 rounded-lg bg-stone-800/60 border border-stone-700/40">
             <span className="text-stone-500 text-xs select-none">◎</span>
-            <span className="text-stone-500 text-[10px]">50 MIC genesis grant on signup</span>
+            <span className="text-stone-500 text-[10px]">Fractal Shard portfolio on signup</span>
           </div>
 
           <button
