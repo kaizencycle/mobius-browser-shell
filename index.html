@@ -31,34 +31,49 @@
     <meta name="twitter:description" content="A civic school organized into seven chambers. Learn, remember, verify, and participate in the civic world." />
     <meta name="twitter:image"       content="https://mobius-substrate.com/og-image.png" />
 
-    <!-- JSON-LD -->
+    <!-- JSON-LD: Organization + WebApplication graph (C-368) -->
     <script type="application/ld+json">
     {
       "@context": "https://schema.org",
-      "@type": "WebApplication",
-      "name": "Mobius Substrate",
-      "url": "https://mobius-substrate.com",
-      "description": "A civic school organized into seven chambers — Learn, Memory, Pulse, World, Council, Archives, Core. Built on integrity, not engagement.",
-      "applicationCategory": "EducationApplication",
-      "applicationSubCategory": "CivicTechnology",
-      "operatingSystem": "Web",
-      "creator": {
-        "@type": "Organization",
-        "name": "Kaizen Cycle",
-        "url": "https://kaizencycle.substack.com"
-      },
-      "isPartOf": {
-        "@type": "WebSite",
-        "name": "Mobius Substrate",
-        "url": "https://mobius-substrate.com"
-      },
-      "sameAs": [
-        "https://github.com/kaizencycle/Mobius-Substrate",
-        "https://github.com/kaizencycle/mobius-browser-shell",
-        "https://handbook.mobius-substrate.com",
-        "https://mobius-civic-ai-terminal.vercel.app"
-      ],
-      "featureList": "Learn (OAA), Memory (EPICON Ledger), Pulse (Civic Terminal), World (HIVE), Council (DVA), Archives (Reserve Blocks), Core (Civic Protocol), MIC Wallet, Citizen Shield"
+      "@graph": [
+        {
+          "@type": "Organization",
+          "@id": "https://mobius-substrate.com/#organization",
+          "name": "Mobius Substrate",
+          "url": "https://mobius-substrate.com",
+          "sameAs": [
+            "https://github.com/kaizencycle/Mobius-Substrate",
+            "https://github.com/kaizencycle/mobius-browser-shell",
+            "https://handbook.mobius-substrate.com",
+            "https://mobius-civic-ai-terminal.vercel.app"
+          ]
+        },
+        {
+          "@type": "Organization",
+          "@id": "https://mobius-substrate.com/#kaizen-cycle",
+          "name": "Kaizen Cycle",
+          "url": "https://kaizencycle.substack.com"
+        },
+        {
+          "@type": "WebApplication",
+          "name": "Mobius Substrate",
+          "url": "https://mobius-substrate.com",
+          "description": "A civic school organized into seven chambers — Learn, Memory, Pulse, World, Council, Archives, Core. Built on integrity, not engagement.",
+          "applicationCategory": "EducationApplication",
+          "applicationSubCategory": "CivicTechnology",
+          "operatingSystem": "Web",
+          "publisher": { "@id": "https://mobius-substrate.com/#organization" },
+          "creator": { "@id": "https://mobius-substrate.com/#kaizen-cycle" },
+          "isPartOf": {
+            "@type": "WebSite",
+            "@id": "https://mobius-substrate.com/#website",
+            "name": "Mobius Substrate",
+            "url": "https://mobius-substrate.com",
+            "publisher": { "@id": "https://mobius-substrate.com/#organization" }
+          },
+          "featureList": "Learn (OAA), Memory (EPICON Ledger), Pulse (Civic Terminal), World (HIVE), Council (DVA), Archives (Reserve Blocks), Core (Civic Protocol), MIC Wallet, Citizen Shield"
+        }
+      ]
     }
     </script>
 
@@ -145,6 +160,7 @@
         <p>A civic school organized into seven chambers. Learn, remember, verify, and participate in the civic world.</p>
         <p>
           <a href="https://handbook.mobius-substrate.com/">Handbook</a> ·
+          <a href="/canon">Canon</a> ·
           <a href="/hallway">Hallway</a> ·
           <a href="/chambers/learn">Learn</a> ·
           <a href="/chambers/memory">Memory</a> ·

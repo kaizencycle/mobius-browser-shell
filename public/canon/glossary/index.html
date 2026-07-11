@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mobius Glossary: Canonical definitions for GI, MII, MIC, EPICON, and surfaces</title>
+<meta name="description" content="Canonical glossary of Mobius terms — do not redefine these in downstream docs. Mirror of CANONICAL_DEFINITIONS.md.">
+<link rel="canonical" href="https://mobius-substrate.com/canon/glossary">
+<meta property="og:title" content="Mobius Glossary: Canonical definitions for GI, MII, MIC, EPICON, and surfaces">
+<meta property="og:description" content="Canonical glossary of Mobius terms — do not redefine these in downstream docs. Mirror of CANONICAL_DEFINITIONS.md.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://mobius-substrate.com/canon/glossary">
+<meta property="og:image" content="https://mobius-substrate.com/og-image.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:site" content="@kaizencycle">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "DefinedTermSet",
+  "name": "Mobius Glossary",
+  "headline": "Mobius Glossary: Canonical definitions for GI, MII, MIC, EPICON, and surfaces",
+  "description": "Canonical glossary of Mobius terms — do not redefine these in downstream docs. Mirror of CANONICAL_DEFINITIONS.md.",
+  "url": "https://mobius-substrate.com/canon/glossary",
+  "isPartOf": {
+    "@type": "WebSite",
+    "name": "Mobius Substrate",
+    "url": "https://mobius-substrate.com"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "@id": "https://mobius-substrate.com/#organization",
+    "name": "Mobius Substrate"
+  }
+}
+</script>
+<style>
+  :root { --ink:#0f0e0d; --muted:#5c574f; --ground:#f7f5f1; --rule:#d4cfc7; --accent:#1a3a2a; }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  body { font-family: Inter, system-ui, sans-serif; background:var(--ground); color:var(--ink); line-height:1.65; }
+  nav { display:flex; flex-wrap:wrap; gap:12px; padding:16px 24px; border-bottom:1px solid var(--rule); background:#fff; }
+  nav a { color:var(--accent); text-decoration:none; font-size:0.9rem; }
+  nav a.active { font-weight:600; text-decoration:underline; }
+  main { max-width:48rem; margin:0 auto; padding:32px 24px 64px; }
+  .disclaimer { font-size:0.85rem; color:var(--muted); background:#fff; border:1px solid var(--rule); padding:12px 16px; margin-bottom:24px; border-radius:6px; }
+  h1 { font-size:1.75rem; margin:1.5rem 0 0.75rem; }
+  h2 { font-size:1.25rem; margin:1.5rem 0 0.5rem; }
+  h3 { font-size:1.05rem; margin:1rem 0 0.5rem; }
+  p, ul { margin:0.75rem 0; }
+  ul { padding-left:1.25rem; }
+  table { width:100%; border-collapse:collapse; margin:1rem 0; font-size:0.92rem; }
+  th, td { border:1px solid var(--rule); padding:8px 10px; text-align:left; vertical-align:top; }
+  th { background:#eeeae3; }
+  code { font-family: ui-monospace, monospace; font-size:0.88em; background:#eeeae3; padding:1px 4px; border-radius:3px; }
+  blockquote { border-left:3px solid var(--accent); padding-left:12px; color:var(--muted); margin:1rem 0; }
+  a { color:var(--accent); }
+  footer { max-width:48rem; margin:0 auto; padding:0 24px 48px; font-size:0.85rem; color:var(--muted); }
+</style>
+</head>
+<body>
+<nav>
+  <a href="/">← School of Chambers</a>
+  <a href="/canon">Canon</a>
+      <a href="/canon/glossary" class="active">Glossary</a>
+      <a href="/canon/misinterpretations">Misinterpretations</a>
+      <a href="/canon/source-of-truth">Source of Truth</a>
+</nav>
+<main>
+  <p class="disclaimer"><strong>Browser Shell surface</strong> — canonical text lives in <a href="https://github.com/kaizencycle/Mobius-Substrate">Mobius-Substrate</a>. This page is a crawler-visible mirror (C-368).</p>
+  <h1>Canonical Definitions</h1>
+<p><strong>Cycle:</strong> C-363 · <strong>Purpose:</strong> One glossary for contributors and agents</p>
+<p>Do not redefine these terms in new docs — link here instead.</p>
+<hr />
+<h2>Integrity family</h2>
+<table>
+<tr><th>Term</th><th>Definition</th></tr>
+<tr><td><strong>Integrity</strong></td><td>Alignment between stated values, recorded intent, and observed behavior over time</td></tr>
+<tr><td><strong>GI (Global Integrity)</strong></td><td>Federation-wide integrity score (0–1); Terminal and pulse writers surface it</td></tr>
+<tr><td><strong>MII (Mobius Integrity Index)</strong></td><td>Per-system or per-domain integrity index; influences MIC multipliers and gates</td></tr>
+<tr><td><strong>MIC (Mobius Integrity Credit)</strong></td><td>Reward accounting for verified civic participation; not cash-like issuance</td></tr>
+</table>
+<hr />
+<h2>Memory and proof</h2>
+<table>
+<tr><th>Term</th><th>Definition</th></tr>
+<tr><td><strong>EPICON</strong></td><td>Intent protocol — declares who, why, and what before important actions</td></tr>
+<tr><td><strong>EP-1 / EP-2 / EP-3</strong></td><td>EPICON consequence tiers (low-risk record / meaningful state change / consequential action). Distinct from DVA agent tiers T1/T2/T3. Policy assigns tier; unknown actions default EP-3. (<a href="../specs/EPICON_TIERING_SPEC_v0.1.md">Tiering spec v0.1</a>)</td></tr>
+<tr><td><strong>Constitutional EPICON</strong></td><td>Compact ledger commitment derived from operational EPICON before EP-2 (elective) or EP-3 (mandatory) execution — hashes and attestations only, never raw evidence</td></tr>
+<tr><td><strong>Reserve Block</strong></td><td>Canonical <code>.dat</code> bundle of sealed history; replayable archive unit</td></tr>
+<tr><td><strong>Seal</strong></td><td>Vault tranche completion record with sentinel attestations</td></tr>
+<tr><td><strong>Attestation</strong></td><td>Signed or logged proof that an event or seal was witnessed</td></tr>
+<tr><td><strong>Quorum</strong></td><td><a href="../protocols/vault-v2-sealed-reserve.md#6-quorum-rules">Seal attestation rule</a> (Vault v2 §6): ZEUS <code>pass</code> required; ≥4 of 5 Seal Sentinels <code>pass</code> (ATLAS, ZEUS, EVE, JADE, AUREA); no non-ZEUS <code>reject</code> — not the full ten-Sentinel roster</td></tr>
+<tr><td><strong>MEC</strong></td><td>Mobius Extraction Code — compact citation address for a Seal / Reserve Block / Epoch; points at EPICON, never replaces it. Corrections mint the next seal (no <code>S016A</code> suffixes). (<a href="../specs/MEC_SPEC_v0.1.md">MEC spec v0.1</a>)</td></tr>
+<tr><td><strong>SealCode</strong></td><td>Human-friendly multi-line display of a MEC for operator UI; round-trips to exactly one canonical MEC string</td></tr>
+</table>
+<hr />
+<h2>Surfaces (short)</h2>
+<table>
+<tr><th>Term</th><th>Definition</th></tr>
+<tr><td><strong>Substrate</strong></td><td>This repo — constitution, cycles, policy, sentinels</td></tr>
+<tr><td><strong>Terminal</strong></td><td>Live civic AI terminal — pulse, vault, journal</td></tr>
+<tr><td><strong>Browser Shell</strong></td><td>Public School of Chambers onboarding UI</td></tr>
+<tr><td><strong>CPC</strong></td><td>Civic Protocol Core — identity, ledger, MIC wallet services</td></tr>
+<tr><td><strong>HIVE</strong></td><td>Playable world layer inside the Shell</td></tr>
+</table>
+<hr />
+<h2>Related</h2>
+<ul>
+<li>Legacy expanded glossary: <a href="./GLOSSARY.md">GLOSSARY.md</a></li>
+<ul>
+<li><a href="./EPICON_PHILOSOPHY.md">EPICON philosophy</a></li>
+<ul>
+<li><a href="./SCHOOL_OF_CHAMBERS.md">School of Chambers</a></li>
+</ul>
+<p>*&quot;We heal as we walk.&quot;*</p>
+</main>
+<footer>
+  <p>Generated 2026-07-11T02:00:00Z · <a href="/llms.txt">llms.txt</a> · <a href="/canon/index.json">canon/index.json</a></p>
+</footer>
+</body>
+</html>

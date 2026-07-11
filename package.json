@@ -31,7 +31,8 @@
   },
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "generate:canon": "node scripts/generate-canon-pages.mjs",
+    "build": "npm run generate:canon && vite build",
     "preview": "vite preview",
     "lint": "tsc --noEmit",
     "check": "npm run typecheck && npm run lint",

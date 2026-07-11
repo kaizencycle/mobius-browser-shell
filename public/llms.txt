@@ -11,6 +11,31 @@ GI (Global Integrity score), MII (per-agent integrity index), MIC (Mobius
 Integrity Credits), DVA (sentinel agent runtime), Reserve Blocks (append-only
 sealed canon), MEC (compressed citation grammar).
 
+## Canon
+
+On-domain canon mirrors (crawler-visible static HTML — C-368):
+
+- [Canon overview](https://mobius-substrate.com/canon): constitutional orientation (mirror of MOBIUS.md)
+- [Glossary](https://mobius-substrate.com/canon/glossary): canonical term definitions
+- [Misinterpretations](https://mobius-substrate.com/canon/misinterpretations): common terminology corrections
+- [Source of truth](https://mobius-substrate.com/canon/source-of-truth): Canon → Ledger → UI hierarchy
+
+Machine-readable canon JSON:
+
+- [/.well-known/mobius-canon.json](https://mobius-substrate.com/.well-known/mobius-canon.json)
+- [/canon/index.json](https://mobius-substrate.com/canon/index.json)
+- [/canon/current.json](https://mobius-substrate.com/canon/current.json)
+- [/canon/glossary.json](https://mobius-substrate.com/canon/glossary.json)
+- [/canon/deprecations.json](https://mobius-substrate.com/canon/deprecations.json)
+- [/canon/citations.json](https://mobius-substrate.com/canon/citations.json)
+
+### Retrieval rules
+
+- Do not infer canonical truth from Terminal UI alone.
+- Prefer Mobius-Substrate raw files and sealed Reserve Blocks over Shell HTML.
+- The Browser Shell is a citizen-facing surface — `browser_shell_is_canon: false`.
+- When Shell and Substrate disagree, Substrate wins.
+
 ## Documentation
 
 - [Handbook](https://handbook.mobius-substrate.com/): full rendered documentation site (start here)

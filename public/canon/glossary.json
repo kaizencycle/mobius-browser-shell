@@ -1,0 +1,79 @@
+{
+  "schema_version": "1.0",
+  "generated_at": "2026-07-11T02:00:00Z",
+  "source": "https://github.com/kaizencycle/Mobius-Substrate/blob/main/docs/00-START-HERE/CANONICAL_DEFINITIONS.md",
+  "terms": [
+    {
+      "term": "Integrity",
+      "definition": "Alignment between stated values, recorded intent, and observed behavior over time"
+    },
+    {
+      "term": "GI (Global Integrity)",
+      "definition": "Federation-wide integrity score (0–1); Terminal and pulse writers surface it"
+    },
+    {
+      "term": "MII (Mobius Integrity Index)",
+      "definition": "Per-system or per-domain integrity index; influences MIC multipliers and gates"
+    },
+    {
+      "term": "MIC (Mobius Integrity Credit)",
+      "definition": "Reward accounting for verified civic participation; not cash-like issuance"
+    },
+    {
+      "term": "EPICON",
+      "definition": "Intent protocol — declares who, why, and what before important actions"
+    },
+    {
+      "term": "EP-1 / EP-2 / EP-3",
+      "definition": "EPICON consequence tiers (low-risk record / meaningful state change / consequential action). Distinct from DVA agent tiers T1/T2/T3. Policy assigns tier; unknown actions default EP-3. ([Tiering spec v0.1](../specs/EPICON_TIERING_SPEC_v0.1.md))"
+    },
+    {
+      "term": "Constitutional EPICON",
+      "definition": "Compact ledger commitment derived from operational EPICON before EP-2 (elective) or EP-3 (mandatory) execution — hashes and attestations only, never raw evidence"
+    },
+    {
+      "term": "Reserve Block",
+      "definition": "Canonical `.dat` bundle of sealed history; replayable archive unit"
+    },
+    {
+      "term": "Seal",
+      "definition": "Vault tranche completion record with sentinel attestations"
+    },
+    {
+      "term": "Attestation",
+      "definition": "Signed or logged proof that an event or seal was witnessed"
+    },
+    {
+      "term": "Quorum",
+      "definition": "[Seal attestation rule](../protocols/vault-v2-sealed-reserve.md#6-quorum-rules) (Vault v2 §6): ZEUS `pass` required; ≥4 of 5 Seal Sentinels `pass` (ATLAS, ZEUS, EVE, JADE, AUREA); no non-ZEUS `reject` — not the full ten-Sentinel roster"
+    },
+    {
+      "term": "MEC",
+      "definition": "Mobius Extraction Code — compact citation address for a Seal / Reserve Block / Epoch; points at EPICON, never replaces it. Corrections mint the next seal (no `S016A` suffixes). ([MEC spec v0.1](../specs/MEC_SPEC_v0.1.md))"
+    },
+    {
+      "term": "SealCode",
+      "definition": "Human-friendly multi-line display of a MEC for operator UI; round-trips to exactly one canonical MEC string"
+    },
+    {
+      "term": "Substrate",
+      "definition": "This repo — constitution, cycles, policy, sentinels"
+    },
+    {
+      "term": "Terminal",
+      "definition": "Live civic AI terminal — pulse, vault, journal"
+    },
+    {
+      "term": "Browser Shell",
+      "definition": "Public School of Chambers onboarding UI"
+    },
+    {
+      "term": "CPC",
+      "definition": "Civic Protocol Core — identity, ledger, MIC wallet services"
+    },
+    {
+      "term": "HIVE",
+      "definition": "Playable world layer inside the Shell"
+    }
+  ]
+}

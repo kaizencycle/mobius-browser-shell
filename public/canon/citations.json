@@ -1,0 +1,20 @@
+{
+  "schema_version": "1.0",
+  "generated_at": "2026-07-11T02:00:00Z",
+  "rules": [
+    "MEC points at EPICON and sealed history — never replaces EPICON.",
+    "Prefer Substrate raw files over Shell HTML for constitutional claims.",
+    "Do not infer canonical truth from Terminal UI alone.",
+    "Corrections mint the next seal; no letter-suffix amendments."
+  ],
+  "specs": [
+    {
+      "name": "MEC",
+      "url": "https://github.com/kaizencycle/Mobius-Substrate/blob/main/specs/MEC_SPEC_v0.1.md"
+    },
+    {
+      "name": "EPICON-02",
+      "url": "https://github.com/kaizencycle/Mobius-Substrate/blob/main/docs/epicon/EPICON-02.md"
+    }
+  ]
+}
