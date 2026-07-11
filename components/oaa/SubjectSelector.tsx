@@ -11,7 +11,7 @@ export const SubjectSelector: React.FC<SubjectSelectorProps> = ({ onSelect }) =>
       <div className="mb-6 text-center">
         <h2 className="text-xl font-bold text-stone-900 mb-1">Choose a Subject</h2>
         <p className="text-sm text-stone-500">
-          Watch 5 seminars → pass a quiz → ask JADE → earn MIC
+          Watch 5 seminars → pass a quiz → ask JADE → collect Fractal Shards
         </p>
       </div>
 

@@ -43,7 +43,7 @@ export const OAAChamber: React.FC<OAAChamberProps> = ({ onNavigateToKnowledgeGra
 
         <div className="oaa-foot">
           <div>Sub: Mrs. ATLAS</div>
-          <div>Class dismissed when MIC rate &gt; 0.</div>
+          <div>Class dismissed when your portfolio grows.</div>
         </div>
 
         <div className="oaa-chalk" aria-hidden />

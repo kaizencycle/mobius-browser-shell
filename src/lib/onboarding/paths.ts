@@ -15,7 +15,7 @@ export const ONBOARDING_PATHS: PathDefinition[] = [
     id: 'learner',
     label: 'Learner',
     description:
-      'Start with guided seminars, earn MIC through verified comprehension, and grow civic skill progressively.',
+      'Start with guided seminars, collect Fractal Shards through verified comprehension, and build a civic skill portfolio.',
     icon: '📖',
     firstChamber: 'oaa',
     firstChamberLabel: 'Learn',
@@ -63,12 +63,12 @@ export const CHAMBER_PREVIEWS: Record<
 > = {
   learner: {
     description:
-      'Swipe through 5-minute seminars on civic topics. After every 5, a quiz gate verifies comprehension. Pass it to earn MIC and unlock JADE routing — your personalized next seminar based on the questions you ask.',
+      'Swipe through 5-minute seminars on civic topics. After every 5, a quiz gate verifies comprehension. Pass to collect Fractal Shards, build your portfolio, and unlock JADE routing for your next seminar.',
     subjects: ['Economics', 'Civics', 'AI governance', 'Game theory', 'Systems'],
     rewards: [
-      { label: 'Pass quiz', value: '5 MIC' },
-      { label: 'Ask JADE', value: '+5 MIC' },
-      { label: 'Cross-topic synthesis', value: '+10 MIC' },
+      { label: 'Pass quiz', value: 'Fractal Shard' },
+      { label: 'Ask JADE', value: 'Portfolio depth' },
+      { label: 'Cross-topic synthesis', value: 'Skill breadth' },
     ],
   },
   operator: {
@@ -98,7 +98,7 @@ export const CHAMBER_PREVIEWS: Record<
     rewards: [
       { label: 'Ship PR', value: 'canon +1' },
       { label: 'EPICON intent', value: 'provenance' },
-      { label: 'Attest block', value: '50 MIC' },
+      { label: 'Attest block', value: 'quorum review' },
     ],
   },
 };

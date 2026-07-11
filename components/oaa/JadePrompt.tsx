@@ -32,7 +32,7 @@ export const JadePrompt: React.FC<JadePromptProps> = ({ courseName, onSubmit, on
         </p>
 
         <p className="text-xs text-stone-500">
-          Your question helps JADE route the right next seminar. The better the question, the more MIC you earn.
+          Your question helps JADE route the right next seminar. Thoughtful reflection strengthens your learning portfolio.
         </p>
 
         <textarea
@@ -48,7 +48,7 @@ export const JadePrompt: React.FC<JadePromptProps> = ({ courseName, onSubmit, on
             onClick={onSkip}
             className="text-xs text-stone-400 hover:text-stone-600 transition-colors px-3 py-2"
           >
-            Skip (−3 MIC)
+            Skip (no shard recorded)
           </button>
           <button
             onClick={() => hasContent && onSubmit(question)}

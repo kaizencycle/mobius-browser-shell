@@ -25,15 +25,15 @@ export function IdentityScreen({ path, civicId, onComplete, onBack, onSkip }: Pr
       <div className="visitor-eyebrow">Step 4 of 4 · Identity</div>
       <h2 className="visitor-title">Your civic identity.</h2>
       <p className="visitor-sub">
-        Your identity is your record in Mobius — contributions, MIC balance,
+        Your identity is your record in Mobius — contributions, Fractal Shards,
         and integrity standing. It persists across chambers and cycles.
       </p>
 
       <div className="visitor-identity-card">
         {[
           { label: 'civic_id',    val: generatedId },
-          { label: 'MIC balance', val: '0.000' },
-          { label: 'MII score',   val: '0.30 (observer)' },
+          { label: 'Fractal Shards', val: '0' },
+          { label: 'portfolio',   val: 'building' },
         ].map(row => (
           <div key={row.label} className="visitor-identity-row">
             <span className="visitor-id-label">{row.label}</span>
@@ -62,7 +62,7 @@ export function IdentityScreen({ path, civicId, onComplete, onBack, onSkip }: Pr
       </div>
 
       <p className="visitor-footnote">
-        Your identity is stored locally. It enters the EPICON ledger once you earn MIC.
+        Your identity is stored locally. Attestations enter the EPICON ledger as you demonstrate capability — learning alone does not promise recognition.
       </p>
     </div>
   );

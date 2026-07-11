@@ -330,7 +330,7 @@ export const OAASeminarFeed: React.FC<OAASeminarFeedProps> = ({ className = '' }
             <div className="text-4xl">📖</div>
             <h3 className="font-bold text-stone-900 text-lg">Let's Review</h3>
             <p className="text-sm text-stone-500">
-              Score below 80%. No MIC awarded yet. Rewatch the seminars and try again.
+              Score below 80%. No Fractal Shard recorded yet. Rewatch the seminars and try again.
             </p>
             <button
               onClick={handleRetryFromReview}
