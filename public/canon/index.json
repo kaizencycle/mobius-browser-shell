@@ -1,0 +1,30 @@
+{
+  "schema_version": "1.0",
+  "generated_at": "2026-07-11T02:00:00Z",
+  "pages": [
+    {
+      "path": "/canon",
+      "title": "Mobius Canon: Constitutional machine interface for civic integrity",
+      "description": "Constitutional orientation for Mobius Substrate — integrity infrastructure, primary systems, and core law. Mirror of MOBIUS.md.",
+      "url": "https://mobius-substrate.com/canon"
+    },
+    {
+      "path": "/canon/glossary",
+      "title": "Mobius Glossary: Canonical definitions for GI, MII, MIC, EPICON, and surfaces",
+      "description": "Canonical glossary of Mobius terms — do not redefine these in downstream docs. Mirror of CANONICAL_DEFINITIONS.md.",
+      "url": "https://mobius-substrate.com/canon/glossary"
+    },
+    {
+      "path": "/canon/misinterpretations",
+      "title": "Mobius Misinterpretations: Corrections for Shell, Terminal, GI, and EPICON confusion",
+      "description": "Frequent misreadings of Mobius terminology and authority order — Shell vs Substrate, GI vs MII, EPICON vs MEC.",
+      "url": "https://mobius-substrate.com/canon/misinterpretations"
+    },
+    {
+      "path": "/canon/source-of-truth",
+      "title": "Mobius Source of Truth: Canon → Ledger → UI authority hierarchy",
+      "description": "Fixed authority order for Mobius — Substrate canon, CPC ledger, and UI surfaces. Retrieval rules for machines.",
+      "url": "https://mobius-substrate.com/canon/source-of-truth"
+    }
+  ]
+}

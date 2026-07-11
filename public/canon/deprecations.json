@@ -1,0 +1,17 @@
+{
+  "schema_version": "1.0",
+  "generated_at": "2026-07-11T02:00:00Z",
+  "source": "https://github.com/kaizencycle/Mobius-Substrate/blob/main/docs/org/REPO_DEPRECATION_INDEX.md",
+  "deprecations": [
+    {
+      "repository": "mobius-civic-ai-terminal-main",
+      "canonical_successor": "mobius-civic-ai-terminal",
+      "status": "readme_merged_archive_pending"
+    },
+    {
+      "repository": "hive",
+      "canonical_successor": "mobius-hive",
+      "status": "template_ready"
+    }
+  ]
+}

@@ -1,0 +1,17 @@
+{
+  "schema_version": "1.0",
+  "generated_at": "2026-07-11T02:00:00Z",
+  "note": "Current canon surface index — not a seal attestation.",
+  "authority_order": [
+    "canon",
+    "ledger",
+    "ui"
+  ],
+  "active_pages": [
+    "/canon",
+    "/canon/glossary",
+    "/canon/misinterpretations",
+    "/canon/source-of-truth"
+  ],
+  "substrate_repo": "https://github.com/kaizencycle/Mobius-Substrate"
+}
