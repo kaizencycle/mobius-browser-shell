@@ -32,7 +32,7 @@ export const CHAMBER_ROUTES = {
     tabId: TabId.OAA,
     title: 'Learn (OAA) — Mobius Substrate',
     description:
-      'The Learn chamber: OAA learn-to-earn curriculum. Civic learning that mints integrity, not engagement.',
+      'The Learn chamber: guided OAA seminars. Prove comprehension, collect Fractal Shards, and build your integrity portfolio — not passive consumption.',
   },
   memory: {
     path: '/chambers/memory',
@@ -104,7 +104,7 @@ const EXTENDED_TAB_ROUTES: Partial<Record<TabId, ChamberRoute>> = {
     path: '/chambers/wallet',
     tabId: TabId.WALLET,
     title: 'Wallet — Mobius Substrate',
-    description: 'MIC wallet and civic participation rewards.',
+    description: 'Fractal Shard portfolio and civic identity.',
   },
 };
 

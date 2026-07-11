@@ -21,7 +21,7 @@ export function ChamberPreviewScreen({ path, onContinue, onBack }: Props) {
       </p>
 
       <div className="visitor-mic-hint">
-        ◎ Complete the first action to begin earning MIC — once GI reaches 0.95.
+        Learn → collect Fractal Shards → build your portfolio. Request an Integrity Grade when the network is eligible — recognition is never guaranteed.
       </div>
 
       <div className="visitor-preview-card">

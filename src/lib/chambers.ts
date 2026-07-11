@@ -33,7 +33,7 @@ export const PUBLIC_CHAMBERS: PublicChamber[] = [
     icon: '📖',
     publicName: 'Learn',
     canonName: 'Open Agent Architecture',
-    tagline: 'Guided seminars, quiz gates, MIC rewards.',
+    tagline: 'Guided seminars and quiz gates — collect Fractal Shards as you learn.',
     room: '01',
     slug: 'LEARN',
     dClass: 'd-oaa',

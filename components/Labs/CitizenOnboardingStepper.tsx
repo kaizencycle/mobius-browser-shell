@@ -5,8 +5,8 @@ import { useGuest } from '../../contexts/GuestContext';
 
 const STEPS = [
   { id: 1, label: 'Explore', desc: 'Browse the chamber. See what integrity looks like.' },
-  { id: 2, label: 'Learn',   desc: 'Complete a lesson. Earn your first XP.' },
-  { id: 3, label: 'Earn',    desc: 'Convert XP → MIC. Become a citizen.' },
+  { id: 2, label: 'Learn',   desc: 'Complete a lesson. Collect your first Fractal Shard.' },
+  { id: 3, label: 'Prove',   desc: 'Build your portfolio. Request an Integrity Grade when eligible.' },
 ] as const;
 
 export const CitizenOnboardingStepper: React.FC = () => {

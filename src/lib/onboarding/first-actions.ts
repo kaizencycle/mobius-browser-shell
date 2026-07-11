@@ -24,7 +24,7 @@ export const FIRST_ACTION_LABELS: Record<FirstActionId, { label: string; sub: st
   },
   seminar: {
     label: 'Complete first seminar',
-    sub: 'Pass the quiz gate to earn MIC',
+    sub: 'Pass the quiz gate to collect your first Fractal Shard',
   },
   jade: {
     label: 'Ask JADE a question',
