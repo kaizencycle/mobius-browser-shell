@@ -123,13 +123,13 @@ export function GuestLanding({ onEnter, onExplore }: GuestLandingProps) {
         <div className="flex items-center gap-3 py-3 px-4 rounded-xl bg-stone-900/60 border border-stone-800/40">
           <span className="text-stone-500 text-base select-none">◎</span>
           <div className="flex flex-col gap-0.5">
-            <p className="text-stone-400 text-xs font-medium">Genesis Grant</p>
+            <p className="text-stone-400 text-xs font-medium">Covenant recognized</p>
             <p className="text-stone-600 text-[10px]">
-              Sign the covenants. Receive 50 MIC. Your first act of integrity, recognized.
+              Sign the covenants. Collect Fractal Shards. Stewardship recognition follows evidence.
             </p>
           </div>
           <span className="ml-auto text-stone-500 text-xs font-mono font-medium shrink-0">
-            ◎ 50
+            ⬡ MFS
           </span>
         </div>
       </div>

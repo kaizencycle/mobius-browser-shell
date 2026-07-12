@@ -63,7 +63,7 @@ export function MICGenesisGrant({ handle, onComplete }: MICGenesisGrantProps) {
             Genesis Grant
           </p>
           <p className="text-stone-200 text-3xl font-light tracking-wide">
-            ◎ 50 MIC
+            ⬡ Portfolio opened
           </p>
           <p className="text-stone-500 text-xs">
             Covenant Acceptance · {new Date().toLocaleDateString()}
@@ -76,8 +76,7 @@ export function MICGenesisGrant({ handle, onComplete }: MICGenesisGrantProps) {
             {displayName}. The substrate recognizes your first act of integrity.
           </p>
           <p className="text-stone-700 text-xs leading-relaxed">
-            50 MIC credited to your citizen account.
-            Integrity is the only currency that compounds.
+            Covenant accepted. Learning collects Fractal Shards — stewardship recognition follows evidence, not volume.
           </p>
         </div>
 
