@@ -39,11 +39,11 @@ export const MicRewardToast: React.FC<MicRewardToastProps> = ({ breakdown, onDis
       <div className="flex items-center gap-3 mb-2">
         <Award className="w-6 h-6 text-amber-500 shrink-0" />
         <div>
-          <div className="text-xs font-semibold text-stone-500 uppercase tracking-wide">Fractal Shard recorded</div>
-          <div className="text-3xl font-black text-amber-500 leading-none">+{breakdown.total}</div>
+          <div className="text-xs font-semibold text-stone-500 uppercase tracking-wide">Comprehension verified</div>
+          <div className="text-sm font-semibold text-stone-700 leading-snug">Learning attestation recorded</div>
         </div>
       </div>
-      {rows.length > 1 && (
+      {rows.length > 0 && (
         <div className="space-y-0.5 border-t border-stone-100 pt-2 mt-2">
           {rows.map(r => (
             <div key={r.label} className="flex justify-between text-xs text-stone-500">
@@ -53,8 +53,8 @@ export const MicRewardToast: React.FC<MicRewardToastProps> = ({ breakdown, onDis
           ))}
         </div>
       )}
-      <div className="mt-2 text-[10px] text-stone-300 text-center">
-        Portfolio evidence — stewardship recognition is separate
+      <div className="mt-2 text-[10px] text-stone-400 text-center leading-relaxed">
+        Attestation logged. Fractal Shard portfolio attribution is not incremented on this path yet — stewardship recognition stays separate.
       </div>
     </div>
   );
