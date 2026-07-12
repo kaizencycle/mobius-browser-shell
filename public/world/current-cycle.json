@@ -1,6 +1,6 @@
 {
   "cycle_id": "C-370",
-  "updated_at": "2026-07-12T10:38:15.203Z",
+  "updated_at": "2026-07-12T12:41:46.978Z",
   "rules_fired": [
     "kv_degraded"
   ],
@@ -10,7 +10,7 @@
   "signals": {
     "kv_status": "degraded",
     "gi": 0.9,
-    "vault_progress": 0.767
+    "vault_progress": 0.769
   },
   "ingest_health": {
     "terminal_snapshot": true,
