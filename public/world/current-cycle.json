@@ -1,6 +1,6 @@
 {
   "cycle_id": "C-372",
-  "updated_at": "2026-07-14T21:41:29.833Z",
+  "updated_at": "2026-07-14T22:41:19.671Z",
   "rules_fired": [
     "kv_degraded"
   ],
@@ -10,7 +10,7 @@
   "signals": {
     "kv_status": "degraded",
     "gi": 0.82,
-    "vault_progress": 0.751
+    "vault_progress": 0.757
   },
   "ingest_health": {
     "terminal_snapshot": true,
