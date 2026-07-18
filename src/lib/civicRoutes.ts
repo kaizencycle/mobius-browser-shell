@@ -7,8 +7,15 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { TabId } from '../../types';
+import { env } from '../../config/env';
 
-const ORIGIN = 'https://mobius-substrate.com';
+/** Public origin for canonical/og:url — chambers subdomain is distinct from apex landing. */
+function civicOrigin(): string {
+  if (typeof window !== 'undefined') {
+    return window.location.origin;
+  }
+  return env.canonicalDomain;
+}
 const HALLWAY_TITLE = 'Hallway — Mobius Substrate';
 
 export interface ChamberRoute {
@@ -177,8 +184,9 @@ function applyRouteMeta(route: ChamberRoute): void {
   setMeta('meta[name="description"]', 'content', route.description);
   setMeta('meta[property="og:title"]', 'content', route.title);
   setMeta('meta[property="og:description"]', 'content', route.description);
-  setMeta('meta[property="og:url"]', 'content', ORIGIN + route.path);
-  setMeta('link[rel="canonical"]', 'href', ORIGIN + route.path);
+  const origin = civicOrigin();
+  setMeta('meta[property="og:url"]', 'content', origin + route.path);
+  setMeta('link[rel="canonical"]', 'href', origin + route.path);
 }
 
 function migrateLegacyHash(): void {
