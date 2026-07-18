@@ -27,7 +27,7 @@ export const env = {
   /** Canonical public domain */
   canonicalDomain:
     (import.meta.env.VITE_CANONICAL_DOMAIN as string | undefined)?.replace(/\/+$/, '') ||
-    'https://mobius-substrate.com',
+    'https://chambers.mobius-substrate.com',
 
   // === FRONTEND LABS (iframe targets) ===
   /** Mobius Civic AI Terminal (snapshots, signals). Override for previews / forks. */
