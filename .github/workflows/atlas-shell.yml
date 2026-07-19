@@ -64,7 +64,7 @@ jobs:
           PR_BODY: ${{ github.event.pull_request.body }}
           REPO: ${{ github.repository }}
           SHA: ${{ github.sha }}
-          MOBIUS_ATLAS_REPO: "kaizencycle/Mobius-Systems"
+          MOBIUS_ATLAS_REPO: "kaizencycle/Mobius-Substrate"
           SENTINEL_ID: "atlas-shell"
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
           VERCEL_TEAM_ID: ${{ secrets.VERCEL_TEAM_ID }}

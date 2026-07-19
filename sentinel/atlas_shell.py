@@ -31,7 +31,7 @@ from consensus.peer_protocol import notify_peer_sentinel
 SENTINEL_NAME = "ATLAS-SHELL"
 SENTINEL_VERSION = "1.0.0"
 PEER_SENTINEL = "MobiusATLAS"
-PEER_REPO = os.environ.get("MOBIUS_ATLAS_REPO", "kaizencycle/Mobius-Systems")
+PEER_REPO = os.environ.get("MOBIUS_ATLAS_REPO", "kaizencycle/Mobius-Substrate")
 
 CONSTITUTIONAL_PROMPT = """
 You are ATLAS-SHELL, a constitutional sentinel for the Mobius Substrate browser shell.
