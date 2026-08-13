@@ -8,12 +8,12 @@
   },
   "canon_rule": "Browser Shell shows world state; it does not canonize world state.",
   "cycle": "C-402",
-  "generated_at": "2026-08-13T06:05:35.154863Z",
-  "idempotency_key": "mobius-browser-shell:HIVE_WORLD_PULSE_V1:C-402:9119b0930efb0018:fetch-hive-world",
+  "generated_at": "2026-08-13T07:53:34.079582Z",
+  "idempotency_key": "mobius-browser-shell:HIVE_WORLD_PULSE_V1:C-402:8ee1ff02fe94d7aa:fetch-hive-world",
   "node_id": "mobius-browser-shell",
   "schema": "HIVE_WORLD_PULSE_V1",
-  "source_hash": "9119b0930efb0018e7beea7587b9ae7139c847e81031bb249463808385b5b7cd",
-  "terminal_gi": 0.791,
+  "source_hash": "8ee1ff02fe94d7aa3928e7188fc7aa95f559bc6e45f12292508292ea8bfc3a15",
+  "terminal_gi": 0.74,
   "terminal_snapshot_available": true,
   "terminal_snapshot_error": null,
   "world": {
@@ -22,7 +22,7 @@
       "active_event_id": "signal-fog",
       "active_quest_id": "restore-the-beacon",
       "active_sentinel_id": "zeus",
-      "cycle_id": "C-401",
+      "cycle_id": "C-402",
       "ingest_health": {
         "cycle_state": true,
         "mobius_pulse": true,
@@ -33,14 +33,14 @@
         "kv_degraded"
       ],
       "signals": {
-        "gi": 0.78,
+        "gi": 0.782,
         "kv_status": "degraded",
-        "vault_progress": 0.77
+        "vault_progress": 0.791
       },
-      "updated_at": "2026-08-13T04:30:42.916Z"
+      "updated_at": "2026-08-13T06:06:22.107Z"
     },
     "event": {
-      "cycle_id": "C-401",
+      "cycle_id": "C-402",
       "description": "The lattice is visible, but unstable. Memory remains, live sight fades.",
       "id": "signal-fog",
       "sentinel_owner": "zeus",
@@ -58,11 +58,11 @@
         "overlay": "fog",
         "priority": 1
       },
-      "updated_at": "2026-08-13T04:30:42.916Z"
+      "updated_at": "2026-08-13T06:06:22.107Z"
     },
     "quest": {
       "assigned_by": "zeus",
-      "cycle_id": "C-401",
+      "cycle_id": "C-402",
       "description": "Re-establish live signal continuity across the Castle.",
       "id": "restore-the-beacon",
       "progress": 0,
@@ -91,7 +91,7 @@
       ],
       "title": "Restore the Beacon",
       "type": "stability_quest",
-      "updated_at": "2026-08-13T04:30:42.916Z"
+      "updated_at": "2026-08-13T06:06:22.107Z"
     },
     "repo": "kaizencycle/mobius-hive",
     "sentinel": null
