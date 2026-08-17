@@ -221,7 +221,7 @@ export const Hallway: React.FC<HallwayProps> = ({ onEnter, onOpenProfile, onOpen
             <div className="hall-sidebar-card hall-sidebar-card--terminal">
               <div className="hall-sidebar-label">Operator terminal</div>
               <a
-                href={TERMINAL_APP_URL.replace(/\/terminal$/, '')}
+                href={env.terminalOrigin.replace(/\/+$/, '')}
                 target="_blank"
                 rel="noreferrer"
                 className="hall-terminal-link"

@@ -27,9 +27,8 @@ export interface PublicChamber {
   badge?: ChamberBadge;
 }
 
-const TERMINAL_URL = `${env.terminalBase.replace(/\/+$/, '')}/terminal`;
 /** Pulse chamber → live Terminal Globe (EPICON events, governance signals, civic heartbeat). */
-const TERMINAL_GLOBE_URL = `${env.terminalBase.replace(/\/+$/, '')}/terminal/globe`;
+const TERMINAL_GLOBE_URL = `${env.terminalOrigin.replace(/\/+$/, '')}/terminal/globe`;
 const HANDBOOK_URL = env.canonicalDomain
   ? `${env.canonicalDomain.replace(/\/+$/, '')}/handbook`
   : 'https://handbook.mobius-substrate.com';
