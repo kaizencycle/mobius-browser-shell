@@ -5,6 +5,7 @@ import { SentinelStatus } from './SentinelStatus';
 import { CitizenProfileButton } from './CitizenProfile/CitizenProfileButton';
 import { OnboardingNudge } from './hallway/OnboardingNudge';
 import { Coffee, CheckCircle, Settings } from 'lucide-react';
+import { ChamberIcon, CHAMBER_ICON_NAMES } from './icons/ChamberIcons';
 import { useTerminal } from '../contexts/TerminalContext';
 import { useWallet } from '../contexts/WalletContext';
 import { useAuth } from '../contexts/AuthContext';
@@ -18,6 +19,12 @@ import { ONBOARDING_PATHS } from '../src/lib/onboarding/paths';
 import { type TerminalState } from '../src/lib/terminal-bridge';
 
 const TERMINAL_APP_URL = `${env.terminalBase.replace(/\/+$/, '')}/terminal`;
+
+function DoorIcon({ icon, size }: { icon: string; size: number }): React.JSX.Element {
+  return CHAMBER_ICON_NAMES.has(icon)
+    ? <ChamberIcon name={icon} size={size} />
+    : <>{icon}</>;
+}
 
 function giClass(mode: TerminalState['mode'], stale: boolean): string {
   if (stale) return 'hall-gi--dim';
@@ -164,9 +171,14 @@ export const Hallway: React.FC<HallwayProps> = ({ onEnter, onOpenProfile, onOpen
                 >
                   <span className="lit" aria-hidden />
                   <span className="glow" aria-hidden />
+                  {chamber.badge && (
+                    <span className={`chamber-badge chamber-badge--${chamber.badge.variant}`}>
+                      {chamber.badge.label}
+                    </span>
+                  )}
                   <span className="num">CHAMBER {chamber.room} · {chamber.slug}</span>
                   <span className="body">
-                    <span className="icon" aria-hidden>{chamber.icon}</span>
+                    <span className="icon" aria-hidden><DoorIcon icon={chamber.icon} size={28} /></span>
                     <span className="door-title">{chamber.publicName}</span>
                     <span className="canon-name">{chamber.canonName}</span>
                     <span className="role">{chamber.tagline}</span>
@@ -194,7 +206,7 @@ export const Hallway: React.FC<HallwayProps> = ({ onEnter, onOpenProfile, onOpen
                 >
                   <span className="lit" aria-hidden />
                   <span className="body">
-                    <span className="icon" aria-hidden>{chamber.icon}</span>
+                    <span className="icon" aria-hidden><DoorIcon icon={chamber.icon} size={20} /></span>
                     <span className="door-title">{chamber.publicName}</span>
                     <span className="canon-name">{chamber.canonName}</span>
                   </span>
@@ -205,6 +217,25 @@ export const Hallway: React.FC<HallwayProps> = ({ onEnter, onOpenProfile, onOpen
 
           <aside className="hall-sidebar">
             <OnboardingNudge />
+
+            <div className="hall-sidebar-card hall-sidebar-card--terminal">
+              <div className="hall-sidebar-label">Operator terminal</div>
+              <a
+                href={env.terminalOrigin.replace(/\/+$/, '')}
+                target="_blank"
+                rel="noreferrer"
+                className="hall-terminal-link"
+              >
+                <span className="hall-terminal-icon" aria-hidden><ChamberIcon name="terminal" size={20} /></span>
+                <span className="hall-terminal-copy">
+                  <span className="hall-terminal-title">Mobius Terminal</span>
+                  <span className="hall-terminal-desc">
+                    Monitoring console for live flows, agents, ledger, and infrastructure pulse.
+                  </span>
+                </span>
+              </a>
+            </div>
+
             <div className="hall-sidebar-card">
               <div className="hall-sidebar-label">Sentinels</div>
               <div className="hall-sentinel-row hall-sentinel-row--sidebar">

@@ -5,9 +5,15 @@
 import { TabId } from '../../types';
 import { env } from '../../config/env';
 
+export interface ChamberBadge {
+  label: string;
+  variant: 'featured' | 'live';
+}
+
 export interface PublicChamber {
   id: string;
   tabId: TabId | null;
+  /** Tabler-outline icon name — see components/icons/ChamberIcons.tsx */
   icon: string;
   publicName: string;
   canonName: string;
@@ -18,9 +24,11 @@ export interface PublicChamber {
   externalUrl?: string;
   disabled?: boolean;
   featured?: boolean;
+  badge?: ChamberBadge;
 }
 
-const TERMINAL_URL = `${env.terminalBase.replace(/\/+$/, '')}/terminal`;
+/** Pulse chamber → live Terminal Globe (EPICON events, governance signals, civic heartbeat). */
+const TERMINAL_GLOBE_URL = `${env.terminalOrigin.replace(/\/+$/, '')}/terminal/globe`;
 const HANDBOOK_URL = env.canonicalDomain
   ? `${env.canonicalDomain.replace(/\/+$/, '')}/handbook`
   : 'https://handbook.mobius-substrate.com';
@@ -30,22 +38,23 @@ export const PUBLIC_CHAMBERS: PublicChamber[] = [
   {
     id: 'learn',
     tabId: TabId.OAA,
-    icon: '📖',
+    icon: 'shield',
     publicName: 'Learn',
     canonName: 'Open Agent Architecture',
-    tagline: 'Guided seminars and quiz gates — collect Fractal Shards as you learn.',
+    tagline: 'Understand civic AI, constitutional integrity, and the Mobius framework.',
     room: '01',
     slug: 'LEARN',
     dClass: 'd-oaa',
     featured: true,
+    badge: { label: 'Start here', variant: 'featured' },
   },
   {
     id: 'memory',
     tabId: TabId.EPICON,
-    icon: '🧠',
+    icon: 'database',
     publicName: 'Memory',
     canonName: 'EPICON Ledger',
-    tagline: 'Attestations and actions the system remembers.',
+    tagline: 'Build and verify personal knowledge through the Witness Protocol and evidence.',
     room: '02',
     slug: 'MEMORY',
     dClass: 'd-epicon',
@@ -54,23 +63,24 @@ export const PUBLIC_CHAMBERS: PublicChamber[] = [
   {
     id: 'pulse',
     tabId: null,
-    icon: '⚡',
+    icon: 'zap',
     publicName: 'Pulse',
     canonName: 'Civic Terminal',
-    tagline: 'Live GI, sentinel journal, tripwire alerts.',
+    tagline: 'Track live EPICON events, governance signals, and civic heartbeat globally.',
     room: '03',
     slug: 'PULSE',
     dClass: 'd-pulse',
-    externalUrl: TERMINAL_URL,
+    externalUrl: TERMINAL_GLOBE_URL,
     featured: true,
+    badge: { label: '● live', variant: 'live' },
   },
   {
     id: 'world',
     tabId: TabId.HIVE,
-    icon: '🌍',
+    icon: 'globe',
     publicName: 'World',
     canonName: 'HIVE',
-    tagline: 'Playable civic world — quests, signals, community.',
+    tagline: 'Engage with civic processes, communities, and measurable civic impact.',
     room: '04',
     slug: 'WORLD',
     dClass: 'd-hive',
@@ -79,10 +89,10 @@ export const PUBLIC_CHAMBERS: PublicChamber[] = [
   {
     id: 'council',
     tabId: TabId.KNOWLEDGE_GRAPH,
-    icon: '⚖️',
+    icon: 'users',
     publicName: 'Council',
     canonName: 'DVA · Sentinels',
-    tagline: 'Agent council, knowledge graph, integrity review.',
+    tagline: 'Deliberate and decide collectively on civic governance and institutional direction.',
     room: '05',
     slug: 'COUNCIL',
     dClass: 'd-atlas',
@@ -91,10 +101,10 @@ export const PUBLIC_CHAMBERS: PublicChamber[] = [
   {
     id: 'archives',
     tabId: TabId.VAULT,
-    icon: '🗄️',
+    icon: 'archive',
     publicName: 'Archives',
     canonName: 'Reserve Blocks',
-    tagline: 'Sealed history — recover, replay, verify.',
+    tagline: 'Access institutional memory, historical records, and canonical documentation.',
     room: '06',
     slug: 'ARCHIVES',
     dClass: 'd-vault',
@@ -152,10 +162,10 @@ export const EXTENDED_CHAMBERS: PublicChamber[] = [
   {
     id: 'core',
     tabId: TabId.EPICON,
-    icon: '⬡',
+    icon: 'settings',
     publicName: 'Core',
     canonName: 'Civic Protocol',
-    tagline: 'Protocol rails — identity, ledger, EPICON intent.',
+    tagline: 'Technical foundations: block chain, sentinels, EPICON, and reserve architecture.',
     room: '11',
     slug: 'CORE',
     dClass: 'd-mii',
