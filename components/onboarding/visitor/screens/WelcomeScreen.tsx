@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { PUBLIC_CHAMBERS } from '../../../../src/lib/chambers';
 import { fetchSnapshot } from '../../../../src/lib/api/terminal';
+import { ChamberIcon, CHAMBER_ICON_NAMES } from '../../../icons/ChamberIcons';
 
 interface GIStatus {
   gi: number;
@@ -58,7 +59,9 @@ export function WelcomeScreen({ onContinue, onSkip }: Props) {
       <div className="visitor-chamber-grid">
         {PUBLIC_CHAMBERS.map(ch => (
           <div key={ch.publicName} className="visitor-chamber-card">
-            <span className="visitor-ch-icon">{ch.icon}</span>
+            <span className="visitor-ch-icon" aria-hidden>
+              {CHAMBER_ICON_NAMES.has(ch.icon) ? <ChamberIcon name={ch.icon} size={20} /> : ch.icon}
+            </span>
             <span className="visitor-ch-public">{ch.publicName}</span>
             <span className="visitor-ch-canon">{ch.canonName}</span>
           </div>

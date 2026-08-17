@@ -572,6 +572,7 @@
   gap: 8px;
 }
 .door .icon { font-size: 30px; line-height: 1; }
+.door .icon svg { display: block; }
 .door .door-title {
   font-family: 'Fraunces', serif;
   font-weight: 600;
@@ -3445,6 +3446,40 @@
 
 .d-pulse .lit { background: linear-gradient(160deg,#78350f 0%,#451a03 100%); }
 
+.chamber-badge {
+  position: absolute;
+  z-index: 3;
+  top: 12px;
+  right: 12px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9.5px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 3px 8px;
+  border-radius: 999px;
+  line-height: 1.4;
+}
+.chamber-badge--featured {
+  color: #f2d6b3;
+  background: rgba(196,122,30,.18);
+  border: 1px solid rgba(196,122,30,.5);
+}
+.chamber-badge--live {
+  color: #5eead4;
+  background: rgba(20,184,166,.16);
+  border: 1px solid rgba(45,212,191,.5);
+  text-transform: none;
+  animation: pulse-badge 2s infinite;
+}
+@keyframes pulse-badge {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.55; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .chamber-badge--live { animation: none; }
+}
+
 .hall-settings {
   display: flex;
   align-items: center;
@@ -3488,6 +3523,47 @@
 
 .hall-sentinel-row--sidebar { font-size: 11px; }
 .hall-sentinels-detail--sidebar { display: flex !important; margin-top: 8px; }
+
+.hall-sidebar-card--terminal {
+  border-color: rgba(45,212,191,.28);
+  background: rgba(20,184,166,.06);
+}
+
+.hall-terminal-link {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  text-decoration: none;
+  color: inherit;
+}
+
+.hall-terminal-icon {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: rgba(45,212,191,.12);
+  color: #5eead4;
+}
+
+.hall-terminal-copy { display: flex; flex-direction: column; gap: 3px; }
+
+.hall-terminal-title {
+  font-size: 13px;
+  font-weight: 500;
+  color: #f5f5f4;
+}
+
+.hall-terminal-desc {
+  font-size: 11px;
+  line-height: 1.5;
+  color: #a8a29e;
+}
+
+.hall-terminal-link:hover .hall-terminal-title { color: #5eead4; }
 
 .hall-nudge {
   background: rgba(5,46,22,.35);
