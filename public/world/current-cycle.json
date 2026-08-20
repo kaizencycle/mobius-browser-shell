@@ -1,6 +1,6 @@
 {
   "cycle_id": "C-409",
-  "updated_at": "2026-08-20T19:00:46.474Z",
+  "updated_at": "2026-08-20T19:46:29.632Z",
   "rules_fired": [
     "kv_degraded"
   ],
@@ -10,7 +10,7 @@
   "signals": {
     "kv_status": "degraded",
     "gi": 0.84,
-    "vault_progress": 0.762
+    "vault_progress": 0.758
   },
   "ingest_health": {
     "terminal_snapshot": true,
