@@ -108,7 +108,8 @@ export function useVisitorOnboarding() {
   const clearIntention = useCallback(() => {
     setState(prev => {
       if (prev.intention == null) return prev;
-      const next = { ...prev, intention: null };
+      // Abandon intent flow — also drop the auto-assigned path from setIntention.
+      const next = { ...prev, intention: null, path: null };
       saveState(next);
       return next;
     });
