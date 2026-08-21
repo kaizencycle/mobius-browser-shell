@@ -6,23 +6,14 @@ import { LearningEvidenceSummary } from './LearningEvidenceSummary';
 
 interface Props {
   journey: ChamberJourney;
-  onComplete: () => void;
+  /** Exit journey and enter the shell (skip remaining onboarding). */
+  onEnterShell: () => void;
   onBack: () => void;
 }
 
 type Phase = 'intro' | 'steps' | 'complete';
 
-function collectEvidenceLabels(journey: ChamberJourney): string[] {
-  const labels: string[] = [];
-  for (const enc of journey.encounters) {
-    enc.evidence?.forEach(e => labels.push(e.source));
-  }
-  journey.counterpoint?.evidence?.forEach(e => labels.push(e.source));
-  if (journey.origin?.source) labels.push(journey.origin.source.source);
-  return [...new Set(labels)];
-}
-
-export function ChamberJourneyFlow({ journey, onComplete, onBack }: Props) {
+export function ChamberJourneyFlow({ journey, onEnterShell, onBack }: Props) {
   const [phase, setPhase] = useState<Phase>('intro');
   const [stepIndex, setStepIndex] = useState(0);
   const [initialClaim, setInitialClaim] = useState('');
@@ -31,6 +22,7 @@ export function ChamberJourneyFlow({ journey, onComplete, onBack }: Props) {
   const [uncertainty, setUncertainty] = useState('');
   const [frictionChoice, setFrictionChoice] = useState('');
   const [counterpointSeen, setCounterpointSeen] = useState(false);
+  const [reviewedSources, setReviewedSources] = useState<string[]>([]);
 
   const interactiveSteps = useMemo(
     () => journey.encounters.filter(e => e.kind !== 'record'),
@@ -44,18 +36,32 @@ export function ChamberJourneyFlow({ journey, onComplete, onBack }: Props) {
     ? 100
     : 0;
 
+  const markSourcesReviewed = useCallback((sources: string[]) => {
+    setReviewedSources(prev => [...new Set([...prev, ...sources])]);
+  }, []);
+
   const record: LearningEvidenceRecord = useMemo(
     () => ({
       journeyId: journey.id,
       initialClaim,
-      evidenceReviewed: collectEvidenceLabels(journey),
+      evidenceReviewed: reviewedSources,
       counterargumentEncountered: counterpointSeen,
-      revisedClaim: revisedClaim || frictionChoice,
+      frictionChoice,
+      revisedClaim: revisedClaim.trim() || frictionChoice,
       revisionReason,
       uncertaintyRemaining: uncertainty,
       completedAt: new Date().toISOString(),
     }),
-    [journey, initialClaim, revisedClaim, frictionChoice, revisionReason, uncertainty, counterpointSeen],
+    [
+      journey.id,
+      initialClaim,
+      reviewedSources,
+      counterpointSeen,
+      frictionChoice,
+      revisedClaim,
+      revisionReason,
+      uncertainty,
+    ],
   );
 
   const advance = useCallback(() => {
@@ -68,6 +74,9 @@ export function ChamberJourneyFlow({ journey, onComplete, onBack }: Props) {
 
   const handleStepContinue = () => {
     if (current?.kind === 'counterpoint') setCounterpointSeen(true);
+    if (current?.kind === 'friction' && frictionChoice && !revisedClaim.trim()) {
+      setRevisedClaim(frictionChoice);
+    }
     advance();
   };
 
@@ -90,7 +99,7 @@ export function ChamberJourneyFlow({ journey, onComplete, onBack }: Props) {
     if (current.kind === 'friction') {
       return (
         <div className="journey-choice-row" role="radiogroup" aria-label={journey.frictionPrompt}>
-          {['Liberator — gift was necessary', 'Stewardship failure — release was reckless', 'Conditional — depends on who decides'].map(opt => (
+          {journey.frictionOptions.map(opt => (
             <label key={opt} className={`journey-choice${frictionChoice === opt ? ' selected' : ''}`}>
               <input
                 type="radio"
@@ -153,7 +162,7 @@ export function ChamberJourneyFlow({ journey, onComplete, onBack }: Props) {
       case 'friction':
         return frictionChoice.length > 0;
       case 'reinterpret':
-        return revisedClaim.trim().length > 0;
+        return revisedClaim.trim().length > 0 || frictionChoice.length > 0;
       case 'reflect':
         return uncertainty.trim().length > 0;
       default:
@@ -211,7 +220,7 @@ export function ChamberJourneyFlow({ journey, onComplete, onBack }: Props) {
         )}
 
         <div className="visitor-btn-row">
-          <button type="button" className="visitor-btn-primary" onClick={onComplete}>
+          <button type="button" className="visitor-btn-primary" onClick={onEnterShell}>
             Continue to the shell →
           </button>
         </div>
@@ -236,7 +245,10 @@ export function ChamberJourneyFlow({ journey, onComplete, onBack }: Props) {
       )}
 
       {current?.evidence && current.evidence.length > 0 && (
-        <EvidenceDrawer evidence={current.evidence} />
+        <EvidenceDrawer
+          evidence={current.evidence}
+          onOpen={markSourcesReviewed}
+        />
       )}
 
       {current?.kind === 'counterpoint' && journey.counterpoint && (
@@ -244,7 +256,11 @@ export function ChamberJourneyFlow({ journey, onComplete, onBack }: Props) {
           <div className="journey-section-label">{journey.counterpoint.title}</div>
           <p>{journey.counterpoint.body}</p>
           {journey.counterpoint.evidence && (
-            <EvidenceDrawer evidence={journey.counterpoint.evidence} label="View counter-evidence" />
+            <EvidenceDrawer
+              evidence={journey.counterpoint.evidence}
+              label="View counter-evidence"
+              onOpen={markSourcesReviewed}
+            />
           )}
         </div>
       )}

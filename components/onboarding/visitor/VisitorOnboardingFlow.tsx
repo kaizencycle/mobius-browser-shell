@@ -1,6 +1,7 @@
 import React from 'react';
 import type { TabId } from '../../../types';
 import type { OnboardingPath } from '../../../src/lib/onboarding/paths';
+import type { ChamberIntention } from '../../../src/lib/chamber-journey/intentions';
 import { ONBOARDING_PATHS } from '../../../src/lib/onboarding/paths';
 import { WelcomeScreen } from './screens/WelcomeScreen';
 import { PathScreen } from './screens/PathScreen';
@@ -38,10 +39,12 @@ export interface VisitorOnboardingFlowProps {
   state: {
     currentStep: number;
     path: OnboardingPath | null;
+    intention: ChamberIntention | null;
     civicId: string | null;
   };
   setStep: (step: number) => void;
   setPath: (path: OnboardingPath) => void;
+  setIntention: (intention: ChamberIntention) => void;
   complete: (firstChamber: string, setActiveTab?: (tab: TabId) => void) => void;
   skip: () => void;
   setActiveTab: (tab: TabId) => void;
@@ -51,6 +54,7 @@ export function VisitorOnboardingFlow({
   state,
   setStep,
   setPath,
+  setIntention,
   complete,
   skip,
   setActiveTab,
@@ -72,11 +76,19 @@ export function VisitorOnboardingFlow({
         <StepNav current={state.currentStep} onSelect={setStep} />
 
         {state.currentStep === 0 && (
-          <WelcomeScreen onContinue={() => setStep(1)} onSkip={skip} />
+          <WelcomeScreen
+            onContinue={() => setStep(1)}
+            onContinueWithIntention={intention => {
+              setIntention(intention);
+              setStep(2);
+            }}
+            onSkip={skip}
+          />
         )}
         {state.currentStep === 1 && (
           <PathScreen
             selectedPath={state.path}
+            selectedIntention={state.intention}
             onSelect={path => { setPath(path); }}
             onContinue={() => setStep(2)}
             onBack={() => setStep(0)}
@@ -85,8 +97,9 @@ export function VisitorOnboardingFlow({
         {state.currentStep === 2 && (
           <ChamberPreviewScreen
             path={selectedPath}
+            intention={state.intention}
             onContinue={() => setStep(3)}
-            onBack={() => setStep(1)}
+            onBack={() => setStep(state.intention ? 0 : 1)}
           />
         )}
         {state.currentStep === 3 && (

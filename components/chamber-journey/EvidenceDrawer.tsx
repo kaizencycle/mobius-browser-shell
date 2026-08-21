@@ -4,6 +4,8 @@ import type { EvidenceRef } from '../../src/lib/chamber-journey/types';
 interface Props {
   evidence: EvidenceRef[];
   label?: string;
+  /** Called once when the drawer is opened — used to attest evidence review */
+  onOpen?: (sources: string[]) => void;
 }
 
 function confidenceLabel(c?: EvidenceRef['confidence']): string {
@@ -21,11 +23,19 @@ function confidenceLabel(c?: EvidenceRef['confidence']): string {
   }
 }
 
-export function EvidenceDrawer({ evidence, label = 'View evidence' }: Props) {
+export function EvidenceDrawer({ evidence, label = 'View evidence', onOpen }: Props) {
   const [open, setOpen] = useState(false);
   const panelId = useId();
 
   if (evidence.length === 0) return null;
+
+  const handleToggle = () => {
+    const next = !open;
+    setOpen(next);
+    if (next) {
+      onOpen?.(evidence.map(e => e.source));
+    }
+  };
 
   return (
     <div className="journey-evidence">
@@ -34,7 +44,7 @@ export function EvidenceDrawer({ evidence, label = 'View evidence' }: Props) {
         className="journey-evidence-toggle"
         aria-expanded={open}
         aria-controls={panelId}
-        onClick={() => setOpen(v => !v)}
+        onClick={handleToggle}
       >
         {open ? 'Hide evidence' : label}
         <span className="journey-evidence-count" aria-hidden>

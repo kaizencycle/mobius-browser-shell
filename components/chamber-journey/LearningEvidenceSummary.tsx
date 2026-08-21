@@ -22,13 +22,19 @@ export function LearningEvidenceSummary({ record }: Props) {
           <dd>
             {record.evidenceReviewed.length > 0
               ? record.evidenceReviewed.join(' · ')
-              : '—'}
+              : 'None opened — drawers were skipped'}
           </dd>
         </div>
         <div className="journey-evidence-record-row">
           <dt>Counterargument encountered</dt>
           <dd>{record.counterargumentEncountered ? 'Yes' : 'No'}</dd>
         </div>
+        {record.frictionChoice && (
+          <div className="journey-evidence-record-row">
+            <dt>Friction interpretation</dt>
+            <dd>{record.frictionChoice}</dd>
+          </div>
+        )}
         <div className="journey-evidence-record-row">
           <dt>Revised claim</dt>
           <dd>{record.revisedClaim || '—'}</dd>

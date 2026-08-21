@@ -55,6 +55,8 @@ export interface ChamberJourney {
   };
   encounters: Encounter[];
   frictionPrompt: string;
+  /** Schema-driven options for friction step — avoids hardcoding in flow component */
+  frictionOptions: string[];
   counterpoint?: Counterpoint;
   reflectionPrompt: string;
   nextQuestions: string[];
@@ -64,8 +66,10 @@ export interface ChamberJourney {
 export interface LearningEvidenceRecord {
   journeyId: string;
   initialClaim: string;
+  /** Sources opened in evidence drawers only — not all configured sources */
   evidenceReviewed: string[];
   counterargumentEncountered: boolean;
+  frictionChoice: string;
   revisedClaim: string;
   revisionReason: string;
   uncertaintyRemaining: string;

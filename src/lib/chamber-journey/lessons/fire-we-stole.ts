@@ -134,6 +134,11 @@ export const FIRE_WE_STOLE: ChamberJourney = {
     },
   ],
   frictionPrompt: 'Was Prometheus a liberator, or capability without stewardship?',
+  frictionOptions: [
+    'Liberator — gift was necessary',
+    'Stewardship failure — release was reckless',
+    'Conditional — depends on who decides',
+  ],
   counterpoint: {
     title: 'The liberation reading',
     body:

@@ -25,10 +25,11 @@ type WelcomeView = 'landing' | 'intentions' | 'chambers' | 'journey';
 
 interface Props {
   onContinue: () => void;
+  onContinueWithIntention: (intention: ChamberIntention) => void;
   onSkip: () => void;
 }
 
-export function WelcomeScreen({ onContinue, onSkip }: Props) {
+export function WelcomeScreen({ onContinue, onContinueWithIntention, onSkip }: Props) {
   const [giStatus, setGIStatus] = useState<GIStatus>({ gi: 0.90, mode: 'yellow', label: 'recovering' });
   const [view, setView] = useState<WelcomeView>('landing');
   const [selectedIntention, setSelectedIntention] = useState<ChamberIntention | null>(null);
@@ -56,7 +57,7 @@ export function WelcomeScreen({ onContinue, onSkip }: Props) {
     return (
       <ChamberJourneyFlow
         journey={FIRE_WE_STOLE}
-        onComplete={onContinue}
+        onEnterShell={onSkip}
         onBack={() => setView('landing')}
       />
     );
@@ -161,7 +162,12 @@ export function WelcomeScreen({ onContinue, onSkip }: Props) {
         )}
 
         <div className="visitor-btn-row">
-          <button type="button" className="visitor-btn-primary" onClick={onContinue} disabled={!selectedIntention}>
+          <button
+            type="button"
+            className="visitor-btn-primary"
+            onClick={() => selectedIntention && onContinueWithIntention(selectedIntention)}
+            disabled={!selectedIntention}
+          >
             Continue with this intent →
           </button>
           <button type="button" className="visitor-btn-ghost" onClick={() => setView('landing')}>
@@ -200,6 +206,14 @@ export function WelcomeScreen({ onContinue, onSkip }: Props) {
         See all chamber questions →
       </button>
 
+      <button
+        type="button"
+        className="visitor-link-btn"
+        onClick={() => setView('intentions')}
+      >
+        What are you trying to do? →
+      </button>
+
       <div className="visitor-gi-bar visitor-gi-bar--subdued">
         <span className={`visitor-gi-dot ${dotColor} ${giStatus.mode !== 'green' ? 'animate-pulse' : ''}`} />
         <span className="visitor-gi-label">System integrity</span>
@@ -212,7 +226,7 @@ export function WelcomeScreen({ onContinue, onSkip }: Props) {
         <button type="button" className="visitor-btn-primary" onClick={() => setView('journey')}>
           Begin with a question →
         </button>
-        <button type="button" className="visitor-btn-ghost" onClick={() => setView('intentions')}>
+        <button type="button" className="visitor-btn-ghost" onClick={() => setView('chambers')}>
           Explore all Chambers
         </button>
       </div>

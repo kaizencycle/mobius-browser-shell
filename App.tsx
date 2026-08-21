@@ -116,6 +116,7 @@ const App: React.FC = () => {
         state={visitorOnboarding.state}
         setStep={visitorOnboarding.setStep}
         setPath={visitorOnboarding.setPath}
+        setIntention={visitorOnboarding.setIntention}
         complete={visitorOnboarding.complete}
         skip={visitorOnboarding.skip}
         setActiveTab={setActiveTab}
