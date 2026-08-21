@@ -39,7 +39,7 @@ export const CHAMBER_ROUTES = {
     tabId: TabId.OAA,
     title: 'Learn (OAA) — Mobius Substrate',
     description:
-      'The Learn chamber: guided OAA seminars. Prove comprehension, collect Fractal Shards, and build your integrity portfolio — not passive consumption.',
+      'The Learn chamber: guided OAA seminars. Study, question, and attest comprehension — learning evidence, not passive consumption.',
   },
   memory: {
     path: '/chambers/memory',

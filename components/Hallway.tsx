@@ -147,11 +147,11 @@ export const Hallway: React.FC<HallwayProps> = ({ onEnter, onOpenProfile, onOpen
             <div className="hall-title hall-title--public">
               <div className="eyebrow">Welcome to the school</div>
               <h1>
-                Pick a chamber.
-                <em> Each one is its own world.</em>
+                Enter with a question.
+                <em> Each chamber is a structured encounter.</em>
               </h1>
               <p className="lede">
-                Learn, remember, verify, and participate — at your own pace.
+                Understand, challenge, and attest — not pick a subsystem first.
                 {pathDef && (
                   <span className="hall-path-badge">
                     Your path: <strong>{pathDef.label}</strong> · opens {pathDef.firstChamberLabel} first
@@ -180,6 +180,7 @@ export const Hallway: React.FC<HallwayProps> = ({ onEnter, onOpenProfile, onOpen
                   <span className="body">
                     <span className="icon" aria-hidden><DoorIcon icon={chamber.icon} size={28} /></span>
                     <span className="door-title">{chamber.publicName}</span>
+                    <span className="door-question">&ldquo;{chamber.humanQuestion}&rdquo;</span>
                     <span className="canon-name">{chamber.canonName}</span>
                     <span className="role">{chamber.tagline}</span>
                   </span>
@@ -208,6 +209,7 @@ export const Hallway: React.FC<HallwayProps> = ({ onEnter, onOpenProfile, onOpen
                   <span className="body">
                     <span className="icon" aria-hidden><DoorIcon icon={chamber.icon} size={20} /></span>
                     <span className="door-title">{chamber.publicName}</span>
+                    <span className="door-question door-question--compact">&ldquo;{chamber.humanQuestion}&rdquo;</span>
                     <span className="canon-name">{chamber.canonName}</span>
                   </span>
                 </button>

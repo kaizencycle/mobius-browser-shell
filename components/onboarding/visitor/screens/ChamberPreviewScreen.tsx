@@ -21,7 +21,7 @@ export function ChamberPreviewScreen({ path, onContinue, onBack }: Props) {
       </p>
 
       <div className="visitor-mic-hint">
-        Learn → collect Fractal Shards → build your portfolio. Request an Integrity Grade when the network is eligible — recognition is never guaranteed.
+        Learn → study, question, and attest comprehension. Recognition flows through integrity attestation — never guaranteed, never ideological.
       </div>
 
       <div className="visitor-preview-card">
