@@ -665,6 +665,75 @@
   .doors .door { animation: none !important; opacity: 1 !important; transform: none !important; }
 }
 
+.learn-lab {
+  background: #f7f5f1;
+}
+
+.learn-chamber-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 14px;
+  background: #1c1917;
+  border-bottom: 1px solid #44403c;
+  color: #e7e5e4;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  flex-shrink: 0;
+}
+
+.learn-chamber-bar__left {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.learn-chamber-bar__room {
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #d6d3d1;
+}
+
+.learn-chamber-bar__canon {
+  color: #78716c;
+  font-size: 9px;
+}
+
+.learn-chamber-bar__right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+  text-align: right;
+}
+
+.learn-chamber-bar__clock {
+  color: #a8a29e;
+  white-space: nowrap;
+}
+
+.learn-chamber-bar__status {
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.learn-chamber-bar__gi {
+  font-weight: 600;
+}
+
+@media (max-width: 640px) {
+  .learn-chamber-bar {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .learn-chamber-bar__right {
+    flex-wrap: wrap;
+    text-align: left;
+  }
+}
+
 /* ═══════════════════════════════════════════════════════════════
    CHAMBER 1 — OAA: chalkboard classroom
    ─────────────────────────────────────────────────────────────── */
