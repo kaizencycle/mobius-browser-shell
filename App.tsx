@@ -117,6 +117,7 @@ const App: React.FC = () => {
         setStep={visitorOnboarding.setStep}
         setPath={visitorOnboarding.setPath}
         setIntention={visitorOnboarding.setIntention}
+        clearIntention={visitorOnboarding.clearIntention}
         complete={visitorOnboarding.complete}
         skip={visitorOnboarding.skip}
         setActiveTab={setActiveTab}

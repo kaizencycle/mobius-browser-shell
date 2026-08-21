@@ -45,6 +45,7 @@ export interface VisitorOnboardingFlowProps {
   setStep: (step: number) => void;
   setPath: (path: OnboardingPath) => void;
   setIntention: (intention: ChamberIntention) => void;
+  clearIntention: () => void;
   complete: (firstChamber: string, setActiveTab?: (tab: TabId) => void) => void;
   skip: () => void;
   setActiveTab: (tab: TabId) => void;
@@ -55,6 +56,7 @@ export function VisitorOnboardingFlow({
   setStep,
   setPath,
   setIntention,
+  clearIntention,
   complete,
   skip,
   setActiveTab,
@@ -77,7 +79,10 @@ export function VisitorOnboardingFlow({
 
         {state.currentStep === 0 && (
           <WelcomeScreen
-            onContinue={() => setStep(1)}
+            onContinue={() => {
+              clearIntention();
+              setStep(1);
+            }}
             onContinueWithIntention={intention => {
               setIntention(intention);
               setStep(2);
@@ -105,6 +110,7 @@ export function VisitorOnboardingFlow({
         {state.currentStep === 3 && (
           <IdentityScreen
             path={selectedPath}
+            intention={state.intention}
             civicId={state.civicId}
             onComplete={() => complete(selectedPath?.firstChamber ?? 'hallway', setActiveTab)}
             onBack={() => setStep(2)}

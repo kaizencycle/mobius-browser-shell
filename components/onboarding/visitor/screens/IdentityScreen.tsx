@@ -1,17 +1,20 @@
 import React, { useMemo } from 'react';
 import type { PathDefinition } from '../../../../src/lib/onboarding/paths';
+import type { ChamberIntention } from '../../../../src/lib/chamber-journey/intentions';
+import { primaryChamberForIntention } from '../../../../src/lib/chamber-journey/intentions';
 import { FirstActionsChecklist } from '../../FirstActionsChecklist';
 import { useFirstActions } from '../../../../hooks/useFirstActions';
 
 interface Props {
   path: PathDefinition | null;
+  intention: ChamberIntention | null;
   civicId: string | null;
   onComplete: () => void;
   onBack: () => void;
   onSkip: () => void;
 }
 
-export function IdentityScreen({ path, civicId, onComplete, onBack, onSkip }: Props) {
+export function IdentityScreen({ path, intention, civicId, onComplete, onBack, onSkip }: Props) {
   const { actions } = useFirstActions();
   const generatedId = useMemo(
     () => civicId ?? `citizen-${Date.now().toString(36)}`,
@@ -19,6 +22,9 @@ export function IdentityScreen({ path, civicId, onComplete, onBack, onSkip }: Pr
   );
 
   const completedCount = [actions.path, actions.seminar, actions.jade, actions.pulse].filter(Boolean).length;
+  const destinationLabel = intention
+    ? primaryChamberForIntention(intention)?.publicName
+    : path?.firstChamberLabel;
 
   return (
     <div className="visitor-screen">
@@ -52,8 +58,8 @@ export function IdentityScreen({ path, civicId, onComplete, onBack, onSkip }: Pr
       <FirstActionsChecklist variant="card" forceShow />
 
       <div className="visitor-btn-row">
-        <button className="visitor-btn-primary" onClick={onComplete}>
-          Enter the {path?.firstChamberLabel ?? 'shell'} chamber →
+        <button type="button" className="visitor-btn-primary" onClick={onComplete}>
+          Enter the {destinationLabel ?? 'shell'} chamber →
         </button>
       </div>
       <div className="visitor-btn-row" style={{ marginTop: '8px' }}>

@@ -71,9 +71,13 @@ const CHAMBER_ID_TO_FIRST: Record<string, string> = {
   core: 'cpc',
 };
 
+export function primaryChamberForIntention(action: ChamberIntention): PublicChamber | undefined {
+  return chambersForIntention(action)[0];
+}
+
 /** Primary first-chamber slug for onboarding completion navigation. */
 export function intentionToFirstChamber(action: ChamberIntention): string {
-  const primary = chambersForIntention(action)[0];
+  const primary = primaryChamberForIntention(action);
   if (!primary) return 'hallway';
   return CHAMBER_ID_TO_FIRST[primary.id] ?? 'hallway';
 }

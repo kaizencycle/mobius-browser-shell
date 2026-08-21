@@ -98,7 +98,17 @@ export function useVisitorOnboarding() {
 
   const setPath = useCallback((path: OnboardingPath) => {
     setState(prev => {
-      const next = { ...prev, path };
+      // Manual path selection supersedes a prior discovery intention.
+      const next = { ...prev, path, intention: null };
+      saveState(next);
+      return next;
+    });
+  }, []);
+
+  const clearIntention = useCallback(() => {
+    setState(prev => {
+      if (prev.intention == null) return prev;
+      const next = { ...prev, intention: null };
       saveState(next);
       return next;
     });
@@ -156,5 +166,5 @@ export function useVisitorOnboarding() {
     setState({ complete: false, path: null, intention: null, currentStep: 0, civicId: null });
   }, []);
 
-  return { state, setStep, setPath, setIntention, complete, skip, reset };
+  return { state, setStep, setPath, setIntention, clearIntention, complete, skip, reset };
 }
