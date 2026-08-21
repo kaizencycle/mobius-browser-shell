@@ -15,7 +15,7 @@ export const ONBOARDING_PATHS: PathDefinition[] = [
     id: 'learner',
     label: 'Learner',
     description:
-      'Start with guided seminars, collect Fractal Shards through verified comprehension, and build a civic skill portfolio.',
+      'Start with guided seminars, attest comprehension through evidence, and build a learning record — not passive consumption or guaranteed recognition.',
     icon: '📖',
     firstChamber: 'oaa',
     firstChamberLabel: 'Learn',

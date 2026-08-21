@@ -4,6 +4,7 @@
 
 import { TabId } from '../../types';
 import { env } from '../../config/env';
+import type { ChamberIntention } from './chamber-journey/intentions';
 
 export interface ChamberBadge {
   label: string;
@@ -18,6 +19,10 @@ export interface PublicChamber {
   publicName: string;
   canonName: string;
   tagline: string;
+  /** Human question this room answers — primary discovery affordance */
+  humanQuestion: string;
+  /** Visitor intent verb — navigation label only, not a rename */
+  intentionAction?: ChamberIntention;
   room: string;
   slug: string;
   dClass: string;
@@ -33,7 +38,11 @@ const HANDBOOK_URL = env.canonicalDomain
   ? `${env.canonicalDomain.replace(/\/+$/, '')}/handbook`
   : 'https://handbook.mobius-substrate.com';
 
-/** Seven public chambers shown in onboarding + hallway hero grid */
+/**
+ * Primary chambers shown in onboarding + hallway hero grid.
+ * NOTE: Comment historically said "seven"; array has six entries. Core is in EXTENDED_CHAMBERS.
+ * See docs/CHAMBER_CANON_DISCREPANCY.md — behavior unchanged pending human disposition.
+ */
 export const PUBLIC_CHAMBERS: PublicChamber[] = [
   {
     id: 'learn',
@@ -41,7 +50,9 @@ export const PUBLIC_CHAMBERS: PublicChamber[] = [
     icon: 'shield',
     publicName: 'Learn',
     canonName: 'Open Agent Architecture',
-    tagline: 'Understand civic AI, constitutional integrity, and the Mobius framework.',
+    tagline: 'Study, question, and attest comprehension — not passive consumption.',
+    humanQuestion: 'What am I trying to understand?',
+    intentionAction: 'UNDERSTAND',
     room: '01',
     slug: 'LEARN',
     dClass: 'd-oaa',
@@ -55,6 +66,8 @@ export const PUBLIC_CHAMBERS: PublicChamber[] = [
     publicName: 'Memory',
     canonName: 'EPICON Ledger',
     tagline: 'Build and verify personal knowledge through the Witness Protocol and evidence.',
+    humanQuestion: 'Where did this idea come from?',
+    intentionAction: 'REMEMBER',
     room: '02',
     slug: 'MEMORY',
     dClass: 'd-epicon',
@@ -67,6 +80,8 @@ export const PUBLIC_CHAMBERS: PublicChamber[] = [
     publicName: 'Pulse',
     canonName: 'Civic Terminal',
     tagline: 'Track live EPICON events, governance signals, and civic heartbeat globally.',
+    humanQuestion: 'Where is this happening now?',
+    intentionAction: 'OBSERVE',
     room: '03',
     slug: 'PULSE',
     dClass: 'd-pulse',
@@ -81,6 +96,8 @@ export const PUBLIC_CHAMBERS: PublicChamber[] = [
     publicName: 'World',
     canonName: 'HIVE',
     tagline: 'Engage with civic processes, communities, and measurable civic impact.',
+    humanQuestion: 'What happens when people act on it?',
+    intentionAction: 'PARTICIPATE',
     room: '04',
     slug: 'WORLD',
     dClass: 'd-hive',
@@ -93,6 +110,8 @@ export const PUBLIC_CHAMBERS: PublicChamber[] = [
     publicName: 'Council',
     canonName: 'DVA · Sentinels',
     tagline: 'Deliberate and decide collectively on civic governance and institutional direction.',
+    humanQuestion: 'What happens when reasonable witnesses disagree?',
+    intentionAction: 'DELIBERATE',
     room: '05',
     slug: 'COUNCIL',
     dClass: 'd-atlas',
@@ -105,6 +124,8 @@ export const PUBLIC_CHAMBERS: PublicChamber[] = [
     publicName: 'Archives',
     canonName: 'Reserve Blocks',
     tagline: 'Access institutional memory, historical records, and canonical documentation.',
+    humanQuestion: 'What evidence actually survived?',
+    intentionAction: 'VERIFY',
     room: '06',
     slug: 'ARCHIVES',
     dClass: 'd-vault',
@@ -122,6 +143,8 @@ export const EXTENDED_CHAMBERS: PublicChamber[] = [
     publicName: 'Reflect',
     canonName: 'Reflection Nook',
     tagline: 'Journal, mood, E.O.M.M. — past-you meets present-you.',
+    humanQuestion: 'What changed in me?',
+    intentionAction: 'QUESTION',
     room: '07',
     slug: 'REFLECT',
     dClass: 'd-reflect',
@@ -133,6 +156,8 @@ export const EXTENDED_CHAMBERS: PublicChamber[] = [
     publicName: 'Shield',
     canonName: 'Citizen Shield',
     tagline: 'Civic radar and ECHO threat intelligence.',
+    humanQuestion: 'What could go wrong?',
+    intentionAction: 'PROTECT',
     room: '08',
     slug: 'SHIELD',
     dClass: 'd-shield',
@@ -144,6 +169,8 @@ export const EXTENDED_CHAMBERS: PublicChamber[] = [
     publicName: 'JADE',
     canonName: 'Tea Room',
     tagline: 'The room that asks why — Socratic inquiry.',
+    humanQuestion: 'Why do I believe this?',
+    intentionAction: 'QUESTION',
     room: '09',
     slug: 'JADE',
     dClass: 'd-jade',
@@ -155,6 +182,7 @@ export const EXTENDED_CHAMBERS: PublicChamber[] = [
     publicName: 'Wallet',
     canonName: 'MIC Treasury',
     tagline: 'Provenance over balance — ledger view.',
+    humanQuestion: 'What has actually been recognized or proven?',
     room: '10',
     slug: 'TREASURY',
     dClass: 'd-wallet',
@@ -166,6 +194,8 @@ export const EXTENDED_CHAMBERS: PublicChamber[] = [
     publicName: 'Core',
     canonName: 'Civic Protocol',
     tagline: 'Technical foundations: block chain, sentinels, EPICON, and reserve architecture.',
+    humanQuestion: 'How do we preserve the lesson without corrupting it?',
+    intentionAction: 'BUILD',
     room: '11',
     slug: 'CORE',
     dClass: 'd-mii',

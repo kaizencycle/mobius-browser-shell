@@ -1,5 +1,7 @@
 import { useState, useCallback } from 'react';
 import type { OnboardingPath } from '../src/lib/onboarding/paths';
+import type { ChamberIntention } from '../src/lib/chamber-journey/intentions';
+import { INTENTION_TO_PATH, intentionToFirstChamber } from '../src/lib/chamber-journey/intentions';
 import { syncOnboardingState, KEYS, setLocal } from '../src/lib/storage';
 import { resetFirstActions, markFirstAction } from '../src/lib/onboarding/first-actions';
 import { env } from '../config/env';
@@ -10,6 +12,7 @@ const STORAGE_KEY = KEYS.VISITOR_ONBOARDING;
 interface VisitorOnboardingState {
   complete: boolean;
   path: OnboardingPath | null;
+  intention: ChamberIntention | null;
   currentStep: number;
   civicId: string | null;
 }
@@ -17,9 +20,18 @@ interface VisitorOnboardingState {
 function loadState(): VisitorOnboardingState {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    if (raw) return JSON.parse(raw) as VisitorOnboardingState;
+    if (raw) {
+      const parsed = JSON.parse(raw) as Partial<VisitorOnboardingState>;
+      return {
+        complete: parsed.complete ?? false,
+        path: parsed.path ?? null,
+        intention: parsed.intention ?? null,
+        currentStep: parsed.currentStep ?? 0,
+        civicId: parsed.civicId ?? null,
+      };
+    }
   } catch { /* ignore */ }
-  return { complete: false, path: null, currentStep: 0, civicId: null };
+  return { complete: false, path: null, intention: null, currentStep: 0, civicId: null };
 }
 
 function saveState(state: VisitorOnboardingState): void {
@@ -86,15 +98,42 @@ export function useVisitorOnboarding() {
 
   const setPath = useCallback((path: OnboardingPath) => {
     setState(prev => {
-      const next = { ...prev, path };
+      // Manual path selection supersedes a prior discovery intention.
+      const next = { ...prev, path, intention: null };
+      saveState(next);
+      return next;
+    });
+  }, []);
+
+  const clearIntention = useCallback(() => {
+    setState(prev => {
+      if (prev.intention == null) return prev;
+      // Abandon intent flow — also drop the auto-assigned path from setIntention.
+      const next = { ...prev, intention: null, path: null };
+      saveState(next);
+      return next;
+    });
+  }, []);
+
+  const setIntention = useCallback((intention: ChamberIntention) => {
+    setState(prev => {
+      const next = {
+        ...prev,
+        intention,
+        path: INTENTION_TO_PATH[intention],
+      };
       saveState(next);
       return next;
     });
   }, []);
 
   const complete = useCallback((firstChamber: string, setActiveTab?: (tab: TabId) => void) => {
+    let resolvedChamber = firstChamber;
     setState(prev => {
       const civicId = prev.civicId ?? `citizen-${Date.now().toString(36)}`;
+      resolvedChamber = prev.intention
+        ? intentionToFirstChamber(prev.intention)
+        : firstChamber;
       const next: VisitorOnboardingState = {
         ...prev,
         complete: true,
@@ -110,7 +149,7 @@ export function useVisitorOnboarding() {
       });
       return next;
     });
-    navigateToFirstChamber(firstChamber, setActiveTab);
+    navigateToFirstChamber(resolvedChamber, setActiveTab);
   }, []);
 
   const skip = useCallback(() => {
@@ -125,8 +164,8 @@ export function useVisitorOnboarding() {
     localStorage.removeItem(STORAGE_KEY);
     localStorage.removeItem(KEYS.ONBOARDING);
     resetFirstActions();
-    setState({ complete: false, path: null, currentStep: 0, civicId: null });
+    setState({ complete: false, path: null, intention: null, currentStep: 0, civicId: null });
   }, []);
 
-  return { state, setStep, setPath, complete, skip, reset };
+  return { state, setStep, setPath, setIntention, clearIntention, complete, skip, reset };
 }

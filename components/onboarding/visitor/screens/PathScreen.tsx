@@ -1,15 +1,20 @@
 import React from 'react';
 import { ONBOARDING_PATHS } from '../../../../src/lib/onboarding/paths';
 import type { OnboardingPath } from '../../../../src/lib/onboarding/paths';
+import type { ChamberIntention } from '../../../../src/lib/chamber-journey/intentions';
+import { chambersForIntention } from '../../../../src/lib/chamber-journey/intentions';
 
 interface Props {
   selectedPath: OnboardingPath | null;
+  selectedIntention: ChamberIntention | null;
   onSelect: (path: OnboardingPath) => void;
   onContinue: () => void;
   onBack: () => void;
 }
 
-export function PathScreen({ selectedPath, onSelect, onContinue, onBack }: Props) {
+export function PathScreen({ selectedPath, selectedIntention, onSelect, onContinue, onBack }: Props) {
+  const intentChambers = selectedIntention ? chambersForIntention(selectedIntention) : [];
+
   return (
     <div className="visitor-screen">
       <div className="visitor-eyebrow">Step 2 of 4 · Your path</div>
@@ -17,6 +22,13 @@ export function PathScreen({ selectedPath, onSelect, onContinue, onBack }: Props
       <p className="visitor-sub">
         This shapes which chamber opens first. You can change it anytime in settings.
       </p>
+
+      {selectedIntention && intentChambers.length > 0 && (
+        <div className="visitor-mic-hint">
+          From your {selectedIntention.toLowerCase()} intent → opens{' '}
+          <strong>{intentChambers.map(c => c.publicName).join(' / ')}</strong>
+        </div>
+      )}
 
       <div className="visitor-path-list">
         {ONBOARDING_PATHS.map(path => (

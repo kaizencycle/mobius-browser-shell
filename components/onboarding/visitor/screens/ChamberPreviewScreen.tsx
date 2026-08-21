@@ -1,27 +1,85 @@
 import React from 'react';
 import { CHAMBER_PREVIEWS } from '../../../../src/lib/onboarding/paths';
 import type { PathDefinition } from '../../../../src/lib/onboarding/paths';
+import type { ChamberIntention } from '../../../../src/lib/chamber-journey/intentions';
+import { primaryChamberForIntention } from '../../../../src/lib/chamber-journey/intentions';
+import { ChamberIcon, CHAMBER_ICON_NAMES } from '../../../icons/ChamberIcons';
 
 interface Props {
   path: PathDefinition | null;
+  intention: ChamberIntention | null;
   onContinue: () => void;
   onBack: () => void;
 }
 
-export function ChamberPreviewScreen({ path, onContinue, onBack }: Props) {
+function PreviewIcon({ icon }: { icon: string }) {
+  if (CHAMBER_ICON_NAMES.has(icon)) {
+    return <ChamberIcon name={icon} size={22} />;
+  }
+  return <>{icon}</>;
+}
+
+export function ChamberPreviewScreen({ path, intention, onContinue, onBack }: Props) {
   if (!path) return null;
-  const preview = CHAMBER_PREVIEWS[path.id];
+
+  const intentChamber = intention ? primaryChamberForIntention(intention) : undefined;
+  const pathPreview = CHAMBER_PREVIEWS[path.id];
+
+  if (intention && intentChamber) {
+    return (
+      <div className="visitor-screen">
+        <div className="visitor-eyebrow">Step 3 of 4 · First chamber</div>
+        <h2 className="visitor-title">Your first chamber is ready.</h2>
+        <p className="visitor-sub">
+          Your {intention.toLowerCase()} intent opens {intentChamber.publicName}.
+        </p>
+
+        <div className="visitor-mic-hint">
+          Learn → study, question, and attest comprehension. Recognition flows through integrity attestation — never guaranteed, never ideological.
+        </div>
+
+        <div className="visitor-preview-card">
+          <div className="visitor-preview-header">
+            <span className="visitor-preview-icon">
+              <PreviewIcon icon={intentChamber.icon} />
+            </span>
+            <div>
+              <div className="visitor-preview-name">{intentChamber.publicName}</div>
+              <div className="visitor-preview-canon font-mono text-[10px] text-stone-500">
+                {intentChamber.canonName}
+              </div>
+            </div>
+          </div>
+          <p className="visitor-ch-question" style={{ marginBottom: 10 }}>
+            &ldquo;{intentChamber.humanQuestion}&rdquo;
+          </p>
+          <p className="visitor-preview-desc">{intentChamber.tagline}</p>
+          <div className="visitor-subjects">
+            <span className="visitor-subject-chip">{intention}</span>
+            <span className="visitor-subject-chip">CHAMBER {intentChamber.room}</span>
+          </div>
+        </div>
+
+        <div className="visitor-btn-row">
+          <button type="button" className="visitor-btn-primary" onClick={onContinue}>
+            Set up identity →
+          </button>
+          <button type="button" className="visitor-btn-ghost" onClick={onBack}>Back</button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="visitor-screen">
       <div className="visitor-eyebrow">Step 3 of 4 · First chamber</div>
       <h2 className="visitor-title">Your first chamber is ready.</h2>
       <p className="visitor-sub">
-        Here's what you'll find inside the {path.firstChamberLabel} chamber.
+        Here&apos;s what you&apos;ll find inside the {path.firstChamberLabel} chamber.
       </p>
 
       <div className="visitor-mic-hint">
-        Learn → collect Fractal Shards → build your portfolio. Request an Integrity Grade when the network is eligible — recognition is never guaranteed.
+        Learn → study, question, and attest comprehension. Recognition flows through integrity attestation — never guaranteed, never ideological.
       </div>
 
       <div className="visitor-preview-card">
@@ -34,21 +92,21 @@ export function ChamberPreviewScreen({ path, onContinue, onBack }: Props) {
             </div>
           </div>
         </div>
-        <p className="visitor-preview-desc">{preview.description}</p>
+        <p className="visitor-preview-desc">{pathPreview.description}</p>
 
-        {preview.subjects && (
+        {pathPreview.subjects && (
           <div className="visitor-subjects">
-            {preview.subjects.map(s => (
+            {pathPreview.subjects.map(s => (
               <span key={s} className="visitor-subject-chip">{s}</span>
             ))}
           </div>
         )}
       </div>
 
-      {preview.rewards && (
+      {pathPreview.rewards && (
         <div className="visitor-rewards">
           <div className="visitor-rewards-label">What you unlock</div>
-          {preview.rewards.map(r => (
+          {pathPreview.rewards.map(r => (
             <div key={r.label} className="visitor-reward-row">
               <span className="visitor-reward-name">{r.label}</span>
               <div className="visitor-reward-track">
@@ -61,10 +119,10 @@ export function ChamberPreviewScreen({ path, onContinue, onBack }: Props) {
       )}
 
       <div className="visitor-btn-row">
-        <button className="visitor-btn-primary" onClick={onContinue}>
+        <button type="button" className="visitor-btn-primary" onClick={onContinue}>
           Set up identity →
         </button>
-        <button className="visitor-btn-ghost" onClick={onBack}>Back</button>
+        <button type="button" className="visitor-btn-ghost" onClick={onBack}>Back</button>
       </div>
     </div>
   );

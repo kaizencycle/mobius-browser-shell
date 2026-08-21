@@ -3378,6 +3378,424 @@
   .visitor-screen { animation: none; }
 }
 
+/* ── Chambers v2: question-led welcome + journey ─────────── */
+
+.visitor-screen--wide { max-width: 640px; }
+
+.visitor-title--hero {
+  font-family: 'DM Serif Display', Georgia, serif;
+  font-size: 28px;
+  font-weight: 400;
+  letter-spacing: -0.02em;
+}
+
+.visitor-hero-tagline {
+  font-family: 'DM Serif Display', Georgia, serif;
+  font-style: italic;
+  font-size: 16px;
+  color: #d6d3d1;
+  margin-bottom: 12px;
+}
+
+.visitor-section-label,
+.journey-section-label {
+  font-size: 10px;
+  font-family: 'JetBrains Mono', monospace;
+  color: #78716c;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin: 16px 0 8px;
+}
+
+.visitor-gi-bar--subdued {
+  opacity: 0.75;
+  margin-top: 16px;
+  margin-bottom: 16px;
+}
+
+.visitor-chamber-cycle {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+@media (min-width: 480px) {
+  .visitor-chamber-cycle { grid-template-columns: repeat(3, 1fr); }
+  .visitor-chamber-cycle--compact { grid-template-columns: repeat(2, 1fr); }
+}
+
+.visitor-chamber-card--question {
+  text-align: left;
+  padding: 14px;
+}
+
+.visitor-chamber-card--compact { padding: 10px; }
+
+.visitor-ch-room {
+  font-size: 9px;
+  font-family: 'JetBrains Mono', monospace;
+  color: #57534e;
+  display: block;
+  margin-bottom: 4px;
+}
+
+.visitor-ch-question {
+  font-size: 12px;
+  font-style: italic;
+  color: #d6d3d1;
+  display: block;
+  margin: 4px 0 6px;
+  line-height: 1.4;
+}
+
+.visitor-link-btn,
+.visitor-skip-link {
+  background: none;
+  border: none;
+  color: #78716c;
+  font-size: 12px;
+  cursor: pointer;
+  padding: 0;
+  margin-bottom: 8px;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.visitor-link-btn:hover,
+.visitor-skip-link:hover { color: #a8a29e; }
+
+.visitor-skip-link {
+  display: block;
+  width: 100%;
+  text-align: center;
+  margin-top: 8px;
+}
+
+.visitor-intention-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+@media (min-width: 520px) {
+  .visitor-intention-grid { grid-template-columns: repeat(3, 1fr); }
+}
+
+.visitor-intention-card {
+  background: #1c1917;
+  border: 1px solid #44403c;
+  border-radius: 10px;
+  padding: 12px;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.15s;
+}
+
+.visitor-intention-card:hover { border-color: #78716c; }
+
+.visitor-intention-card.selected {
+  border-color: #a8a29e;
+  background: #292524;
+}
+
+.visitor-intention-action {
+  display: block;
+  font-size: 9px;
+  font-family: 'JetBrains Mono', monospace;
+  color: #78716c;
+  letter-spacing: 0.06em;
+  margin-bottom: 4px;
+}
+
+.visitor-intention-label {
+  display: block;
+  font-size: 12px;
+  color: #e7e5e4;
+  line-height: 1.4;
+}
+
+.visitor-intention-match { margin-bottom: 16px; }
+
+/* Journey flow */
+.journey-screen { max-width: 560px; }
+
+.journey-title-serif {
+  font-family: 'DM Serif Display', Georgia, serif;
+  font-weight: 400;
+}
+
+.journey-lede { font-size: 15px; }
+
+.journey-opening-question {
+  border-left: 2px solid #78716c;
+  padding: 12px 16px;
+  margin: 0 0 16px;
+  font-family: 'DM Serif Display', Georgia, serif;
+  font-size: 17px;
+  font-style: italic;
+  color: #e7e5e4;
+  line-height: 1.5;
+}
+
+.journey-note {
+  font-size: 12px;
+  color: #78716c;
+  margin-bottom: 16px;
+  line-height: 1.5;
+}
+
+.journey-progress {
+  height: 2px;
+  background: #44403c;
+  border-radius: 1px;
+  margin-bottom: 16px;
+  overflow: hidden;
+}
+
+.journey-progress-fill {
+  height: 100%;
+  background: #d6d3d1;
+  transition: width 0.3s ease;
+}
+
+.journey-prompt {
+  font-size: 13px;
+  font-style: italic;
+  color: #d6d3d1;
+  margin: 12px 0;
+}
+
+.journey-input {
+  width: 100%;
+  background: #1c1917;
+  border: 1px solid #44403c;
+  border-radius: 8px;
+  padding: 10px 12px;
+  color: #e7e5e4;
+  font-size: 13px;
+  line-height: 1.5;
+  margin-bottom: 10px;
+  resize: vertical;
+  font-family: inherit;
+}
+
+.journey-input:focus {
+  outline: 2px solid #78716c;
+  outline-offset: 1px;
+}
+
+.journey-choice-row {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.journey-choice {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 10px 12px;
+  background: #1c1917;
+  border: 1px solid #44403c;
+  border-radius: 8px;
+  font-size: 12px;
+  color: #d6d3d1;
+  cursor: pointer;
+}
+
+.journey-choice.selected { border-color: #a8a29e; }
+
+.journey-choice input { margin-top: 2px; flex-shrink: 0; }
+
+.journey-counterpoint {
+  background: #1c1917;
+  border: 1px dashed #57534e;
+  border-radius: 8px;
+  padding: 12px;
+  margin: 12px 0;
+  font-size: 13px;
+  color: #a8a29e;
+}
+
+.journey-next-questions ul {
+  margin: 0;
+  padding-left: 18px;
+  color: #a8a29e;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+/* Lineage */
+.journey-lineage {
+  margin: 12px 0;
+  padding: 12px;
+  background: #1c1917;
+  border: 1px solid #44403c;
+  border-radius: 8px;
+}
+
+.journey-lineage-node { text-align: center; }
+
+.journey-lineage-label {
+  font-size: 12px;
+  color: #e7e5e4;
+}
+
+.journey-lineage-period,
+.journey-lineage-relation {
+  font-size: 10px;
+  font-family: 'JetBrains Mono', monospace;
+  color: #78716c;
+}
+
+.journey-lineage-connector {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 4px 0;
+}
+
+.journey-lineage-arrow {
+  color: #57534e;
+  font-size: 12px;
+}
+
+.journey-lineage-node--learner .journey-lineage-label {
+  font-style: italic;
+  color: #d6d3d1;
+}
+
+/* Evidence drawer */
+.journey-evidence { margin: 10px 0; }
+
+.journey-evidence-toggle {
+  background: none;
+  border: 1px solid #44403c;
+  border-radius: 6px;
+  padding: 6px 10px;
+  font-size: 11px;
+  font-family: 'JetBrains Mono', monospace;
+  color: #a8a29e;
+  cursor: pointer;
+}
+
+.journey-evidence-toggle:hover { border-color: #78716c; }
+
+.journey-evidence-count { color: #57534e; margin-left: 4px; }
+
+.journey-evidence-panel {
+  margin-top: 8px;
+  border: 1px solid #44403c;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.journey-evidence-item {
+  padding: 10px 12px;
+  border-bottom: 1px solid #44403c;
+  font-size: 12px;
+  color: #a8a29e;
+}
+
+.journey-evidence-item:last-child { border-bottom: none; }
+
+.journey-evidence-field {
+  display: block;
+  font-size: 9px;
+  font-family: 'JetBrains Mono', monospace;
+  color: #57534e;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-bottom: 2px;
+}
+
+.journey-evidence-claim {
+  color: #e7e5e4;
+  margin-bottom: 8px;
+  line-height: 1.5;
+}
+
+.journey-evidence-row {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.journey-evidence-row .journey-evidence-field {
+  min-width: 72px;
+  margin-bottom: 0;
+}
+
+.journey-evidence-counterpoint {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px dashed #44403c;
+}
+
+.journey-evidence-confidence--high { color: #34d399; }
+.journey-evidence-confidence--medium { color: #fbbf24; }
+.journey-evidence-confidence--low { color: #fb923c; }
+.journey-evidence-confidence--disputed { color: #f87171; }
+
+/* Learning evidence record */
+.journey-evidence-record {
+  background: #1c1917;
+  border: 1px solid #44403c;
+  border-radius: 10px;
+  padding: 14px;
+  margin-bottom: 16px;
+}
+
+.journey-evidence-record-title {
+  font-size: 13px;
+  color: #d6d3d1;
+  margin-bottom: 12px;
+  line-height: 1.5;
+}
+
+.journey-evidence-record-grid { margin: 0; }
+
+.journey-evidence-record-row {
+  display: grid;
+  grid-template-columns: 140px 1fr;
+  gap: 8px;
+  padding: 6px 0;
+  border-bottom: 1px solid #292524;
+  font-size: 12px;
+}
+
+.journey-evidence-record-row:last-child { border-bottom: none; }
+
+.journey-evidence-record-row dt {
+  color: #78716c;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+}
+
+.journey-evidence-record-row dd {
+  margin: 0;
+  color: #e7e5e4;
+  line-height: 1.4;
+}
+
+.door-question {
+  display: block;
+  font-size: 13px;
+  font-style: italic;
+  color: rgba(255, 255, 255, 0.72);
+  margin: 2px 0 4px;
+  line-height: 1.35;
+}
+
+.door-question--compact { font-size: 11px; }
+
+@media (prefers-reduced-motion: reduce) {
+  .journey-progress-fill { transition: none; }
+}
+
 /* ═══════════════════════════════════════════════════════════════
    C-357 PUBLIC HALLWAY + SETTINGS
    ─────────────────────────────────────────────────────────────── */
