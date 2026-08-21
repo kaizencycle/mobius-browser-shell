@@ -10,9 +10,8 @@ import { OAALearnToEarn } from './OAALearnToEarn';
 import { OAASeminarFeed } from '../oaa/OAASeminarFeed';
 import { AtlasChamberHeader } from './AtlasChamberHeader';
 import { CitizenOnboardingStepper } from './CitizenOnboardingStepper';
+import { LearnEvidenceStats } from '../chambers/LearnEvidenceStats';
 import { useWallet } from '../../contexts/WalletContext';
-import { useTerminal } from '../../contexts/TerminalContext';
-import { StreakDisplay, LevelBar, StatsRow, OAASkeleton } from './OAAEnhancements';
 import { getOnboardingState } from '../../src/lib/storage';
 
 export interface OAALabProps {
@@ -50,14 +49,10 @@ const SUBJECTS: Subject[] = [
 // View mode for OAA Lab
 type OAAView = 'subjects' | 'learning' | 'seminar-feed';
 
-const XP_TO_MIC_THRESHOLD = 50;
-
 export const OAALab: React.FC<OAALabProps> = ({ onNavigateToKnowledgeGraph }) => {
   const lab = getLabById(TabId.OAA);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { wallet } = useWallet();
-  const { state: terminalState } = useTerminal();
-  const [sessionXp, setSessionXp] = useState(0);
 
   // State for view mode
   const learnerDefaultView: OAAView =
@@ -71,9 +66,18 @@ export const OAALab: React.FC<OAALabProps> = ({ onNavigateToKnowledgeGraph }) =>
   const [isLoading, setIsLoading] = useState(false);
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
 
-  const ribbonPct = Math.min(100, Math.round((sessionXp % XP_TO_MIC_THRESHOLD) / XP_TO_MIC_THRESHOLD * 100));
-
-  // If live mode is enabled and URL exists, show iframe
+  // Evidence snapshot — no fabricated streaks or MIC farming UI
+  const learningProgress = {
+    totalMicEarned: wallet?.total_earned ?? 0,
+    modulesCompleted: wallet?.total_earned ? Math.floor(wallet.total_earned / 3) : 0,
+    currentStreak: 0,
+    bestStreak: 0,
+    totalLearningMinutes: wallet?.total_earned ? Math.floor(wallet.total_earned * 12) : 0,
+    totalCorrect: 0,
+    totalQuestions: 0,
+    level: 1,
+    lastActivityDate: new Date().toISOString(),
+  };
   if (lab && shouldUseLiveMode(lab.url)) {
     return (
       <LabFrame
@@ -84,71 +88,41 @@ export const OAALab: React.FC<OAALabProps> = ({ onNavigateToKnowledgeGraph }) =>
     );
   }
 
-  // Derived progress snapshot for enhancement components
-  const mockProgress = {
-    totalMicEarned: (wallet?.total_earned ?? 0) + sessionXp * 0.1,
-    modulesCompleted: wallet?.total_earned ? Math.floor(wallet.total_earned / 3) : 0,
-    currentStreak: 12,
-    bestStreak: 18,
-    totalLearningMinutes: 142,
-    totalCorrect: 47,
-    totalQuestions: 55,
-    level: Math.min(7, Math.floor(((wallet?.total_earned ?? 0) + sessionXp * 0.1) / 5) + 1),
-    lastActivityDate: new Date().toISOString(),
-  };
+  if (lab && shouldUseLiveMode(lab.url)) {
+    return (
+      <LabFrame
+        url={lab.url!}
+        title={lab.name}
+        description={lab.description}
+      />
+    );
+  }
 
-  // Demo mode — show the Claude Design Learn-to-Earn experience
   return (
-    <div className="flex flex-col h-full overflow-hidden">
+    <div className="flex flex-col h-full overflow-hidden learn-lab">
       <AtlasChamberHeader />
-      {/* XP→MIC Progress Ribbon with streak + level bar */}
-      <div className="px-4 py-2 bg-stone-800 border-b border-stone-700 flex-shrink-0 space-y-1.5">
-        <div className="flex items-center gap-2">
-          <span className="text-[10px] font-mono text-stone-400 flex-shrink-0">XP → MIC</span>
-          <div className="flex-1 h-1.5 rounded-full bg-stone-700 overflow-hidden">
-            <div
-              className="h-full bg-amber-400 rounded-full transition-all duration-500"
-              style={{ width: `${ribbonPct}%` }}
-            />
-          </div>
-          <span className="text-[10px] font-mono text-amber-400 flex-shrink-0">{sessionXp} XP</span>
-        </div>
-        <div className="flex items-center gap-3">
-          <StreakDisplay
-            currentStreak={mockProgress.currentStreak}
-            bestStreak={mockProgress.bestStreak}
-          />
-          <div className="flex-1">
-            <LevelBar
-              totalMicEarned={mockProgress.totalMicEarned}
-              level={mockProgress.level}
-            />
-          </div>
-        </div>
-      </div>
       <CitizenOnboardingStepper />
-      {/* Mode toggle */}
       <div className="flex border-b border-stone-700 bg-stone-800 shrink-0">
         <button
           onClick={() => setCurrentView('learning')}
           className={`flex-1 py-2 text-xs font-semibold transition-colors ${
             currentView !== 'seminar-feed'
-              ? 'text-amber-400 border-b-2 border-amber-400'
+              ? 'text-amber-200 border-b-2 border-amber-200'
               : 'text-stone-400 hover:text-stone-200'
           }`}
         >
           <BookOpen className="w-3.5 h-3.5 inline mr-1" />
-          Quiz Modules
+          Encounters
         </button>
         <button
           onClick={() => setCurrentView('seminar-feed')}
           className={`flex-1 py-2 text-xs font-semibold transition-colors ${
             currentView === 'seminar-feed'
-              ? 'text-amber-400 border-b-2 border-amber-400'
+              ? 'text-amber-200 border-b-2 border-amber-200'
               : 'text-stone-400 hover:text-stone-200'
           }`}
         >
-          📺 Seminar Feed
+          Seminars
         </button>
       </div>
 
@@ -159,9 +133,8 @@ export const OAALab: React.FC<OAALabProps> = ({ onNavigateToKnowledgeGraph }) =>
           </div>
         ) : (
           <>
-            {/* Stats row above learn-to-earn content */}
             <div className="px-4 pt-3 pb-1">
-              <StatsRow progress={mockProgress} />
+              <LearnEvidenceStats progress={learningProgress} />
             </div>
             <OAALearnToEarn onNavigateToKnowledgeGraph={onNavigateToKnowledgeGraph} />
           </>

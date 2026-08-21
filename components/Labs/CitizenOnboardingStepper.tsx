@@ -4,9 +4,9 @@ import React from 'react';
 import { useGuest } from '../../contexts/GuestContext';
 
 const STEPS = [
-  { id: 1, label: 'Explore', desc: 'Browse the chamber. See what integrity looks like.' },
-  { id: 2, label: 'Learn',   desc: 'Complete a lesson. Collect your first Fractal Shard.' },
-  { id: 3, label: 'Prove',   desc: 'Build your portfolio. Request an Integrity Grade when eligible.' },
+  { id: 1, label: 'Explore', desc: 'Browse the chamber. See how evidence is surfaced.' },
+  { id: 2, label: 'Learn', desc: 'Complete an encounter. Record what you believed first.' },
+  { id: 3, label: 'Attest', desc: 'Revise with evidence. Recognition follows comprehension — never guaranteed.' },
 ] as const;
 
 export const CitizenOnboardingStepper: React.FC = () => {

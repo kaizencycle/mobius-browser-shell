@@ -1,4 +1,5 @@
 import React, { useState, useCallback, useRef, useEffect } from 'react';
+import { useLocalChamberTime } from '../../hooks/useLocalChamberTime';
 
 interface OAALearnToEarnProps {
   onNavigateToKnowledgeGraph?: () => void;
@@ -70,6 +71,7 @@ interface MicGhost {
 }
 
 export const OAALearnToEarn: React.FC<OAALearnToEarnProps> = ({ onNavigateToKnowledgeGraph }) => {
+  const { iso, dateLine, timeLine } = useLocalChamberTime();
   const [screen, setScreen] = useState<Screen>('path');
   const [qi, setQi] = useState(0);
   const [score, setScore] = useState(0);
@@ -192,53 +194,36 @@ export const OAALearnToEarn: React.FC<OAALearnToEarnProps> = ({ onNavigateToKnow
           <div className="oaa-path-wrap">
             <div className="oaa-greeting">
               <h1 className="oaa-greeting__h1 oaa-serif">
-                Welcome back, Kai. <em>Three things on the path today.</em>
+                What are you trying to understand? <em>Three suggested encounters.</em>
               </h1>
               <div className="oaa-greeting__when oaa-mono">
-                Mon, 9 May<b>9:14 am</b>
-              </div>
-            </div>
-
-            <div className="oaa-streak">
-              <div className="oaa-streak__L">
-                <span className="oaa-streak__flame">🔥</span>
-                <div>
-                  <b>12-day streak</b>
-                  <p>Miss today and you reset to zero — protect the bonus before noon.</p>
-                </div>
-              </div>
-              <div className="oaa-streak__R">
-                {Array.from({ length: 12 }).map((_, i) => (
-                  <div key={i} className="oaa-pip" />
-                ))}
-                <div className="oaa-pip oaa-pip--future" title="today" />
-                <div className="oaa-pip oaa-pip--future" title="tomorrow" />
+                <time dateTime={iso}>{dateLine}</time>
+                <b>{timeLine}</b>
               </div>
             </div>
 
             <div className="oaa-section-label">
-              <h2 className="oaa-serif">Today's Path</h2>
-              <div className="oaa-section-label__why oaa-mono">ranked by streak risk · MIC ceiling · time-fit</div>
+              <h2 className="oaa-serif">Suggested encounters</h2>
+              <div className="oaa-section-label__why oaa-mono">ranked by fit · depth · time available now</div>
             </div>
 
             <div className="oaa-path-list">
               {/* Primary card */}
               <button className="oaa-path-card oaa-path-card--primary" onClick={startLesson}>
-                <span className="oaa-applies oaa-mono">REC 01 · 04</span>
+                <span className="oaa-applies oaa-mono">ENCOUNTER 01</span>
                 <div className="oaa-path-card__reason">
-                  <div className="oaa-path-card__dot">🔥</div>
-                  <div className="oaa-path-card__why-tag oaa-mono">Streak<br />at risk</div>
+                  <div className="oaa-path-card__dot">?</div>
+                  <div className="oaa-path-card__why-tag oaa-mono">Start<br />here</div>
                 </div>
                 <div className="oaa-path-card__body">
                   <h3 className="oaa-serif">Probability — Independence &amp; Conditional</h3>
-                  <p className="oaa-path-card__sub">Five short questions. Picks up where you stopped Friday — 60% through the module.</p>
+                  <p className="oaa-path-card__sub">Five short questions. Commit your first answer before the evidence — then revise if challenged.</p>
                   <div className="oaa-payoff">
                     <span className="oaa-payoff-chip oaa-payoff-chip--time oaa-mono">
                       <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
                       ~9 min
                     </span>
-                    <span className="oaa-payoff-chip oaa-payoff-chip--mic oaa-mono">MIC <span>+4.5</span></span>
-                    <span className="oaa-payoff-chip oaa-payoff-chip--streak oaa-mono">+1 streak day</span>
+                    <span className="oaa-payoff-chip oaa-mono">Evidence trail logged</span>
                     <span className="oaa-payoff-chip oaa-mono">JADE: 2 weak nodes here</span>
                   </div>
                 </div>
@@ -256,11 +241,10 @@ export const OAALearnToEarn: React.FC<OAALearnToEarnProps> = ({ onNavigateToKnow
                 </div>
                 <div className="oaa-path-card__body">
                   <h3 className="oaa-serif">Linear Algebra — Eigenvalues, part 2</h3>
-                  <p className="oaa-path-card__sub">Continues Thursday's matrix decomposition. Higher MIC ceiling because the difficulty is up.</p>
+                  <p className="oaa-path-card__sub">Continues Thursday&apos;s matrix decomposition. Higher friction — expect counterpoints.</p>
                   <div className="oaa-payoff">
                     <span className="oaa-payoff-chip oaa-payoff-chip--time oaa-mono">~14 min</span>
-                    <span className="oaa-payoff-chip oaa-payoff-chip--mic oaa-mono">MIC <span>+6.0</span></span>
-                    <span className="oaa-payoff-chip oaa-payoff-chip--streak oaa-mono">+1 streak day</span>
+                    <span className="oaa-payoff-chip oaa-mono">Source comparison</span>
                   </div>
                 </div>
                 <div className="oaa-path-card__go oaa-mono">
@@ -279,8 +263,7 @@ export const OAALearnToEarn: React.FC<OAALearnToEarnProps> = ({ onNavigateToKnow
                   <p className="oaa-path-card__sub">JADE flagged this as a knowledge gap from your last three reflections.</p>
                   <div className="oaa-payoff">
                     <span className="oaa-payoff-chip oaa-payoff-chip--time oaa-mono">~18 min</span>
-                    <span className="oaa-payoff-chip oaa-payoff-chip--mic oaa-mono">MIC <span>+7.5</span></span>
-                    <span className="oaa-payoff-chip oaa-payoff-chip--streak oaa-mono">+1 streak day</span>
+                    <span className="oaa-payoff-chip oaa-mono">Uncertainty calibration</span>
                     <span className="oaa-payoff-chip oaa-mono">opens 3 KG nodes</span>
                   </div>
                 </div>
@@ -294,22 +277,22 @@ export const OAALearnToEarn: React.FC<OAALearnToEarnProps> = ({ onNavigateToKnow
             <div className="oaa-library">
               <div className="oaa-section-label">
                 <h2 className="oaa-serif">Library <span className="oaa-mono" style={{ fontSize: 10.5, color: 'var(--oaa-mute)', fontWeight: 500, marginLeft: 8, letterSpacing: '0.06em' }}>— 247 modules</span></h2>
-                <div className="oaa-section-label__why oaa-mono">browse if Today's Path doesn't fit your mood</div>
+                <div className="oaa-section-label__why oaa-mono">browse when none of these match your question</div>
               </div>
               <div className="oaa-lib-grid">
                 <div className="oaa-lib-card">
                   <h4 className="oaa-serif">Calculus · Limits</h4>
-                  <div className="oaa-mono oaa-lib-card__meta">BEGINNER · 3.0 MIC</div>
+                  <div className="oaa-mono oaa-lib-card__meta">BEGINNER · ~20 min</div>
                   <div className="oaa-lib-card__pgr"><i style={{ width: '100%' }} /></div>
                 </div>
                 <div className="oaa-lib-card">
                   <h4 className="oaa-serif">Number Theory · Modular Arithmetic</h4>
-                  <div className="oaa-mono oaa-lib-card__meta">INTERMEDIATE · 5.0 MIC</div>
+                  <div className="oaa-mono oaa-lib-card__meta">INTERMEDIATE · ~30 min</div>
                   <div className="oaa-lib-card__pgr"><i style={{ width: '42%' }} /></div>
                 </div>
                 <div className="oaa-lib-card">
                   <h4 className="oaa-serif">Topology · Open Sets</h4>
-                  <div className="oaa-mono oaa-lib-card__meta">ADVANCED · 7.5 MIC</div>
+                  <div className="oaa-mono oaa-lib-card__meta">ADVANCED · ~45 min</div>
                   <div className="oaa-lib-card__pgr"><i style={{ width: '0%' }} /></div>
                 </div>
               </div>

@@ -1,18 +1,22 @@
 import React from 'react';
-import { useWallet } from '../../contexts/WalletContext';
+import { TabId } from '../../types';
+import { chamberByTab } from '../../src/lib/chambers';
+import { useLocalChamberTime } from '../../hooks/useLocalChamberTime';
 import { useTerminal } from '../../contexts/TerminalContext';
 import { useAtlasWakeGuard } from '../../hooks/useAtlasWakeGuard';
 import { giTextColor } from '../../utils/gi';
 
+const learn = chamberByTab(TabId.OAA)!;
+
 const STATUS_CONFIG = {
-  checking: { label: '◌ Connecting…', cls: 'text-stone-400' },
-  online:   { label: '● Online',      cls: 'text-emerald-400' },
-  cold:     { label: '◐ Cold Start',  cls: 'text-amber-400' },
-  error:    { label: '✕ Offline',     cls: 'text-rose-400' },
+  checking: { label: 'Connecting…', cls: 'text-stone-400' },
+  online:   { label: 'Online',      cls: 'text-emerald-400' },
+  cold:     { label: 'Cold start',  cls: 'text-amber-400' },
+  error:    { label: 'Offline',     cls: 'text-rose-400' },
 } as const;
 
 export const AtlasChamberHeader: React.FC = () => {
-  const { wallet } = useWallet();
+  const { dateLine, timeLine, timeZone, iso } = useLocalChamberTime();
   const { state: terminalState } = useTerminal();
   const wakeStatus = useAtlasWakeGuard();
 
@@ -21,21 +25,19 @@ export const AtlasChamberHeader: React.FC = () => {
   const { label: statusLabel, cls: statusCls } = STATUS_CONFIG[wakeStatus];
 
   return (
-    <div className="flex items-center justify-between px-4 py-2 bg-stone-900 border-b border-stone-700 text-white text-xs font-mono flex-shrink-0">
-      <div className="flex items-center gap-3">
-        <span className="px-2 py-0.5 rounded bg-stone-700 text-stone-200 tracking-widest uppercase text-[10px]">
-          ⬡ ATLAS · Tutor
+    <div className="learn-chamber-bar">
+      <div className="learn-chamber-bar__left">
+        <span className="learn-chamber-bar__room">
+          ROOM {learn.room} · {learn.publicName}
         </span>
-        <span className="text-stone-400">Chamber I · OAA Learning Hub</span>
+        <span className="learn-chamber-bar__canon">{learn.canonName}</span>
       </div>
-      <div className="flex items-center gap-4">
-        <span className={`${statusCls} text-[10px]`}>{statusLabel}</span>
-        <span className={giCls}>{giLabelText}</span>
-        {wallet && (
-          <span className="text-amber-400">
-            ◎ {wallet.balance.toFixed(2)} MIC
-          </span>
-        )}
+      <div className="learn-chamber-bar__right">
+        <time className="learn-chamber-bar__clock" dateTime={iso} aria-live="polite">
+          {dateLine} · {timeLine} {timeZone}
+        </time>
+        <span className={`learn-chamber-bar__status ${statusCls}`}>{statusLabel}</span>
+        <span className={`learn-chamber-bar__gi ${giCls}`}>{giLabelText}</span>
       </div>
     </div>
   );
