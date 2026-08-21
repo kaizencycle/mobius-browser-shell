@@ -1,4 +1,5 @@
 import React, { useState, useCallback, useRef, useEffect } from 'react';
+import { useLocalChamberTime } from '../../hooks/useLocalChamberTime';
 
 interface OAALearnToEarnProps {
   onNavigateToKnowledgeGraph?: () => void;
@@ -70,6 +71,7 @@ interface MicGhost {
 }
 
 export const OAALearnToEarn: React.FC<OAALearnToEarnProps> = ({ onNavigateToKnowledgeGraph }) => {
+  const { iso, dateLine, timeLine } = useLocalChamberTime();
   const [screen, setScreen] = useState<Screen>('path');
   const [qi, setQi] = useState(0);
   const [score, setScore] = useState(0);
@@ -195,7 +197,8 @@ export const OAALearnToEarn: React.FC<OAALearnToEarnProps> = ({ onNavigateToKnow
                 Welcome back, Kai. <em>Three things on the path today.</em>
               </h1>
               <div className="oaa-greeting__when oaa-mono">
-                Mon, 9 May<b>9:14 am</b>
+                <time dateTime={iso}>{dateLine}</time>
+                <b>{timeLine}</b>
               </div>
             </div>
 

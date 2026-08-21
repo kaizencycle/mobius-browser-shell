@@ -729,6 +729,56 @@
   margin-top: 4px;
   font-weight: 400;
 }
+
+.oaa-head__question {
+  font-family: 'Caveat', cursive;
+  font-size: 28px;
+  font-style: italic;
+  color: #e8e4bc;
+  margin: 0 0 6px;
+  line-height: 1.1;
+}
+
+.oaa-head__lede {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  color: #a8a080;
+  margin: 8px 0 0;
+  max-width: 36ch;
+  line-height: 1.5;
+}
+
+.oaa-head__clock {
+  font-family: 'Caveat', cursive;
+  font-size: 26px;
+  color: #c9c39a;
+  text-align: right;
+  line-height: 1.1;
+  flex-shrink: 0;
+}
+
+.oaa-head__date {
+  display: block;
+  color: #c9c39a;
+}
+
+.oaa-head__time {
+  display: block;
+  color: #fafaf2;
+  font-weight: 600;
+  font-size: 32px;
+}
+
+.oaa-head__tz {
+  display: block;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #8a8568;
+  margin-top: 4px;
+}
+
 .oaa-head .date {
   font-family: 'Caveat', cursive;
   font-size: 26px;
@@ -783,7 +833,10 @@
 }
 @media (max-width: 980px) {
   .oaa-frame { inset: 12px; padding: 24px 20px; }
+  .oaa-head { flex-direction: column; align-items: flex-start; gap: 12px; }
+  .oaa-head__clock { text-align: left; }
   .oaa-head h2 { font-size: 42px; }
+  .oaa-head__question { font-size: 22px; }
 }
 
 /* ═══════════════════════════════════════════════════════════════
@@ -1687,6 +1740,10 @@
   font-size: 14px;
   margin-top: 2px;
   letter-spacing: 0;
+}
+
+.oaa-greeting__when time {
+  display: block;
 }
 
 /* Streak banner */

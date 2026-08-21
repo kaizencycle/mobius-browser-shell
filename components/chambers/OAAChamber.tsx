@@ -2,6 +2,7 @@ import React, { Suspense, lazy } from 'react';
 import { ShellErrorBoundary } from '../ShellErrorBoundary';
 import { ErrorCodes } from '../../errors/errorCodes';
 import { useAtlasErrorLog } from '../useAtlasErrorLog';
+import { useLocalChamberTime } from '../../hooks/useLocalChamberTime';
 import { chamberByTab, chamberPublicName } from '../../src/lib/chambers';
 import { TabId } from '../../types';
 
@@ -17,16 +18,29 @@ interface OAAChamberProps {
 
 export const OAAChamber: React.FC<OAAChamberProps> = ({ onNavigateToKnowledgeGraph }) => {
   const logToAtlas = useAtlasErrorLog();
+  const { iso, dateLine, timeLine, timeZone } = useLocalChamberTime();
+
   return (
     <div className="oaa-room">
       <div className="oaa-frame">
-        <div className="oaa-head">
-          <div>
-            <div className="label">ROOM {learn.room} · {learn.publicName} · Today's Lesson Plan</div>
-            <h2>{learn.publicName}<small>{learn.canonName}</small></h2>
+        <header className="oaa-head">
+          <div className="oaa-head__intro">
+            <div className="label">ROOM {learn.room} · {learn.slug}</div>
+            <p className="oaa-head__question">&ldquo;{learn.humanQuestion}&rdquo;</p>
+            <h2>
+              {learn.publicName}
+              <small>{learn.canonName}</small>
+            </h2>
+            <p className="oaa-head__lede">{learn.tagline}</p>
           </div>
-          <div className="date">Period 3<b>Mon — Fri</b></div>
-        </div>
+          <div className="oaa-head__clock" aria-live="polite">
+            <time className="oaa-head__date" dateTime={iso}>
+              {dateLine}
+            </time>
+            <b className="oaa-head__time">{timeLine}</b>
+            <span className="oaa-head__tz">{timeZone}</span>
+          </div>
+        </header>
 
         <div className="oaa-content">
           <ShellErrorBoundary
@@ -41,10 +55,10 @@ export const OAAChamber: React.FC<OAAChamberProps> = ({ onNavigateToKnowledgeGra
           </ShellErrorBoundary>
         </div>
 
-        <div className="oaa-foot">
-          <div>Sub: Mrs. ATLAS</div>
-          <div>Class dismissed when your portfolio grows.</div>
-        </div>
+        <footer className="oaa-foot">
+          <div>Study · question · attest comprehension</div>
+          <div>Enter with what you believe. Leave able to explain why.</div>
+        </footer>
 
         <div className="oaa-chalk" aria-hidden />
         <div className="oaa-eraser" aria-hidden />
