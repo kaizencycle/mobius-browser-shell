@@ -36,14 +36,14 @@ function formatLocalChamberTime(date: Date): LocalChamberTime {
   };
 }
 
-/** Live local date/time for chamber headers — updates every minute. */
+/** Live local date/time for chamber headers — updates every second. */
 export function useLocalChamberTime(): LocalChamberTime {
   const [now, setNow] = useState(() => new Date());
 
   useEffect(() => {
     const tick = () => setNow(new Date());
     tick();
-    const id = window.setInterval(tick, 60_000);
+    const id = window.setInterval(tick, 1_000);
     return () => window.clearInterval(id);
   }, []);
 
