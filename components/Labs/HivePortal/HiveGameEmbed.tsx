@@ -5,9 +5,9 @@
  *   1. ?data= passthrough — game overlays the shell's live current-world.json,
  *      so both surfaces read the same substrate state.
  *   2. postMessage listener (C-341 write-back) — game emits events on every
- *      realm seal / fountain restore; shell catches them and POSTs to
- *      /ledger/attest via the existing submitAttestation helper. This closes
- *      the Sweep → Seal → Ledger loop the game's comment block promises.
+ *      realm seal / fountain restore; shell catches them and POSTs
+ *      hive.player_event to /ledger/attest (lab_source=hive). This closes
+ *      the Sweep → Seal → Ledger → citizen_history loop.
  *   3. Fog-of-integrity CSS overlay — shell-side radial gradient driven by GI,
  *      keeping the chamber chrome and the game interior atmospherically unified.
  *
@@ -15,10 +15,10 @@
  *   { source: "mobius-hive-sim", type, cycle, live, gi, vault, mic,
  *     sealed, total, won, ts, realm?, realmTitle?, realmColor? }
  *
- * Types we attest:
- *   "seal"          → citizen sealed a realm beacon
- *   "win"           → citizen restored the Forge Fountain (cycle complete)
- *   "fountain_ready"→ all realms sealed, fountain now unlockable
+ * Types we attest as hive.player_event:
+ *   "seal"          → action channel_node on realm zone
+ *   "win"           → action restore_beacon on forge-of-civilization
+ *   "fountain_ready"→ action fountain_ready on forge-of-civilization
  *
  * Types we silently ignore (not consequential enough to attest):
  *   "start", "ready" — game lifecycle, not player actions
@@ -26,7 +26,11 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 import { getHiveWorldBaseUrl } from '../../../src/lib/meshWorldFetch';
-import { submitAttestation } from '../../../src/lib/epicon-attest';
+import {
+  defaultHiveAttestUrl,
+  postHivePlayerEvent,
+  type HivePlayerEventPayload,
+} from '../../../src/lib/hive-player-event';
 import { env } from '../../../config/env';
 
 export const GAME_BASE_URL =
@@ -113,57 +117,45 @@ function isHiveEvent(data: unknown): data is HiveGameEvent {
   );
 }
 
-// Map a game event to an attestation.
+// Map a game event to a hive.player_event payload.
 // Returns null for event types that don't warrant ledger writes.
-function toAttestation(
-  ev: HiveGameEvent,
-  civicId: string,
-): Parameters<typeof submitAttestation>[0] | null {
-  const cycle = ev.cycle ?? 'C-?';
-  const gi = ev.gi ?? 0;
-  const vault = ev.vault ?? 0;
+function toPlayerEvent(ev: HiveGameEvent, civicId: string): HivePlayerEventPayload | null {
+  const cycleId = ev.cycle ?? 'C-?';
+  const clientTs = new Date().toISOString();
 
   if (ev.type === 'seal' && ev.realm) {
     return {
+      world: 'hive-citadel',
+      zone: ev.realm,
+      action: 'channel_node',
+      target_id: `realm-${ev.realm}`,
+      cycle_id: cycleId,
       civic_id: civicId,
-      event_type: 'community-action',
-      title: `Realm sealed: ${ev.realmTitle ?? ev.realm}`,
-      summary: `A citizen swept the Signal Fog from ${ev.realmTitle ?? ev.realm} ` +
-        `and lit its beacon. Cycle ${cycle}. ` +
-        `Realms sealed: ${ev.sealed ?? '?'}/${ev.total ?? '?'}. ` +
-        `GI after seal: ${gi.toFixed(3)}.`,
-      location: ev.realm,
-      evidence: JSON.stringify({ realm: ev.realm, sealed: ev.sealed, total: ev.total, gi, vault }),
-      confidence: 0.95,
+      client_ts: clientTs,
     };
   }
 
   if (ev.type === 'win') {
     return {
+      world: 'hive-citadel',
+      zone: 'forge-of-civilization',
+      action: 'restore_beacon',
+      target_id: 'forge-fountain',
+      cycle_id: cycleId,
       civic_id: civicId,
-      event_type: 'governance-event',
-      title: `Forge Fountain restored — ${cycle}`,
-      summary: `A citizen restored the Forge Fountain, completing the cycle. ` +
-        `All ${ev.total ?? '?'} realms sealed. ` +
-        `Final GI: ${gi.toFixed(3)}, vault: ${(vault * 100).toFixed(1)}%. ` +
-        `Cycle: ${cycle}.`,
-      location: 'forge-of-civilization',
-      evidence: JSON.stringify({ cycle, gi, vault, mic: ev.mic, live: ev.live }),
-      confidence: 1.0,
+      client_ts: clientTs,
     };
   }
 
   if (ev.type === 'fountain_ready') {
     return {
+      world: 'hive-citadel',
+      zone: 'forge-of-civilization',
+      action: 'fountain_ready',
+      target_id: 'forge-fountain',
+      cycle_id: cycleId,
       civic_id: civicId,
-      event_type: 'civic-observation',
-      title: `Fountain ready — all realms sealed (${cycle})`,
-      summary: `All ${ev.total ?? '?'} realms sealed this session. ` +
-        `The Forge Fountain is unlocked and awaiting final restoration. ` +
-        `GI: ${gi.toFixed(3)}.`,
-      location: 'forge-of-civilization',
-      evidence: JSON.stringify({ cycle, gi, vault, total: ev.total }),
-      confidence: 0.95,
+      client_ts: clientTs,
     };
   }
 
@@ -229,6 +221,8 @@ export const HiveGameEmbed: React.FC<HiveGameEmbedProps> = ({
   useEffect(() => {
     if (!env.api.ledger) return; // ledger not configured — skip silently
 
+    const attestUrl = defaultHiveAttestUrl();
+
     const handler = async (ev: MessageEvent) => {
       // P1: validate sender — must be our iframe's window at the expected origin.
       // Rejects forged postMessages from any other frame or extension.
@@ -237,8 +231,8 @@ export const HiveGameEmbed: React.FC<HiveGameEmbedProps> = ({
       if (!isHiveEvent(ev.data)) return;
       const gameEv = ev.data;
 
-      const attestation = toAttestation(gameEv, civicId.current);
-      if (!attestation) return;
+      const playerEvent = toPlayerEvent(gameEv, civicId.current);
+      if (!playerEvent) return;
 
       // Dedup key: type + realm (or 'none') + cycle
       const dedupKey = `${gameEv.type}:${gameEv.realm ?? 'none'}:${gameEv.cycle ?? '?'}`;
@@ -246,11 +240,13 @@ export const HiveGameEmbed: React.FC<HiveGameEmbedProps> = ({
       onEventTypeRef.current(gameEv.type);
       onWriteStatusRef.current('writing');
 
-      const result = await submitAttestation(attestation);
-      if (result.ok && attested.current) {
-        attested.current.add(dedupKey);
-        saveAttested(civicId.current, attested.current);
-      }
+      const result = await postHivePlayerEvent(attestUrl, playerEvent, {
+        cacheKey: dedupKey,
+        markPosted: (key) => {
+          attested.current?.add(key);
+          saveAttested(civicId.current, attested.current ?? new Set([key]));
+        },
+      });
       onWriteStatusRef.current(result.ok ? 'ok' : 'fail');
 
       // Clear indicator after 4s so it doesn't clutter the screen
