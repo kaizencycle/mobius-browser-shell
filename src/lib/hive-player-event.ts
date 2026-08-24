@@ -42,30 +42,39 @@ export async function postHivePlayerEvent(
   };
 
   for (let attempt = 0; attempt < 2; attempt++) {
+    let res: Response;
     try {
-      const res = await fetch(attestUrl, {
+      res = await fetch(attestUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),
         signal: AbortSignal.timeout(8000),
       });
-      if (!res.ok) {
-        if (attempt === 1) return { ok: false, error: `ledger_${res.status}` };
-        continue;
-      }
+    } catch (err) {
+      // Network-level failure before any response — nothing was written, safe to retry.
+      if (attempt === 1) return { ok: false, error: String(err) };
+      continue;
+    }
 
+    if (!res.ok) {
+      // Request was rejected — nothing was written, safe to retry once.
+      if (attempt === 1) return { ok: false, error: `ledger_${res.status}` };
+      continue;
+    }
+
+    // The write landed (2xx). Mark posted and never retry past this point —
+    // a response-body parse failure here must not trigger a duplicate POST.
+    if (options?.markPosted && options.cacheKey) {
+      options.markPosted(options.cacheKey);
+    }
+    try {
       const data: unknown = await res.json();
       const eventId = isRecord(data)
         ? readString(data['event_id']) ?? readString(data['id'])
         : undefined;
-
-      if (options?.markPosted && options.cacheKey) {
-        options.markPosted(options.cacheKey);
-      }
-
       return { ok: true, eventId };
-    } catch (err) {
-      if (attempt === 1) return { ok: false, error: String(err) };
+    } catch {
+      return { ok: true };
     }
   }
 
