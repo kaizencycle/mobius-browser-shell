@@ -27,7 +27,10 @@ function readString(value: unknown): string | undefined {
 
 /**
  * Fire-and-forget POST of hive.player_event to the Civic ledger pseudonymous lane.
- * One retry; never throws. Marks target posted on success for idempotent reloads.
+ * Retries only on a definite HTTP rejection (never on a thrown/timed-out fetch —
+ * the ledger has no idempotency key, so an ambiguous failure might have already
+ * been committed server-side, and retrying it could double-write). Never throws.
+ * Marks target posted on success for idempotent reloads.
  */
 export async function postHivePlayerEvent(
   attestUrl: string,
@@ -51,13 +54,16 @@ export async function postHivePlayerEvent(
         signal: AbortSignal.timeout(8000),
       });
     } catch (err) {
-      // Network-level failure before any response — nothing was written, safe to retry.
-      if (attempt === 1) return { ok: false, error: String(err) };
-      continue;
+      // Thrown fetch (network error, timeout, aborted signal) — we don't know
+      // whether the server received and committed this write before the
+      // response was lost. Fail immediately rather than risk a duplicate.
+      return { ok: false, error: String(err) };
     }
 
     if (!res.ok) {
-      // Request was rejected — nothing was written, safe to retry once.
+      // A definite HTTP response means the server validated and rejected the
+      // request before writing anything (civic_id/rate-limit/payload checks
+      // all run before the INSERT) — safe to retry once.
       if (attempt === 1) return { ok: false, error: `ledger_${res.status}` };
       continue;
     }
