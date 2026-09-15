@@ -7,13 +7,13 @@
     "ZEUS": "verify pulse integrity"
   },
   "canon_rule": "Browser Shell shows world state; it does not canonize world state.",
-  "cycle": "C-434",
-  "generated_at": "2026-09-15T01:55:24.087817Z",
-  "idempotency_key": "mobius-browser-shell:HIVE_WORLD_PULSE_V1:C-434:6afc42b08b8e1921:fetch-hive-world",
+  "cycle": "C-435",
+  "generated_at": "2026-09-15T07:26:57.215488Z",
+  "idempotency_key": "mobius-browser-shell:HIVE_WORLD_PULSE_V1:C-435:9d7b55a17d5d7a35:fetch-hive-world",
   "node_id": "mobius-browser-shell",
   "schema": "HIVE_WORLD_PULSE_V1",
-  "source_hash": "6afc42b08b8e19215c8839edb7f09e581dbfd6ae34b6270cd709cdfaff53187a",
-  "terminal_gi": 0.63,
+  "source_hash": "9d7b55a17d5d7a35ed5bc15754d66a28f2e72c5e84c62580642fabe9a4bf6a82",
+  "terminal_gi": 0.64,
   "terminal_snapshot_available": true,
   "terminal_snapshot_error": null,
   "world": {
@@ -33,11 +33,11 @@
         "kv_degraded"
       ],
       "signals": {
-        "gi": 0.781,
+        "gi": 0.74,
         "kv_status": "degraded",
-        "vault_progress": 0.76
+        "vault_progress": 0.782
       },
-      "updated_at": "2026-09-15T00:39:45.711Z"
+      "updated_at": "2026-09-15T05:25:24.749Z"
     },
     "event": {
       "cycle_id": "C-434",
@@ -58,7 +58,7 @@
         "overlay": "fog",
         "priority": 1
       },
-      "updated_at": "2026-09-15T00:39:45.711Z"
+      "updated_at": "2026-09-15T05:25:24.749Z"
     },
     "quest": {
       "assigned_by": "zeus",
@@ -91,7 +91,7 @@
       ],
       "title": "Restore the Beacon",
       "type": "stability_quest",
-      "updated_at": "2026-09-15T00:39:45.711Z"
+      "updated_at": "2026-09-15T05:25:24.749Z"
     },
     "repo": "kaizencycle/mobius-hive",
     "sentinel": null
