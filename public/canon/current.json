@@ -11,7 +11,9 @@
     "/canon",
     "/canon/glossary",
     "/canon/misinterpretations",
-    "/canon/source-of-truth"
+    "/canon/source-of-truth",
+    "/canon/cycle-0",
+    "/canon/virtue-accord"
   ],
   "substrate_repo": "https://github.com/kaizencycle/Mobius-Substrate"
 }

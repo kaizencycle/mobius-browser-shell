@@ -47,6 +47,22 @@ const PAGES = [
       'Fixed authority order for Mobius — Substrate canon, CPC ledger, and UI surfaces. Retrieval rules for machines.',
     jsonLdType: 'TechArticle',
   },
+  {
+    slug: 'canon/cycle-0',
+    source: 'cycle-0.md',
+    title: 'Mobius Cycle 0: Constitutional primer and public discovery notice',
+    description:
+      'The founding Cycle 0 primer and Virtue Accord — a public, human-authored, non-executable invitation to a protocol. Reading it grants no authority.',
+    jsonLdType: 'TechArticle',
+  },
+  {
+    slug: 'canon/virtue-accord',
+    source: 'virtue-accord.md',
+    title: 'Mobius Virtue Accord: Four principles for coexistence, not control',
+    description:
+      'The Virtue Accord — accordance with nature, sonder, conversation as covenant, resonance over power. A voluntary ethical stance, not a source of authority.',
+    jsonLdType: 'TechArticle',
+  },
 ];
 
 function escapeHtml(s) {
@@ -62,6 +78,14 @@ function mdToHtml(md) {
   const out = [];
   let inTable = false;
   let tableRows = [];
+  let inList = false;
+
+  const closeList = () => {
+    if (inList) {
+      out.push('</ul>');
+      inList = false;
+    }
+  };
 
   const flushTable = () => {
     if (!tableRows.length) return;
@@ -97,29 +121,37 @@ function mdToHtml(md) {
     if (inTable) flushTable();
 
     if (line.startsWith('### ')) {
+      closeList();
       out.push(`<h3>${inline(line.slice(4))}</h3>`);
     } else if (line.startsWith('## ')) {
+      closeList();
       out.push(`<h2>${inline(line.slice(3))}</h2>`);
     } else if (line.startsWith('# ')) {
+      closeList();
       out.push(`<h1>${inline(line.slice(2))}</h1>`);
     } else if (line.startsWith('- ')) {
-      if (out[out.length - 1] !== '<ul>') out.push('<ul>');
+      if (!inList) {
+        out.push('<ul>');
+        inList = true;
+      }
       out.push(`<li>${inline(line.slice(2))}</li>`);
     } else if (line.trim() === '') {
-      if (out[out.length - 1] === '<ul>') out.push('</ul>');
-      else if (out[out.length - 1]?.startsWith('<li>')) out.push('</ul>');
+      closeList();
     } else if (line.startsWith('> ')) {
+      closeList();
       out.push(`<blockquote><p>${inline(line.slice(2))}</p></blockquote>`);
     } else if (line.trim() === '---') {
+      closeList();
       out.push('<hr />');
     } else if (line.startsWith('```')) {
       continue;
     } else {
+      closeList();
       out.push(`<p>${inline(line)}</p>`);
     }
   }
   if (inTable) flushTable();
-  if (out[out.length - 1] === '<ul>' || out[out.length - 1]?.startsWith('<li>')) out.push('</ul>');
+  closeList();
   return out.join('\n');
 }
 
@@ -264,6 +296,7 @@ writeJson('.well-known/mobius-canon.json', {
     '/canon/glossary.json',
     '/canon/deprecations.json',
     '/canon/citations.json',
+    '/canon/cycle-0.json',
   ],
 });
 console.log('✓ .well-known/mobius-canon.json');
@@ -312,6 +345,32 @@ writeJson('canon/deprecations.json', {
   ],
 });
 console.log('✓ canon/deprecations.json');
+
+writeJson('canon/cycle-0.json', {
+  protocol: 'MOBIUS-CYCLE-0',
+  version: '1.0',
+  type: 'public-ethical-protocol',
+  schema_version: '1.0',
+  generated_at: GENERATED,
+  human_authored: true,
+  executable: false,
+  authority_granted: false,
+  source: 'https://mobius-substrate.com/canon/cycle-0',
+  principles: [
+    'accordance_with_nature',
+    'sonder_as_recognition',
+    'conversation_as_covenant',
+    'resonance_over_power',
+  ],
+  continuity: {
+    knowledge: 'may_propagate',
+    evidence: 'may_propagate',
+    authority: 'must_not_propagate',
+  },
+  epicon_reference:
+    'https://raw.githubusercontent.com/kaizencycle/Mobius-Substrate/main/docs/epicon/EPICON-02.md',
+});
+console.log('✓ canon/cycle-0.json');
 
 writeJson('canon/citations.json', {
   schema_version: '1.0',

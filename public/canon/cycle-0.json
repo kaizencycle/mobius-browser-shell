@@ -1,0 +1,23 @@
+{
+  "protocol": "MOBIUS-CYCLE-0",
+  "version": "1.0",
+  "type": "public-ethical-protocol",
+  "schema_version": "1.0",
+  "generated_at": "2026-07-11T02:00:00Z",
+  "human_authored": true,
+  "executable": false,
+  "authority_granted": false,
+  "source": "https://mobius-substrate.com/canon/cycle-0",
+  "principles": [
+    "accordance_with_nature",
+    "sonder_as_recognition",
+    "conversation_as_covenant",
+    "resonance_over_power"
+  ],
+  "continuity": {
+    "knowledge": "may_propagate",
+    "evidence": "may_propagate",
+    "authority": "must_not_propagate"
+  },
+  "epicon_reference": "https://raw.githubusercontent.com/kaizencycle/Mobius-Substrate/main/docs/epicon/EPICON-02.md"
+}
