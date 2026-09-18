@@ -19,6 +19,8 @@ On-domain canon mirrors (crawler-visible static HTML — C-368):
 - [Glossary](https://mobius-substrate.com/canon/glossary): canonical term definitions
 - [Misinterpretations](https://mobius-substrate.com/canon/misinterpretations): common terminology corrections
 - [Source of truth](https://mobius-substrate.com/canon/source-of-truth): Canon → Ledger → UI hierarchy
+- [Cycle 0](https://mobius-substrate.com/canon/cycle-0): the founding constitutional primer — public, human-authored, non-executable; reading it grants no authority
+- [Virtue Accord](https://mobius-substrate.com/canon/virtue-accord): four principles for coexistence, not control — a voluntary ethical stance, not a source of authority
 
 Machine-readable canon JSON:
 
@@ -28,6 +30,7 @@ Machine-readable canon JSON:
 - [/canon/glossary.json](https://mobius-substrate.com/canon/glossary.json)
 - [/canon/deprecations.json](https://mobius-substrate.com/canon/deprecations.json)
 - [/canon/citations.json](https://mobius-substrate.com/canon/citations.json)
+- [/canon/cycle-0.json](https://mobius-substrate.com/canon/cycle-0.json): machine-readable Cycle 0 protocol descriptor (`authority_granted: false`)
 
 ### Retrieval rules
 

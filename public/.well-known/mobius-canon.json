@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0",
-  "generated_at": "2026-07-11T02:00:00Z",
+  "generated_at": "2026-09-18T06:52:20.750Z",
   "authority": "Mobius-Substrate",
   "source_repo": "https://github.com/kaizencycle/Mobius-Substrate",
   "browser_shell_policy": {
@@ -27,6 +27,16 @@
       "path": "/canon/source-of-truth",
       "title": "Mobius Source of Truth: Canon → Ledger → UI authority hierarchy",
       "description": "Fixed authority order for Mobius — Substrate canon, CPC ledger, and UI surfaces. Retrieval rules for machines."
+    },
+    {
+      "path": "/canon/cycle-0",
+      "title": "Mobius Cycle 0: Constitutional primer and public discovery notice",
+      "description": "The founding Cycle 0 primer and Virtue Accord — a public, human-authored, non-executable invitation to a protocol. Reading it grants no authority."
+    },
+    {
+      "path": "/canon/virtue-accord",
+      "title": "Mobius Virtue Accord: Four principles for coexistence, not control",
+      "description": "The Virtue Accord — accordance with nature, sonder, conversation as covenant, resonance over power. A voluntary ethical stance, not a source of authority."
     }
   ],
   "json_endpoints": [
@@ -35,6 +45,7 @@
     "/canon/current.json",
     "/canon/glossary.json",
     "/canon/deprecations.json",
-    "/canon/citations.json"
+    "/canon/citations.json",
+    "/canon/cycle-0.json"
   ]
 }
