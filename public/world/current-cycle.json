@@ -1,6 +1,6 @@
 {
   "cycle_id": "C-464",
-  "updated_at": "2026-10-14T19:42:48.426Z",
+  "updated_at": "2026-10-14T22:41:14.383Z",
   "rules_fired": [
     "kv_degraded"
   ],
@@ -10,7 +10,7 @@
   "signals": {
     "kv_status": "degraded",
     "gi": 0.82,
-    "vault_progress": 0.761
+    "vault_progress": 0.79
   },
   "ingest_health": {
     "terminal_snapshot": true,
