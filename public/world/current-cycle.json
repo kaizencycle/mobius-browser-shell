@@ -1,6 +1,6 @@
 {
   "cycle_id": "C-491",
-  "updated_at": "2026-11-10T13:19:48.313Z",
+  "updated_at": "2026-11-10T20:32:59.540Z",
   "rules_fired": [
     "kv_degraded"
   ],
@@ -9,8 +9,8 @@
   "active_sentinel_id": "zeus",
   "signals": {
     "kv_status": "degraded",
-    "gi": 0.92,
-    "vault_progress": 0.775
+    "gi": 0.804,
+    "vault_progress": 0.795
   },
   "ingest_health": {
     "terminal_snapshot": true,
